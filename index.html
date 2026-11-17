@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ລະບົບຈັດການສະຕ໋ອກ ແລະ ນັບສະຕ໋ອກ - Mom's Touch Vangxai</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Noto Sans Lao & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Lao:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Lao', 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom scrollbar for clean table scrolling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Header Bar -->
+    <header class="bg-[#B91C1C] text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3">
+            <!-- Brand Title -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-400 text-[#B91C1C] p-2 rounded-xl shadow-sm font-bold text-xl flex items-center justify-center">
+                    🍗
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-tight">
+                        Mom's Touch Vangxai - ລະບົບຈັດການສະຕ໋ອກ
+                    </h1>
+                    <p class="text-xs text-red-100 opacity-90">
+                        Inventory & Stock Management System (100 ລາຍການວັດຖຸດິບ)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Month Indicator & Actions -->
+            <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                <div class="bg-red-900/60 border border-red-400/30 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="header-month-label">ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026</span>
+                </div>
+
+                <button onclick="exportToCSV()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <span>📥</span> ສົ່ງອອກລາຍງານ CSV
+                </button>
+
+                <button onclick="openConfirmModal('reset')" class="bg-white/15 hover:bg-white/25 text-white border border-white/25 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5 cursor-pointer">
+                    <span>🔄</span> ຣີເຊັດຂໍ້ມູນເດີມ
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-grow">
+
+        <!-- Real-time Low Stock Alert Banner -->
+        <div id="low-stock-banner" class="bg-amber-50 border-l-4 border-amber-500 rounded-r-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all">
+            <div class="flex items-start sm:items-center gap-3">
+                <div class="bg-amber-100 text-amber-600 p-2.5 rounded-xl text-xl shrink-0">
+                    ⚠️
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="font-bold text-amber-950 text-sm sm:text-base">ແຈ້ງເຕືອນສະຕ໋ອກໃກ້ໝົດ / ໝົດສະຕ໋ອກ (Low Stock Alert)</h2>
+                        <span id="alert-badge-count" class="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <p id="low-stock-list-preview" class="text-xs sm:text-sm text-amber-800 mt-0.5 line-clamp-2">
+                        ກຳລັງກວດສອບລາຍການວັດຖຸດິບ...
+                    </p>
+                </div>
+            </div>
+            <button onclick="filterLowStockQuick()" id="btn-quick-low-stock" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition whitespace-nowrap shrink-0 cursor-pointer">
+                🔍 ເບິ່ງສະເພາະສິນຄ້າໃກ້ໝົດ
+            </button>
+        </div>
+
+        <!-- Executive Summary KPI Cards (4 Cards) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Card 1: Total Items -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">ລາຍການວັດຖຸດິບທັງໝົດ</p>
+                        <h3 id="kpi-total-items" class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1.5">100</h3>
+                    </div>
+                    <span class="bg-slate-100 text-slate-700 p-2.5 rounded-xl text-lg">📦</span>
+                </div>
+                <p class="text-xs text-emerald-600 font-medium mt-3 flex items-center gap-1">
+                    <span>✓</span> ຄົບຖ້ວນ 10 ໝວດໝູ່ຫຼັກ
+                </p>
+            </div>
+
+            <!-- Card 2: Total Ending Stock Value -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອ</p>
+                        <h3 id="kpi-total-value" class="text-xl sm:text-2xl font-bold text-blue-700 mt-1.5">0 ₭</h3>
+                    </div>
+                    <span class="bg-blue-50 text-blue-600 p-2.5 rounded-xl text-lg">💰</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-3">
+                    ຄິດໄລ່ຈາກ ຍອດຄົງເຫຼືອ × ລາຄາຕໍ່ໜ່ວຍ
+                </p>
+            </div>
+
+            <!-- Card 3: Low / Out of Stock Count (Clickable) -->
+            <div onclick="filterLowStockQuick()" class="bg-white rounded-2xl p-5 shadow-sm border border-amber-200 hover:border-amber-400 hover:shadow-md transition cursor-pointer group">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 group-hover:text-amber-800">ສິນຄ້າໃກ້ໝົດ / ໝົດສະຕ໋ອກ</p>
+                        <h3 id="kpi-low-stock" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-1.5">0</h3>
+                    </div>
+                    <span class="bg-amber-50 text-amber-600 p-2.5 rounded-xl text-lg group-hover:scale-110 transition">🚨</span>
+                </div>
+                <p class="text-xs text-amber-700 font-medium mt-3 flex items-center justify-between">
+                    <span>ຍອດຄົງເຫຼືອ ≤ 2 ໜ່ວຍ</span>
+                    <span class="underline">ກົດເພື່ອກອງ ➔</span>
+                </p>
+            </div>
+
+            <!-- Card 4: Total Waste Cost -->
+            <div onclick="switchTab('waste')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 hover:border-red-300 hover:shadow-md transition cursor-pointer group">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 group-hover:text-red-700">ມູນຄ່າຂອງເສຍລວມ (Waste)</p>
+                        <h3 id="kpi-waste-value" class="text-xl sm:text-2xl font-bold text-[#B91C1C] mt-1.5">0 ₭</h3>
+                    </div>
+                    <span class="bg-red-50 text-[#B91C1C] p-2.5 rounded-xl text-lg group-hover:scale-110 transition">🗑️</span>
+                </div>
+                <p class="text-xs text-red-600 font-medium mt-3 flex items-center justify-between">
+                    <span id="kpi-waste-count">0 ລາຍການບັນທຶກ</span>
+                    <span class="underline">ຈັດການ ➔</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
+            <button onclick="switchTab('stock')" id="tab-btn-stock" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-[#B91C1C] text-white shadow-sm cursor-pointer">
+                <span>📊</span> ແດຊບອດ & ນັບສະຕ໋ອກ (Stock Count)
+            </button>
+            <button onclick="switchTab('rollover')" id="tab-btn-rollover" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
+                <span>🔗</span> ເຊື່ອມໂຍງເດືອນນີ້ & ເດືອນໜ້າ (NOV ➔ DEC)
+            </button>
+            <button onclick="switchTab('waste')" id="tab-btn-waste" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
+                <span>🗑️</span> ບັນທຶກຂອງເສຍ (Waste Log)
+            </button>
+        </nav>
+
+        <!-- ==================== TAB 1: DASHBOARD & STOCK COUNT ==================== -->
+        <section id="tab-content-stock" class="space-y-6">
+            
+            <!-- Category Breakdown Visual Cards -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">ສະຫຼຸບມູນຄ່າສະຕ໋ອກແຍກຕາມໝວດໝູ່ (Category Breakdown)</h2>
+                        <p class="text-xs text-slate-500">ກົດທີ່ກາດໝວດໝູ່ເພື່ອກອງລາຍການສິນຄ້າໃນຕາຕະລາງດ້ານລຸ່ມ</p>
+                    </div>
+                    <button onclick="selectCategoryFilter('ALL')" class="text-xs text-[#B91C1C] hover:underline font-semibold cursor-pointer">
+                        ສະແດງທຸກໝວດໝູ່ (100 ລາຍການ)
+                    </button>
+                </div>
+                <div id="category-breakdown-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Interactive Stock Count Table Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <!-- Table Controls & Search -->
+                <div class="p-5 border-b border-slate-200 space-y-4">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">ຕາຕະລາງນັບສະຕ໋ອກສິນຄ້າປະຈຳເດືອນ (Stock Count Sheet)</h2>
+                            <p class="text-xs text-slate-500">ປ້ອນຕົວເລກ <span class="font-semibold text-slate-700">"ຍອດຄົງເຫຼືອປາຍເດືອນ (Ending)"</span> ລະບົບຈະຄິດໄລ່ຍອດໃຊ້ໄປ ແລະ ມູນຄ່າຄົງເຫຼືອອັດຕະໂນມັດ</p>
+                        </div>
+                        <button onclick="saveStockManually()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition flex items-center gap-2 shrink-0 cursor-pointer">
+                            <span>💾</span> ບັນທຶກຍອດນັບສະຕ໋ອກ
+                        </button>
+                    </div>
+
+                    <!-- Filters Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 pt-1">
+                        <!-- Search -->
+                        <div class="lg:col-span-4 relative">
+                            <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm">🔍</span>
+                            <input type="text" id="filter-search" oninput="renderStockTable()" placeholder="ຄົ້ນຫາລະຫັດ (FV0001), ຊື່ລາວ ຫຼື ອັງກິດ..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C] focus:bg-white transition">
+                        </div>
+
+                        <!-- Category Dropdown -->
+                        <div class="lg:col-span-3">
+                            <select id="filter-category" onchange="renderStockTable()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C] focus:bg-white transition">
+                                <option value="ALL">ທຸກໝວດໝູ່ (All Categories)</option>
+                            </select>
+                        </div>
+
+                        <!-- Storage Filter -->
+                        <div class="lg:col-span-2">
+                            <select id="filter-storage" onchange="renderStockTable()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C] focus:bg-white transition">
+                                <option value="ALL">ບ່ອນເກັບທັງໝົດ (Storage)</option>
+                                <option value="R/T">R/T (ອຸນຫະພູມຫ້ອງ)</option>
+                                <option value="Ref">Ref (ຕູ້ເຢັນທຳມະດາ)</option>
+                                <option value="Fro">Fro (ຕູ້ແຊ່ແຂງ)</option>
+                            </select>
+                        </div>
+
+                        <!-- Low Stock Toggle -->
+                        <div class="lg:col-span-3 flex items-center">
+                            <label class="flex items-center gap-2.5 cursor-pointer bg-amber-50/80 border border-amber-200 px-3.5 py-2 rounded-xl w-full hover:bg-amber-100/70 transition select-none">
+                                <input type="checkbox" id="filter-low-stock" onchange="renderStockTable()" class="w-4 h-4 accent-[#B91C1C] rounded cursor-pointer">
+                                <span class="text-xs font-bold text-amber-900">ສະແດງສະເພາະສິນຄ້າໃກ້ໝົດ</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Info Bar -->
+                <div class="bg-slate-50 px-5 py-2 border-b border-slate-200 flex justify-between items-center text-xs text-slate-600">
+                    <span>ສະແດງຜົນ <strong id="table-showing-count" class="text-slate-900">100</strong> ຈາກທັງໝົດ 100 ລາຍການ</span>
+                    <span class="hidden sm:inline">💡 ຂໍ້ມູນຖືກບັນທຶກອັດຕະໂນມັດໃນ Browser (Auto-save)</span>
+                </div>
+
+                <!-- Responsive Table -->
+                <div class="overflow-x-auto max-h-[650px]">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="py-3.5 px-3 border-b border-slate-200">ລະຫັດ (ID)</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200">ບ່ອນເກັບ</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200">ໝວດໝູ່</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200 min-w-[220px]">ຊື່ວັດຖຸດິບ (ລາວ / English)</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200">ຂະໜາດ / ໜ່ວຍ</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200 text-right">ລາຄາ/ໜ່ວຍ (₭)</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200 text-right">ຍອດຍົກມາ (Beg)</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200 text-right">ຮັບເຂົ້າ (Rec)</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200 text-center bg-amber-50/80 text-amber-950">ຍອດຄົງເຫຼືອ (Ending)</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200 text-right">ໃຊ້ໄປ (Usage)</th>
+                                <th class="py-3.5 px-3 border-b border-slate-200 text-right">ມູນຄ່າຄົງເຫຼືອ (₭)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: MONTH-TO-MONTH ROLLOVER ==================== -->
+        <section id="tab-content-rollover" class="hidden space-y-6">
+            
+            <!-- Rollover Status Banner (Hidden until executed) -->
+            <div id="rollover-success-banner" class="hidden bg-emerald-50 border border-emerald-300 rounded-2xl p-4 flex items-center gap-3 text-emerald-900 shadow-sm">
+                <span class="text-2xl">✅</span>
+                <div>
+                    <h4 class="font-bold text-sm sm:text-base">ໂອນຍ້າຍຍອດສະຕ໋ອກໄປເດືອນທັນວາ (DEC 2026) ສຳເລັດແລ້ວ!</h4>
+                    <p class="text-xs sm:text-sm text-emerald-700">ຍອດຄົງເຫຼືອປາຍເດືອນພະຈິກ (Ending Stock) ໄດ້ຖືກຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບຮອບບັນຊີໃໝ່ຮຽບຮ້ອຍແລ້ວ.</p>
+                </div>
+            </div>
+
+            <!-- Side-by-Side Comparison Cards -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left: Current Month (NOV) -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="bg-slate-100 text-slate-800 p-2 rounded-xl text-lg">📅</span>
+                            <div>
+                                <h3 class="font-bold text-slate-900">ສະຫຼຸບຍອດເດືອນນີ້ (November 2026)</h3>
+                                <p class="text-xs text-slate-500">ສະຖານະ: ກຳລັງປິດຍອດບັນຊີປາຍເດືອນ</p>
+                            </div>
+                        </div>
+                        <span class="bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-lg">NOV Ending</span>
+                    </div>
+
+                    <div class="space-y-2.5 text-sm">
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-600">ມູນຄ່າສະຕ໋ອກຍົກມາຕົ້ນເດືອນ (Beginning):</span>
+                            <span id="rollover-nov-beg-val" class="font-semibold text-slate-800">0 ₭</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-600">ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອປາຍເດືອນ (Ending):</span>
+                            <span id="rollover-nov-end-val" class="font-bold text-blue-700">0 ₭</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-600">ຈຳນວນລາຍການທີ່ຕ້ອງສັ່ງຊື້ເພີ່ມ (Low/Out):</span>
+                            <span id="rollover-low-count" class="font-bold text-amber-600">0 ລາຍການ</span>
+                        </div>
+                        <div class="flex justify-between py-1.5">
+                            <span class="text-slate-600">ມູນຄ່າຂອງເສຍສະສົມໃນເດືອນນີ້:</span>
+                            <span id="rollover-waste-val" class="font-bold text-[#B91C1C]">0 ₭</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Next Month (DEC) Rollover Action -->
+                <div class="bg-gradient-to-br from-red-50 to-amber-50/50 rounded-2xl p-6 shadow-sm border border-red-200 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between border-b border-red-200/60 pb-3">
+                            <div class="flex items-center gap-2.5">
+                                <span class="bg-[#B91C1C] text-white p-2 rounded-xl text-lg">🚀</span>
+                                <div>
+                                    <h3 class="font-bold text-red-950">ເຊື່ອມຕໍ່ໄປເດືອນໜ້າ (December 2026)</h3>
+                                    <p class="text-xs text-red-800">ໂອນຍ້າຍ Ending Stock ➔ Beginning Stock</p>
+                                </div>
+                            </div>
+                            <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg">DEC Projected</span>
+                        </div>
+
+                        <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                            ເມື່ອກວດສອບຍອດນັບສະຕ໋ອກປາຍເດືອນພະຈິກຄົບຖ້ວນແລ້ວ ທ່ານສາມາດກົດປຸ່ມດ້ານລຸ່ມເພື່ອໂອນຍ້າຍຍອດຄົງເຫຼືອທັງໝົດ 100 ລາຍການ ໄປເປັນຍອດຕັ້ງຕົ້ນຂອງເດືອນທັນວາໂດຍອັດຕະໂນມັດ ໂດຍບໍ່ຕ້ອງພິມຂໍ້ມູນໃໝ່.
+                        </p>
+
+                        <div class="bg-white/80 rounded-xl p-3.5 border border-red-100 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-600">ມູນຄ່າສະຕ໋ອກຕັ້ງຕົ້ນເດືອນທັນວາ (DEC Beginning):</span>
+                            <span id="rollover-dec-beg-val" class="text-base sm:text-lg font-bold text-[#B91C1C]">0 ₭</span>
+                        </div>
+                    </div>
+
+                    <button onclick="openConfirmModal('rollover')" class="w-full bg-[#B91C1C] hover:bg-red-800 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                        <span>🔄</span> ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນໜ້າ (Rollover NOV ➔ DEC)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Automatic Purchase Order Requisition Preview -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <span>📋</span> ໃບສະເໜີສັ່ງຊື້ວັດຖຸດິບອັດຕະໂນມັດ (Auto Purchase Requisition)
+                        </h3>
+                        <p class="text-xs text-slate-500">ລາຍການສິນຄ້າທີ່ມີຍອດຄົງເຫຼືອຕ່ຳກວ່າເກນ (≤ 2 ໜ່ວຍ) ທີ່ຄວນສັ່ງຊື້ເຂົ້າຮ້ານສຳລັບຕົ້ນເດືອນໜ້າ</p>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-xl text-right">
+                        <span class="text-xs text-amber-800 block">ງົບປະມານສັ່ງຊື້ໂດຍປະມານ:</span>
+                        <span id="po-total-estimate" class="text-sm sm:text-base font-bold text-amber-950">0 ₭</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100 text-slate-700 text-xs font-bold uppercase">
+                            <tr>
+                                <th class="py-3 px-4 border-b border-slate-200">ລະຫັດ</th>
+                                <th class="py-3 px-4 border-b border-slate-200">ຊື່ວັດຖຸດິບ (ລາວ / English)</th>
+                                <th class="py-3 px-4 border-b border-slate-200">ຜູ້ສະໜອງ (Supplier)</th>
+                                <th class="py-3 px-4 border-b border-slate-200">ຮອບຈັດສົ່ງ</th>
+                                <th class="py-3 px-4 border-b border-slate-200 text-right">ຄົງເຫຼືອປັດຈຸບັນ</th>
+                                <th class="py-3 px-4 border-b border-slate-200 text-right">ແນະນຳສັ່ງຊື້</th>
+                                <th class="py-3 px-4 border-b border-slate-200 text-right">ປະມານການຄ່າໃຊ້ຈ່າຍ (₭)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="po-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: WASTE LOG ==================== -->
+        <section id="tab-content-waste" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left: Add Waste Entry Form -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4 h-fit">
+                    <div class="border-b border-slate-100 pb-3">
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900">➕ ບັນທຶກລາຍການຂອງເສຍໃໝ່</h3>
+                        <p class="text-xs text-slate-500">ເລືອກວັດຖຸດິບທີ່ເສຍຫາຍ ຫຼື ໝົດອາຍຸເພື່ອຄິດໄລ່ຕົ້ນທຶນສູນເສຍ</p>
+                    </div>
+
+                    <form onsubmit="addWasteEntry(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">ເລືອກວັດຖຸດິບ (100 ລາຍການ)</label>
+                            <select id="waste-item-select" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C]">
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">ຈຳນວນທີ່ເສຍ</label>
+                                <input type="number" id="waste-qty-input" step="0.01" min="0.01" required placeholder="ເຊັ່ນ: 1.5" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">ສາເຫດ (Reason)</label>
+                                <select id="waste-reason-select" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C]">
+                                    <option value="ໝົດອາຍຸ (Expired)">ໝົດອາຍຸ (Expired)</option>
+                                    <option value="ເສຍຫາຍ/ເນົ່າເສຍ (Spoiled)">ເສຍຫາຍ/ເນົ່າເສຍ (Spoiled)</option>
+                                    <option value="ຕົກຫຼົ່ນ/ແຕກຫັກ (Dropped)">ຕົກຫຼົ່ນ/ແຕກຫັກ (Dropped)</option>
+                                    <option value="ປຸງແຕ່ງຜິດພາດ (Kitchen Error)">ປຸງແຕ່ງຜິດພາດ (Error)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-[#B91C1C] hover:bg-red-800 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-sm transition cursor-pointer">
+                            💾 ບັນທຶກລາຍການຂອງເສຍ
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right: Recorded Waste Table -->
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-5 border-b border-slate-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-900">ປະຫວັດການບັນທຶກຂອງເສຍ (Waste History)</h3>
+                            <p class="text-xs text-slate-500">ລາຍການວັດຖຸດິບທີ່ຖືກຕັດເປັນຂອງເສຍໃນຮອບເດືອນນີ້</p>
+                        </div>
+                        <span id="waste-table-total-badge" class="bg-red-50 text-[#B91C1C] border border-red-200 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold">
+                            ລວມ: 0 ₭
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-100 text-slate-700 text-xs font-bold uppercase">
+                                <tr>
+                                    <th class="py-3 px-4 border-b border-slate-200">ວັນທີ/ເວລາ</th>
+                                    <th class="py-3 px-4 border-b border-slate-200">ວັດຖຸດິບ</th>
+                                    <th class="py-3 px-4 border-b border-slate-200">ສາເຫດ</th>
+                                    <th class="py-3 px-4 border-b border-slate-200 text-right">ຈຳນວນ</th>
+                                    <th class="py-3 px-4 border-b border-slate-200 text-right">ລາຄາ/ໜ່ວຍ</th>
+                                    <th class="py-3 px-4 border-b border-slate-200 text-right">ມູນຄ່າເສຍຫາຍ (₭)</th>
+                                    <th class="py-3 px-4 border-b border-slate-200 text-center">ລຶບ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="waste-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-10 py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
+            <span>© 2026 Mom's Touch Vangxai - ລະບົບບໍລິຫານຈັດການສະຕ໋ອກສິນຄ້າ</span>
+            <span>ຂໍ້ມູນອ້າງອີງຈາກ: Inventory Mom's Touch NOV.xlsx (100 Items Master Data)</span>
+        </div>
+    </footer>
+
+    <!-- Custom Confirmation Modal (Replaces window.confirm/alert) -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4 transform transition-all">
+            <div class="flex items-center gap-3">
+                <div id="modal-icon" class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                    ⚠️
+                </div>
+                <h3 id="modal-title" class="text-lg font-bold text-slate-900">ຢືນຢັນການດຳເນີນການ</h3>
+            </div>
+            <p id="modal-message" class="text-sm text-slate-600 leading-relaxed">
+                ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການດຳເນີນການນີ້?
+            </p>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+                    ຍົກເລີກ
+                </button>
+                <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-bold text-white bg-[#B91C1C] hover:bg-red-800 transition shadow-sm cursor-pointer">
+                    ຢືນຢັນ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Application Logic -->
+    <script>
+        // 1. Master 100 Items extracted directly from "Inventory Mom's Touch NOV.xlsx"
+        const INITIAL_INVENTORY_DATA = [
+            {"id":"FV0001","category":"Fresh Vegetables","nameEn":"Lettuce Butterhead","nameLao":"ຜັກສະຫຼັດບັດເຕີເຮດ","supplier":"LGP Fresh","storage":"Ref","pack":"1 x 1KG","uom":"KG","cost":65000.0,"beg":18.98,"rec":38.98,"ending":18.98},
+            {"id":"FV0002","category":"Fresh Vegetables","nameEn":"Onion","nameLao":"ຜັກບົ່ວໃຫຍ່","supplier":"LGP Fresh","storage":"Ref","pack":"1 x 1KG","uom":"KG","cost":15000.0,"beg":9.34,"rec":21.34,"ending":9.34},
+            {"id":"FV0003","category":"Fresh Vegetables","nameEn":"Tomato","nameLao":"ໝາກເລັ່ນ","supplier":"LGP Fresh","storage":"Ref","pack":"1 x 1KG","uom":"KG","cost":35000.0,"beg":3.71,"rec":7.71,"ending":3.71},
+            {"id":"FV0004","category":"Fresh Vegetables","nameEn":"Pickle","nameLao":"ແຕງດອງ","supplier":"Warehouse","storage":"R/T","pack":"1bag*2kg 6bag /box","uom":"BAG","cost":93131.5,"beg":20.0,"rec":38.0,"ending":20.0},
+            {"id":"FV0005","category":"Fresh Vegetables","nameEn":"Carrot","nameLao":"ແຄຣອດ","supplier":"LGP Fresh","storage":"Ref","pack":"1 x 1KG","uom":"KG","cost":15000.0,"beg":0.0,"rec":0.0,"ending":0.0},
+            {"id":"FV0006","category":"Fresh Vegetables","nameEn":"Cabbage","nameLao":"ຜັກກະລໍ່າປີ","supplier":"LGP Fresh","storage":"Ref","pack":"1 x 1KG","uom":"KG","cost":15000.0,"beg":1.2,"rec":2.2,"ending":1.2},
+            {"id":"FV0007","category":"Fresh Vegetables","nameEn":"Purple cabbage","nameLao":"ຜັກກະລໍ່າປີສີມ່ວງ","supplier":"LGP Fresh","storage":"Ref","pack":"1 x 1KG","uom":"KG","cost":35000.0,"beg":1.1,"rec":1.1,"ending":1.1},
+            {"id":"FV0008","category":"Fresh Vegetables","nameEn":"Radish","nameLao":"ຫົວໄຊເທົ້າ","supplier":"LGP Fresh","storage":"Ref","pack":"1 x 1KG","uom":"KG","cost":15000.0,"beg":5.0,"rec":5.0,"ending":5.0},
+            {"id":"PT2001","category":"Meat & Protein","nameEn":"Chicken Thigh Patty","nameLao":"ຊີ້ນສະໂພກໄກ່ຊຸບແປ້ງ","supplier":"R&D","storage":"Ref","pack":"1Bag*10pcs","uom":"KG","cost":76000.0,"beg":52.0,"rec":173.0,"ending":52.0},
+            {"id":"PT2002","category":"Meat & Protein","nameEn":"Ham","nameLao":"ແຮມ","supplier":"LGP dried and Frozen","storage":"Ref","pack":"1Bag*450g","uom":"BAG","cost":52295.1,"beg":5.0,"rec":23.0,"ending":5.0},
+            {"id":"RM3001","category":"Raw Material","nameEn":"Burger Bun","nameLao":"ເຂົ້າຈີ່ເບີເກີ","supplier":"Farmhouse Sole Co.,Ltd","storage":"R/T","pack":"1Bag*6PCS","uom":"EA","cost":6500.0,"beg":342.0,"rec":1122.0,"ending":342.0},
+            {"id":"RM3002","category":"Raw Material","nameEn":"White Cheese","nameLao":"ເນີຍແຂງສີຂາວ","supplier":"LGP dried and Frozen","storage":"Ref","pack":"12 Slices 250 g","uom":"BAG","cost":105752.89,"beg":0.0,"rec":0.0,"ending":0.0},
+            {"id":"RM30013","category":"Raw Material","nameEn":"White Cheese New","nameLao":"ເນີຍແຂງສີຂາວຊະນິດໃໝ່","supplier":"Import","storage":"Fro","pack":"24 Slices 500 g","uom":"BAG","cost":98778.0,"beg":13.5,"rec":13.5,"ending":13.5},
+            {"id":"RM3003","category":"Raw Material","nameEn":"Real Mayonnaise Beast food","nameLao":"ມາຍອງເນສແທ້ Beast Food","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1KG","uom":"BAG","cost":87694.0,"beg":4.0,"rec":4.0,"ending":4.0},
+            {"id":"RM3004","category":"Raw Material","nameEn":"Golden Mountain 5% Distilled Vinegar","nameLao":"ນ້ຳສົ້ມສາຍຊູກັ່ນ 5%","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1lter","uom":"CAN","cost":13000.0,"beg":9.0,"rec":9.0,"ending":9.0},
+            {"id":"RM3005","category":"Raw Material","nameEn":"Suger","nameLao":"ນ້ຳຕານ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1KG","uom":"KG","cost":25000.0,"beg":5.0,"rec":5.0,"ending":5.0},
+            {"id":"RM3006","category":"Raw Material","nameEn":"Salt","nameLao":"ເກືອ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1KG","uom":"KG","cost":13000.0,"beg":0.0,"rec":0.0,"ending":0.0},
+            {"id":"RM3007","category":"Raw Material","nameEn":"Black Peper","nameLao":"ພິກໄທດຳ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1KG","uom":"KG","cost":0.0,"beg":1.0,"rec":1.0,"ending":1.0},
+            {"id":"RM3008","category":"Raw Material","nameEn":"KETCHUP","nameLao":"ຊອດໝາກເລັ່ນ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"100 Pcs/Pack","uom":"EA","cost":581.14,"beg":700.0,"rec":3100.0,"ending":700.0},
+            {"id":"RM3009","category":"Raw Material","nameEn":"Samhwa Corn Syrup 1.2kg","nameLao":"ນ້ຳເຊື່ອມສາລີ Samhwa 1.2kg","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1 Can 1.2Kg","uom":"CAN","cost":36000.0,"beg":9.0,"rec":9.0,"ending":9.0},
+            {"id":"RM30010","category":"Raw Material","nameEn":"Batter mix","nameLao":"ແປ້ງຊຸບທອດ","supplier":"Import","storage":"R/T","pack":"1.88kg*6bag/box","uom":"Bag","cost":197560.0,"beg":26.0,"rec":26.0,"ending":26.0},
+            {"id":"RM30011","category":"Raw Material","nameEn":"Oil (premium)","nameLao":"ນ້ຳມັນພືດ (ເກຣດພຣີມຽມ)","supplier":"Import","storage":"R/T","pack":"CAN 15L","uom":"CAN","cost":1103520.0,"beg":14.0,"rec":29.0,"ending":14.0},
+            {"id":"RM30012","category":"Raw Material","nameEn":"Korea Flour","nameLao":"ແປ້ງສາລີເກົາຫຼີ","supplier":"Import","storage":"R/T","pack":"1 x 20KG","uom":"BAG","cost":571718.4,"beg":5.2,"rec":12.2,"ending":5.2},
+            {"id":"Sd5001","category":"Side","nameEn":"Cajun fries","nameLao":"ມັນຝຣັ່ງທອດປຸງລົດຄາຈູນ","supplier":"Import","storage":"Fro","pack":"2kg*6bag/box","uom":"KG","cost":100100.0,"beg":20.0,"rec":184.0,"ending":20.0},
+            {"id":"Sd5002","category":"Side","nameEn":"Herb cheesestick","nameLao":"ຊີສະຕິກລົດສະໝຸນໄພ","supplier":"Import","storage":"Fro","pack":"1kg*4bag/box","uom":"KG","cost":264583.0,"beg":33.0,"rec":33.0,"ending":33.0},
+            {"id":"Sd5003","category":"Side","nameEn":"Mom's touch cheese ball","nameLao":"ຊີສບອນຂອງ Mom’s Touch","supplier":"Import","storage":"Fro","pack":"28g*50ea*4bag/box","uom":"EA","cost":7631.36,"beg":740.0,"rec":740.0,"ending":740.0},
+            {"id":"S6001","category":"Sauce","nameEn":"Mom's Burger Sauce Dressing","nameLao":"ຊອດເບີເກີສູດພິເສດ Mom’s Touch","supplier":"Import","storage":"Ref","pack":"2kg/bag*5bag/box","uom":"BAG","cost":242950.4,"beg":19.0,"rec":19.0,"ending":19.0},
+            {"id":"S6002","category":"Sauce","nameEn":"Moms Cheese Sauce","nameLao":"ຊອດຊີສ Mom’s Touch","supplier":"Import","storage":"Ref","pack":"2kg/bag*5bag/box","uom":"BAG","cost":354194.52,"beg":6.0,"rec":11.0,"ending":6.0},
+            {"id":"S6003","category":"Sauce","nameEn":"Mom's White Garlic Sauce","nameLao":"ຊອດກະທຽມສີຂາວ Mom’s Touch","supplier":"Import","storage":"Ref","pack":"2kg/bag*5bag/box","uom":"BAG","cost":178904.45,"beg":10.0,"rec":10.0,"ending":10.0},
+            {"id":"S6004","category":"Sauce","nameEn":"Sichuan-Style Spicy Sauce","nameLao":"ຊອດເຜັດສູດເສສວນ","supplier":"Import","storage":"Ref","pack":"2kg/bag*6bag/box","uom":"BAG","cost":238511.36,"beg":11.0,"rec":21.0,"ending":11.0},
+            {"id":"S6007","category":"Sauce","nameEn":"Mom's New Yangnyeom Sauce","nameLao":"ຊອດຢັງນຽມສູດໃໝ່ Mom’s Touch","supplier":"Import","storage":"Ref","pack":"2kg/bag*5bag/box","uom":"BAG","cost":142693.1,"beg":7.0,"rec":17.0,"ending":7.0},
+            {"id":"S6008","category":"Sauce","nameEn":"Soy garlic sauce","nameLao":"ຊອດຖົ່ວເຫຼືອງກະທຽມ","supplier":"Import","storage":"Ref","pack":"2kg/bag*6bag/box","uom":"BAG","cost":183036.77,"beg":11.0,"rec":11.0,"ending":11.0},
+            {"id":"S6009","category":"Sauce","nameEn":"Dill Pickle Sauce","nameLao":"ຊອດແຕງດອງຜັກຊີລາວ","supplier":"Import","storage":"Fro","pack":"1kg*10Bag/Box","uom":"Bag","cost":87871.67,"beg":8.0,"rec":8.0,"ending":8.0},
+            {"id":"S6010","category":"Sauce","nameEn":"Bulgogi Sauce-M","nameLao":"ຊອດບຸນໂກກິ (ສູດ M)","supplier":"Import","storage":"Fro","pack":"2kg*5bag/box","uom":"Bag","cost":178890.98,"beg":0.0,"rec":0.0,"ending":0.0},
+            {"id":"S6011","category":"Sauce","nameEn":"Burger Seasoning","nameLao":"ຜົງປຸງລົດສຳລັບເບີເກີ","supplier":"Import","storage":"Fro","pack":"100ea*50/Bag","uom":"EA","cost":13797.16,"beg":94.0,"rec":94.0,"ending":94.0},
+            {"id":"S6012","category":"Sauce","nameEn":"Mom's Butter-Flavored Oil","nameLao":"ນ້ຳມັນກິ່ນເນີຍ Mom's Touch","supplier":"Import","storage":"R/T","pack":"2kg*5bag/Box","uom":"Bag","cost":247771.88,"beg":0.5,"rec":5.5,"ending":0.5},
+            {"id":"Pk4001","category":"Package","nameEn":"Napkins (Logo)","nameLao":"ເຈ້ຍເຊັດປາກ (ມີໂລໂກ້)","supplier":"Import","storage":"R/T","pack":"500ea*20bag/box","uom":"BAG","cost":42382.33,"beg":37.5,"rec":37.5,"ending":37.5},
+            {"id":"Pk4002","category":"Package","nameEn":"Single box","nameLao":"ກ່ອງອາຫານຊິ້ນດຽວ","supplier":"Import","storage":"R/T","pack":"50ea* 4pack/box","uom":"PCS","cost":3477.32,"beg":435.0,"rec":835.0,"ending":435.0},
+            {"id":"Pk4003","category":"Package","nameEn":"Drink cup carrier (1 cup)","nameLao":"ທີ່ຫິ້ວຈອກເຄື່ອງດື່ມ (1 ຈອກ)","supplier":"Import","storage":"R/T","pack":"200ea*5Pack/box","uom":"PACK","cost":142733.99,"beg":9.5,"rec":19.5,"ending":9.5},
+            {"id":"Pk4004","category":"Package","nameEn":"Drink cup carrier (2 cups)","nameLao":"ທີ່ຫິ້ວຈອກເຄື່ອງດື່ມ (2 ຈອກ)","supplier":"Import","storage":"R/T","pack":"200ea*5Pack/box","uom":"PACK","cost":185488.47,"beg":12.0,"rec":12.0,"ending":12.0},
+            {"id":"Pk4005","category":"Package","nameEn":"Chicken box (half)","nameLao":"ກ່ອງໄກ່ (ເຄິ່ງໂຕ)","supplier":"Import","storage":"R/T","pack":"100ea/box*25/pack","uom":"PCS","cost":6687.81,"beg":239.0,"rec":339.0,"ending":239.0},
+            {"id":"Pk4006","category":"Package","nameEn":"Chicken box (whole)","nameLao":"ກ່ອງໄກ່ (ເຕັມໂຕ)","supplier":"Import","storage":"R/T","pack":"100ea/box*25/pack","uom":"PCS","cost":9572.45,"beg":95.0,"rec":95.0,"ending":95.0},
+            {"id":"Pk4007","category":"Package","nameEn":"Drink cup 16oz","nameLao":"ຈອກເຄື່ອງດື່ມ 16 ອອນຊ໌","supplier":"Import","storage":"R/T","pack":"50ea*20bag/box","uom":"BAG","cost":64214.7,"beg":27.0,"rec":27.0,"ending":27.0},
+            {"id":"Pk4008","category":"Package","nameEn":"Drink cup 16oz lid (1000ea)","nameLao":"ຝາປິດຈອກ 16 ອອນຊ໌ (1,000 ອັນ)","supplier":"Import","storage":"R/T","pack":"100ea*10bag/box","uom":"BAG","cost":45877.83,"beg":15.0,"rec":15.0,"ending":15.0},
+            {"id":"Pk4009","category":"Package","nameEn":"Box tray (half)","nameLao":"ຖາດກ່ອງອາຫານ (ເຄິ່ງໂຕ)","supplier":"Import","storage":"R/T","pack":"200ea/box /50ea/Pack","uom":"PCS","cost":1722.91,"beg":788.0,"rec":1188.0,"ending":788.0},
+            {"id":"Pk4010","category":"Package","nameEn":"Box tray (whole)","nameLao":"ຖາດກ່ອງອາຫານ (ເຕັມໂຕ)","supplier":"Import","storage":"R/T","pack":"200ea/box /50ea/Pack","uom":"PCS","cost":2097.06,"beg":648.0,"rec":648.0,"ending":648.0},
+            {"id":"Pk4011","category":"Package","nameEn":"Burger wrapper","nameLao":"ເຈ້ຍຫໍ່ເບີເກີ","supplier":"Import","storage":"R/T","pack":"1000ea/box 1box5kg","uom":"KG","cost":130790.12,"beg":9.11,"rec":34.11,"ending":9.11},
+            {"id":"Pk4018","category":"Package","nameEn":"Thigh flex burger wrapper","nameLao":"ເຈ້ຍຫໍ່ເບີເກີໄກ່ສະໂພກ","supplier":"Import","storage":"R/T","pack":"1000ea/box 1box6kg","uom":"KG","cost":162000.94,"beg":8.7,"rec":8.7,"ending":8.7},
+            {"id":"Pk4012","category":"Package","nameEn":"Plastic bag (mini)","nameLao":"ຖົງຢາງ (ຂະໜາດນ້ອຍພິເສດ)","supplier":"Import","storage":"R/T","pack":"200ea*5bag/box","uom":"BAG","cost":99909.57,"beg":6.3,"rec":16.3,"ending":6.3},
+            {"id":"Pk4013","category":"Package","nameEn":"Plastic bag (S)","nameLao":"ຖົງຢາງ (ຂະໜາດ S)","supplier":"Import","storage":"R/T","pack":"200ea*5bag/box","uom":"BAG","cost":130340.65,"beg":8.0,"rec":8.0,"ending":8.0},
+            {"id":"Pk4014","category":"Package","nameEn":"Plastic bag (M)","nameLao":"ຖົງຢາງ (ຂະໜາດ M)","supplier":"Import","storage":"R/T","pack":"1000ea*3bag/box","uom":"BAG","cost":174632.38,"beg":6.8,"rec":6.8,"ending":6.8},
+            {"id":"Pk4015","category":"Package","nameEn":"Snack bag (R)","nameLao":"ຖົງໃສ່ອາຫານຫວ່າງ (ຂະໜາດ R)","supplier":"Import","storage":"R/T","pack":"1000ea*10Pack/box","uom":"PACK","cost":54753.6,"beg":41.0,"rec":81.0,"ending":41.0},
+            {"id":"Pk4016","category":"Package","nameEn":"Snack bag (L)","nameLao":"ຖົງໃສ່ອາຫານຫວ່າງ (ຂະໜາດ L)","supplier":"Import","storage":"R/T","pack":"1000ea*10Pack/box","uom":"PACK","cost":58990.8,"beg":22.0,"rec":22.0,"ending":22.0},
+            {"id":"Pk4017","category":"Package","nameEn":"Straw (straight)","nameLao":"ຫຼອດດູດແບບຊື່","supplier":"Import","storage":"R/T","pack":"500ea*20bag/box","uom":"BAG","cost":62594.06,"beg":15.0,"rec":15.0,"ending":15.0},
+            {"id":"Pk4020","category":"Package","nameEn":"Paper tray mat","nameLao":"ເຈ້ຍປູຖາດ","supplier":"Import","storage":"R/T","pack":"1000/PACK*2,000ea/box","uom":"KG","cost":112261.0,"beg":6.77,"rec":24.77,"ending":6.77},
+            {"id":"Pk4021","category":"Package","nameEn":"Wet tissue (Logo)","nameLao":"ຜ້າເຊັດມືປຽກ (ມີໂລໂກ້)","supplier":"Import","storage":"R/T","pack":"200ea*3bag/box","uom":"BAG","cost":103655.74,"beg":13.0,"rec":22.0,"ending":13.0},
+            {"id":"Pk4022","category":"Package","nameEn":"Logo tape","nameLao":"ເທບກາວມີໂລໂກ້","supplier":"Import","storage":"R/T","pack":"200roll/box","uom":"ROLL","cost":3228.2,"beg":159.0,"rec":159.0,"ending":159.0},
+            {"id":"Pk4023","category":"Package","nameEn":"Plastic fork (100ea)","nameLao":"ສ້ອມພລາສຕິກ (100 ອັນ)","supplier":"Import","storage":"R/T","pack":"100ea/bag 20bag/box","uom":"BAG","cost":47896.78,"beg":4.3,"rec":4.3,"ending":4.3},
+            {"id":"Pk4024","category":"Package","nameEn":"Plastic knife (100ea)","nameLao":"ມີດພລາສຕິກ (100 ອັນ)","supplier":"Import","storage":"R/T","pack":"100ea/bag 20bag/box","uom":"BAG","cost":52288.23,"beg":19.0,"rec":19.0,"ending":19.0},
+            {"id":"Pk4025","category":"Package","nameEn":"Paper spoon","nameLao":"ບ່ວງເຈ້ຍ","supplier":"Import","storage":"R/T","pack":"500ea*6bag/box","uom":"BAG","cost":88402.16,"beg":10.0,"rec":10.0,"ending":10.0},
+            {"id":"Pk4026","category":"Package","nameEn":"Paper Bowl S","nameLao":"ຖ້ວຍເຈ້ຍຂະໜາດ S","supplier":"Warehouse","storage":"R/T","pack":"50ea*Bag*20bag/box","uom":"Bag","cost":25000.0,"beg":13.9,"rec":13.9,"ending":13.9},
+            {"id":"Pk4027","category":"Package","nameEn":"Paper Bowl lid S","nameLao":"ຝາປິດຖ້ວຍເຈ້ຍຂະໜາດ S","supplier":"Warehouse","storage":"R/T","pack":"50ea*Bag*20bag/box","uom":"Bag","cost":25000.0,"beg":14.0,"rec":14.0,"ending":14.0},
+            {"id":"Pk4028","category":"Package","nameEn":"Paper Bowl M","nameLao":"ຖ້ວຍເຈ້ຍຂະໜາດ M","supplier":"Warehouse","storage":"R/T","pack":"50ea*Bag*20bag/box","uom":"Bag","cost":25000.0,"beg":11.0,"rec":11.0,"ending":11.0},
+            {"id":"Pk4029","category":"Package","nameEn":"Paper Bowl lid M","nameLao":"ຝາປິດຖ້ວຍເຈ້ຍຂະໜາດ M","supplier":"Warehouse","storage":"R/T","pack":"50ea*Bag*20bag/box","uom":"Bag","cost":25000.0,"beg":20.0,"rec":20.0,"ending":20.0},
+            {"id":"Bv7001","category":"Beverage","nameEn":"COKE POSTMIX 20 L","nameLao":"ນ້ຳອັດລົມ Coke Postmix 20 ລິດ","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"1 BOX x 20 L","uom":"Box","cost":900000.0,"beg":2.0,"rec":3.0,"ending":2.0},
+            {"id":"Bv7002","category":"Beverage","nameEn":"CO2 Tank","nameLao":"ຖັງກາກບອນໄດອອກໄຊ (CO₂)","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"1 TANK x 9KG","uom":"TANK","cost":145454.55,"beg":1.0,"rec":1.0,"ending":1.0},
+            {"id":"Bv7003","category":"Beverage","nameEn":"Coke Classic 325 ML","nameLao":"ນ້ຳອັດລົມ Coke ສູດດັ້ງເດີມ 325 ມລ","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"1X 12 CAN","uom":"CAN","cost":8250.0,"beg":19.0,"rec":43.0,"ending":19.0},
+            {"id":"Bv7004","category":"Beverage","nameEn":"Coke NoSuger 325 ML","nameLao":"ນ້ຳອັດລົມ Coke ສູດບໍ່ມີນ້ຳຕານ 325 ມລ","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"1X 12 CAN","uom":"CAN","cost":8250.0,"beg":46.0,"rec":46.0,"ending":46.0},
+            {"id":"Bv7005","category":"Beverage","nameEn":"Sprite 325 ML","nameLao":"ນ້ຳອັດລົມ Sprite 325 ມລ","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"1X 12 CAN","uom":"CAN","cost":8250.0,"beg":10.0,"rec":34.0,"ending":10.0},
+            {"id":"Bv7006","category":"Beverage","nameEn":"Namthip 550 ML","nameLao":"ນ້ຳດື່ມ Namthip 550 ມລ","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"1X 12 PET","uom":"PET","cost":3181.82,"beg":40.0,"rec":40.0,"ending":40.0},
+            {"id":"Bv7007","category":"Beverage","nameEn":"Coke 1.25ml","nameLao":"ນ້ຳອັດລົມ Coke 1.25 ລິດ","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"N1 x 6","uom":"PET","cost":15909.0,"beg":0.0,"rec":0.0,"ending":0.0},
+            {"id":"Bv7008","category":"Beverage","nameEn":"Sprite 450 ml","nameLao":"ນ້ຳອັດລົມ Sprite 450 ມລ","supplier":"Lao Coca-Cola Bottling Co., Ltd","storage":"R/T","pack":"1Pack*6 PET","uom":"PET","cost":8181.82,"beg":7.0,"rec":31.0,"ending":7.0},
+            {"id":"Cb8001","category":"Consumables","nameEn":"Vila Tissue Hand Towel 230x230mm","nameLao":"ເຈ້ຍເຊັດມື Vila ຂະໜາດ 230 x 230 ມມ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PACK","uom":"PACK","cost":15847.09,"beg":34.0,"rec":34.0,"ending":34.0},
+            {"id":"Cb8002","category":"Consumables","nameEn":"Mask","nameLao":"ຜ້າອັດປາກ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1box*100pcs","uom":"Box","cost":24466.0,"beg":14.0,"rec":14.0,"ending":14.0},
+            {"id":"Cb8004","category":"Consumables","nameEn":"Black Garbage Bag Size 28 X 36","nameLao":"ຖົງຂີ້ເຫຍື້ອສີດຳ ຂະໜາດ 28 x 36","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PACK","uom":"PACK","cost":28123.74,"beg":3.0,"rec":13.0,"ending":3.0},
+            {"id":"Cb8005","category":"Consumables","nameEn":"Black Garbage Bag Size 36 X 45","nameLao":"ຖົງຂີ້ເຫຍື້ອສີດຳ ຂະໜາດ 36 x 45","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PACK","uom":"PACK","cost":28095.0,"beg":0.0,"rec":15.0,"ending":0.0},
+            {"id":"Cb8006","category":"Consumables","nameEn":"Plastic Wrap","nameLao":"ຟິມຫໍ່ອາຫານ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"Roll","uom":"PACK","cost":0.0,"beg":1.0,"rec":3.0,"ending":1.0},
+            {"id":"Cb8007","category":"Consumables","nameEn":"Scoth Brite Sponge","nameLao":"ຟອງນ້ຳລ້າງຈານ Scotch-Brite","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PACK x 24 PCS","uom":"PACK","cost":22000.0,"beg":0.0,"rec":0.0,"ending":0.0},
+            {"id":"Cb8008","category":"Consumables","nameEn":"ScotchWash the dishes 2floor","nameLao":"ນ້ຳຢາລ້າງຈານ ScotchWash ສູດ 2 ຊັ້ນ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"BAG x 10 PCS","uom":"PCS","cost":12368.6,"beg":9.0,"rec":9.0,"ending":9.0},
+            {"id":"Cb8009","category":"Consumables","nameEn":"Hairnets","nameLao":"ໝວກຄຸມຜົມ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PACK x 100 PCS","uom":"PACK","cost":40000.0,"beg":3.0,"rec":3.0,"ending":3.0},
+            {"id":"Cb8010","category":"Consumables","nameEn":"Black Latex Gloves size M&S&L","nameLao":"ຖົງມືຢາງລາເທັກສີດຳ ຂະໜາດ M, S ແລະ L","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PACK x 50 PAIR","uom":"PACK","cost":123797.4,"beg":14.0,"rec":14.0,"ending":14.0},
+            {"id":"Cb8011","category":"Consumables","nameEn":"Viet An Hand glove Size M 100P","nameLao":"ຖົງມື Viet An ຂະໜາດ M (100 ຄູ່)","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PACK x 100 PAIR","uom":"PACK","cost":15000.0,"beg":51.0,"rec":101.0,"ending":51.0},
+            {"id":"Cb8012","category":"Consumables","nameEn":"Glove For Cleaning Oven","nameLao":"ຖົງມືສຳລັບລ້າງເຕົາອົບ","supplier":"LGP dried and Frozen","storage":"R/T","pack":"PAIR","uom":"PACK","cost":12000.0,"beg":13.0,"rec":13.0,"ending":13.0},
+            {"id":"Cb8013","category":"Consumables","nameEn":"Therminal Paper Rolls 80*80","nameLao":"ເຈ້ຍມ້ວນເຄື່ອງພິມບິນ 80 x 80","supplier":"LGP dried and Frozen","storage":"R/T","pack":"1 Box*50 ROLL","uom":"ROLL","cost":10000.0,"beg":102.0,"rec":102.0,"ending":102.0},
+            {"id":"Cb8015","category":"Consumables","nameEn":"Panasonic Battery Alkaline AAA","nameLao":"ຖ່ານໄຟສາຍ Panasonic Alkaline AAA","supplier":"LGP dried and Frozen","storage":"R/T","pack":"Box x 10 pair","uom":"PAIR","cost":18000.0,"beg":2.0,"rec":2.0,"ending":2.0},
+            {"id":"Cb8016","category":"Consumables","nameEn":"Oil filter paper","nameLao":"ເຈ້ຍກອງນ້ຳມັນ","supplier":"Warehouse","storage":"R/T","pack":"100pcs x 5 pack *1 box","uom":"pcs","cost":707.2,"beg":880.0,"rec":880.0,"ending":880.0},
+            {"id":"Cn9001","category":"Cleaning","nameEn":"S-PERDRY 3.8LT","nameLao":"ນ້ຳຢາ S-PERDRY 3.8 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 3.8 LITER","uom":"GAL","cost":918000.0,"beg":0.09,"rec":1.09,"ending":0.09},
+            {"id":"Cn9002","category":"Cleaning","nameEn":"S-PERKLENE 3.8LT","nameLao":"ນ້ຳຢາ S-PERKLENE 3.8 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 3.8 LITER","uom":"GAL","cost":561000.0,"beg":0.45,"rec":2.45,"ending":0.45},
+            {"id":"Cn9003","category":"Cleaning","nameEn":"LIME KLENE 3.8LT","nameLao":"ນ້ຳຢາ LIME KLENE 3.8 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 3.8 LITER","uom":"GAL","cost":510000.0,"beg":0.67,"rec":0.67,"ending":0.67},
+            {"id":"Cn9004","category":"Cleaning","nameEn":"KLEENCARE 3.8LT","nameLao":"ນ້ຳຢາ KLEENCARE 3.8 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 3.8 LITER","uom":"GAL","cost":527680.0,"beg":0.1,"rec":0.1,"ending":0.1},
+            {"id":"Cn9005","category":"Cleaning","nameEn":"ALCOHOL 3.8LT","nameLao":"ແອລກໍຮໍ 3.8 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 3.8 LITER","uom":"GAL","cost":527680.0,"beg":0.35,"rec":0.35,"ending":0.35},
+            {"id":"Cn9006","category":"Cleaning","nameEn":"Click 10 10 LT","nameLao":"ນ້ຳຢາ Click 10 10 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 10 LITER","uom":"GAL","cost":748000.0,"beg":1.24,"rec":2.24,"ending":1.24},
+            {"id":"Cn9007","category":"Cleaning","nameEn":"NOVAKLENE 10 LT","nameLao":"ນ້ຳຢາ NOVAKLENE 10 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 10 LITER","uom":"GAL","cost":897600.0,"beg":0.8,"rec":1.8,"ending":0.8},
+            {"id":"Cn9008","category":"Cleaning","nameEn":"STEPKLENE 10LT","nameLao":"ນ້ຳຢາ STEPKLENE 10 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 10 LITER","uom":"GAL","cost":924800.0,"beg":0.64,"rec":0.64,"ending":0.64},
+            {"id":"Cn9009","category":"Cleaning","nameEn":"Drain Klene 10LT","nameLao":"ນ້ຳຢາລ້າງທໍ່ລະບາຍ Drain Klene 10 ລິດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 10 LITER","uom":"GAL","cost":2958000.0,"beg":0.12,"rec":0.12,"ending":0.12},
+            {"id":"Cn9010","category":"Cleaning","nameEn":"KAY VEGI WASH","nameLao":"ນ້ຳຢາລ້າງຜັກ KAY VEGI WASH","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"100 x 1 OZ","uom":"Bag","cost":17000.0,"beg":22.0,"rec":42.0,"ending":22.0},
+            {"id":"Cn9011","category":"Cleaning","nameEn":"Stainless Steel Cleaner","nameLao":"ນ້ຳຢາທຳຄວາມສະອາດສະແຕນເລດ","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1 BOTTLE 600 ML","uom":"ML","cost":510000.0,"beg":0.0,"rec":1.0,"ending":0.0},
+            {"id":"Cn9012","category":"Cleaning","nameEn":"22 Multi-Quat Sanitizer","nameLao":"ນ້ຳຢາຂ້າເຊື້ອ 22 Multi-Quat Sanitizer","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 2 LITER","uom":"GAL","cost":1475600.0,"beg":1.06,"rec":1.06,"ending":1.06},
+            {"id":"Cn9013","category":"Cleaning","nameEn":"Grillklene","nameLao":"ນ້ຳຢາລ້າງເຕົາປີ້ງ Grillklene","supplier":"Inthichack Solution Sole Co.,Ltd","storage":"R/T","pack":"1GAL x 3.8 LITER","uom":"GAL","cost":527850.0,"beg":0.0,"rec":1.0,"ending":0.0},
+            {"id":"Gas0001","category":"Gas LGP","nameEn":"Gas LGP","nameLao":"ແກັສຫຸງຕົ້ມ Gas LGP","supplier":"SangGas Sole Co.,Ltd","storage":"R/T","pack":"TANK x 48 KG","uom":"TANK","cost":1370000.0,"beg":3.0,"rec":3.0,"ending":3.0}
+        ];
+
+        // Category Metadata (Lao translations & icons)
+        const CATEGORY_META = {
+            "Fresh Vegetables": { lao: "ຜັກສົດ", icon: "🥬" },
+            "Meat & Protein": { lao: "ຊີ້ນສັດ & ໂປຣຕີນ", icon: "🍗" },
+            "Raw Material": { lao: "ວັດຖຸດິບຫຼັກ", icon: "🌾" },
+            "Side": { lao: "ອາຫານທານຫຼິ້ນ", icon: "🍟" },
+            "Sauce": { lao: "ຊອດ & ເຄື່ອງປຸງ", icon: "🥫" },
+            "Package": { lao: "ບັນຈຸພັນ", icon: "🥡" },
+            "Beverage": { lao: "ເຄື່ອງດື່ມ", icon: "🥤" },
+            "Consumables": { lao: "ວັດສະດຸສິ້ນເປືອງ", icon: "🧤" },
+            "Cleaning": { lao: "ນ້ຳຢາທຳຄວາມສະອາດ", icon: "🧼" },
+            "Gas LGP": { lao: "ແກັສຫຸງຕົ້ມ", icon: "🔥" }
+        };
+
+        // App State
+        let inventory = [];
+        let wasteLogs = [];
+        let isRolledOver = false;
+        let pendingModalAction = null;
+
+        const STORAGE_KEY_INV = "momstouch_vangxai_inv_v1";
+        const STORAGE_KEY_WASTE = "momstouch_vangxai_waste_v1";
+        const STORAGE_KEY_ROLLOVER = "momstouch_vangxai_rollover_v1";
+
+        // Format currency in LAK
+        function formatLAK(num) {
+            return Math.round(num).toLocaleString('en-US') + ' ₭';
+        }
+
+        // Format quantity cleanly (up to 2 decimal places if needed)
+        function formatQty(num) {
+            return Number.isInteger(num) ? num.toString() : Number(num.toFixed(2)).toString();
+        }
+
+        // Initialize Data from localStorage or fallback to Master Excel Data
+        function initApp() {
+            try {
+                const savedInv = localStorage.getItem(STORAGE_KEY_INV);
+                const savedWaste = localStorage.getItem(STORAGE_KEY_WASTE);
+                const savedRollover = localStorage.getItem(STORAGE_KEY_ROLLOVER);
+
+                if (savedInv) {
+                    inventory = JSON.parse(savedInv);
+                } else {
+                    inventory = JSON.parse(JSON.stringify(INITIAL_INVENTORY_DATA));
+                }
+
+                if (savedWaste) {
+                    wasteLogs = JSON.parse(savedWaste);
+                } else {
+                    wasteLogs = [];
+                }
+
+                isRolledOver = savedRollover === "true";
+                if (isRolledOver) {
+                    document.getElementById('rollover-success-banner').classList.remove('hidden');
+                    document.getElementById('header-month-label').textContent = "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)";
+                }
+            } catch (e) {
+                console.error("Storage error:", e);
+                inventory = JSON.parse(JSON.stringify(INITIAL_INVENTORY_DATA));
+            }
+
+            populateDropdowns();
+            refreshAllViews();
+        }
+
+        // Persist state to localStorage
+        function persistState() {
+            try {
+                localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory));
+                localStorage.setItem(STORAGE_KEY_WASTE, JSON.stringify(wasteLogs));
+                localStorage.setItem(STORAGE_KEY_ROLLOVER, isRolledOver.toString());
+            } catch (e) {
+                console.error("Failed to save state:", e);
+            }
+        }
+
+        // Populate Category Filter & Waste Item Select
+        function populateDropdowns() {
+            const catSelect = document.getElementById('filter-category');
+            const wasteSelect = document.getElementById('waste-item-select');
+
+            // Clear existing except first
+            catSelect.innerHTML = '<option value="ALL">ທຸກໝວດໝູ່ (All Categories)</option>';
+            Object.keys(CATEGORY_META).forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = `${CATEGORY_META[cat].icon} ${CATEGORY_META[cat].lao} (${cat})`;
+                catSelect.appendChild(opt);
+            });
+
+            wasteSelect.innerHTML = '';
+            inventory.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = `[${item.id}] ${item.nameLao} (${item.nameEn}) - ${formatLAK(item.cost)}/${item.uom}`;
+                wasteSelect.appendChild(opt);
+            });
+        }
+
+        // Refresh all UI components
+        function refreshAllViews() {
+            updateKPIsAndAlerts();
+            renderCategoryBreakdown();
+            renderStockTable();
+            renderRolloverAndPO();
+            renderWasteTable();
+        }
+
+        // Check if an item is Low Stock / Out of Stock (Ending <= 2)
+        function isLowStockItem(item) {
+            return item.ending <= 2;
+        }
+
+        // Update KPI Cards & Alert Banner
+        function updateKPIsAndAlerts() {
+            let totalEndingValue = 0;
+            let totalBegValue = 0;
+            let lowStockItems = [];
+
+            inventory.forEach(item => {
+                totalEndingValue += (item.ending * item.cost);
+                totalBegValue += (item.beg * item.cost);
+                if (isLowStockItem(item)) {
+                    lowStockItems.push(item);
+                }
+            });
+
+            let totalWasteValue = wasteLogs.reduce((acc, w) => acc + (w.qty * w.cost), 0);
+
+            // Update KPIs
+            document.getElementById('kpi-total-items').textContent = inventory.length;
+            document.getElementById('kpi-total-value').textContent = formatLAK(totalEndingValue);
+            document.getElementById('kpi-low-stock').textContent = lowStockItems.length;
+            document.getElementById('kpi-waste-value').textContent = formatLAK(totalWasteValue);
+            document.getElementById('kpi-waste-count').textContent = `${wasteLogs.length} ລາຍການບັນທຶກ`;
+
+            // Update Alert Banner
+            const alertCountBadge = document.getElementById('alert-badge-count');
+            const alertPreviewText = document.getElementById('low-stock-list-preview');
+            alertCountBadge.textContent = `${lowStockItems.length} ລາຍການ`;
+
+            if (lowStockItems.length > 0) {
+                const sampleNames = lowStockItems.slice(0, 5).map(i => `${i.nameLao} (${formatQty(i.ending)} ${i.uom})`).join(', ');
+                const extraCount = lowStockItems.length > 5 ? ` ແລະ ອີກ ${lowStockItems.length - 5} ລາຍການ...` : '';
+                alertPreviewText.textContent = `ພົບວັດຖຸດິບຄົງເຫຼືອຕ່ຳກວ່າເກນ (≤ 2): ${sampleNames}${extraCount}`;
+            } else {
+                alertPreviewText.textContent = "ສະຕ໋ອກວັດຖຸດິບທຸກລາຍການຢູ່ໃນເກນປົກກະຕິ ພ້ອມໃຫ້ບໍລິການ!";
+            }
+
+            // Update Rollover Summary Values
+            document.getElementById('rollover-nov-beg-val').textContent = formatLAK(totalBegValue);
+            document.getElementById('rollover-nov-end-val').textContent = formatLAK(totalEndingValue);
+            document.getElementById('rollover-low-count').textContent = `${lowStockItems.length} ລາຍການ`;
+            document.getElementById('rollover-waste-val').textContent = formatLAK(totalWasteValue);
+            document.getElementById('rollover-dec-beg-val').textContent = formatLAK(totalEndingValue);
+        }
+
+        // Render Category Breakdown Grid
+        function renderCategoryBreakdown() {
+            const grid = document.getElementById('category-breakdown-grid');
+            const currentSelectedCat = document.getElementById('filter-category').value;
+            grid.innerHTML = '';
+
+            Object.keys(CATEGORY_META).forEach(catKey => {
+                const catItems = inventory.filter(i => i.category === catKey);
+                const catVal = catItems.reduce((sum, i) => sum + (i.ending * i.cost), 0);
+                const isSelected = currentSelectedCat === catKey;
+
+                const card = document.createElement('div');
+                card.onclick = () => selectCategoryFilter(isSelected ? 'ALL' : catKey);
+                card.className = `p-3 rounded-xl border transition cursor-pointer select-none ${
+                    isSelected 
+                    ? 'bg-red-50 border-[#B91C1C] ring-1 ring-[#B91C1C]' 
+                    : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-base">${CATEGORY_META[catKey].icon}</span>
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-[#B91C1C] text-white' : 'bg-slate-200 text-slate-700'}">
+                            ${catItems.length} ລາຍການ
+                        </span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-900 truncate" title="${CATEGORY_META[catKey].lao}">${CATEGORY_META[catKey].lao}</p>
+                    <p class="text-[11px] text-slate-500 truncate">${catKey}</p>
+                    <p class="text-xs font-bold text-blue-700 mt-1.5 font-mono">${formatLAK(catVal)}</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Render Interactive Stock Count Table
+        function renderStockTable() {
+            const searchQuery = document.getElementById('filter-search').value.trim().toLowerCase();
+            const catFilter = document.getElementById('filter-category').value;
+            const storageFilter = document.getElementById('filter-storage').value;
+            const lowStockOnly = document.getElementById('filter-low-stock').checked;
+
+            const tbody = document.getElementById('stock-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = inventory.filter(item => {
+                const matchesSearch = !searchQuery || 
+                    item.id.toLowerCase().includes(searchQuery) ||
+                    item.nameEn.toLowerCase().includes(searchQuery) ||
+                    item.nameLao.toLowerCase().includes(searchQuery);
+                const matchesCat = catFilter === 'ALL' || item.category === catFilter;
+                const matchesStorage = storageFilter === 'ALL' || item.storage === storageFilter;
+                const matchesLow = !lowStockOnly || isLowStockItem(item);
+                return matchesSearch && matchesCat && matchesStorage && matchesLow;
+            });
+
+            document.getElementById('table-showing-count').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="py-10 text-center text-slate-500">
+                            ບໍ່ພົບລາຍການວັດຖຸດິບທີ່ຄົ້ນຫາ ກະລຸນາລອງປ່ຽນເງື່ອນໄຂການກອງໃໝ່
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isLow = isLowStockItem(item);
+                const isOut = item.ending === 0;
+                const usage = Math.max(0, (item.beg + item.rec) - item.ending);
+                const endingValue = item.ending * item.cost;
+
+                // Storage badge styling
+                let storageBadgeClass = "bg-slate-100 text-slate-700";
+                if (item.storage === "Ref") storageBadgeClass = "bg-sky-100 text-sky-800";
+                if (item.storage === "Fro") storageBadgeClass = "bg-indigo-100 text-indigo-800";
+
+                const tr = document.createElement('tr');
+                tr.className = isOut 
+                    ? 'bg-red-50/60 hover:bg-red-50 transition' 
+                    : isLow 
+                        ? 'bg-amber-50/60 hover:bg-amber-50 transition' 
+                        : 'hover:bg-slate-50 transition';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-mono text-xs font-bold text-slate-700 whitespace-nowrap">${item.id}</td>
+                    <td class="py-3 px-3 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${storageBadgeClass}">${item.storage}</span>
+                    </td>
+                    <td class="py-3 px-3 text-xs text-slate-600 whitespace-nowrap">
+                        ${CATEGORY_META[item.category]?.lao || item.category}
+                    </td>
+                    <td class="py-3 px-3">
+                        <div class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5 flex-wrap">
+                            <span>${item.nameLao}</span>
+                            ${isOut 
+                                ? '<span class="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">ໝົດສະຕ໋ອກ</span>' 
+                                : isLow 
+                                    ? '<span class="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">ໃກ້ໝົດ</span>' 
+                                    : ''
+                            }
+                        </div>
+                        <div class="text-xs text-slate-500">${item.nameEn}</div>
+                    </td>
+                    <td class="py-3 px-3 text-xs text-slate-600 whitespace-nowrap">
+                        <div>${item.pack}</div>
+                        <span class="font-bold text-slate-800">${item.uom}</span>
+                    </td>
+                    <td class="py-3 px-3 text-right font-mono text-xs text-slate-700 whitespace-nowrap">
+                        ${formatLAK(item.cost)}
+                    </td>
+                    <td class="py-3 px-3 text-right font-mono text-xs text-slate-600 whitespace-nowrap">
+                        ${formatQty(item.beg)}
+                    </td>
+                    <td class="py-3 px-3 text-right font-mono text-xs text-emerald-700 font-semibold whitespace-nowrap">
+                        +${formatQty(item.rec)}
+                    </td>
+                    <td class="py-3 px-3 text-center bg-amber-50/40 whitespace-nowrap">
+                        <input 
+                            type="number" 
+                            step="0.01" 
+                            min="0" 
+                            value="${item.ending}" 
+                            onchange="handleEndingChange('${item.id}', this.value)"
+                            class="w-20 sm:w-24 text-center font-mono font-bold text-sm px-2 py-1.5 rounded-lg border ${
+                                isLow ? 'border-amber-400 bg-white text-amber-900' : 'border-slate-300 bg-white text-slate-900'
+                            } focus:outline-none focus:ring-2 focus:ring-[#B91C1C]"
+                        >
+                    </td>
+                    <td class="py-3 px-3 text-right font-mono text-xs text-slate-600 whitespace-nowrap">
+                        ${formatQty(usage)}
+                    </td>
+                    <td class="py-3 px-3 text-right font-mono text-xs sm:text-sm font-bold text-slate-900 whitespace-nowrap">
+                        ${formatLAK(endingValue)}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Handle Ending Stock Input Update
+        function handleEndingChange(id, rawValue) {
+            const val = Math.max(0, parseFloat(rawValue) || 0);
+            const itemIndex = inventory.findIndex(i => i.id === id);
+            if (itemIndex !== -1) {
+                inventory[itemIndex].ending = val;
+                persistState();
+                updateKPIsAndAlerts();
+                renderCategoryBreakdown();
+                renderStockTable();
+                renderRolloverAndPO();
+            }
+        }
+
+        // Render Rollover & Auto Purchase Order Requisition Table
+        function renderRolloverAndPO() {
+            const poBody = document.getElementById('po-table-body');
+            poBody.innerHTML = '';
+
+            const lowItems = inventory.filter(isLowStockItem);
+            let totalEstimatedPOCost = 0;
+
+            if (lowItems.length === 0) {
+                poBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-500">
+                            🎉 ບໍ່ມີລາຍການສິນຄ້າໃກ້ໝົດສະຕ໋ອກ ຍັງບໍ່ຈຳເປັນຕ້ອງສັ່ງຊື້ເພີ່ມໃນຂະນະນີ້
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('po-total-estimate').textContent = formatLAK(0);
+                return;
+            }
+
+            lowItems.forEach(item => {
+                // Recommend ordering up to target buffer (e.g., 10 units or based on historical usage)
+                const suggestedTarget = Math.max(10, Math.ceil((item.beg + item.rec - item.ending) * 0.5));
+                const orderQty = Math.max(1, Math.ceil(suggestedTarget - item.ending));
+                const estCost = orderQty * item.cost;
+                totalEstimatedPOCost += estCost;
+
+                // Determine delivery schedule based on supplier
+                let schedule = "ຈັນ - ສຸກ (2-3 ມື້)";
+                if (item.supplier.includes("Fresh")) schedule = "ທຸກມື້ (Daily Fresh)";
+                if (item.supplier.includes("Import")) schedule = "ລ່ວງໜ້າ 7-14 ມື້";
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono text-xs font-bold text-slate-700">${item.id}</td>
+                    <td class="py-3 px-4">
+                        <div class="font-bold text-slate-900 text-xs sm:text-sm">${item.nameLao}</div>
+                        <div class="text-xs text-slate-500">${item.nameEn} (${item.uom})</div>
+                    </td>
+                    <td class="py-3 px-4 text-xs text-slate-700 font-medium">${item.supplier}</td>
+                    <td class="py-3 px-4 text-xs text-slate-500">${schedule}</td>
+                    <td class="py-3 px-4 text-right font-mono text-xs font-bold ${item.ending === 0 ? 'text-red-600' : 'text-amber-600'}">
+                        ${formatQty(item.ending)} ${item.uom}
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-xs font-bold text-emerald-700">
+                        +${orderQty} ${item.uom}
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-xs sm:text-sm font-bold text-slate-900">
+                        ${formatLAK(estCost)}
+                    </td>
+                `;
+                poBody.appendChild(tr);
+            });
+
+            document.getElementById('po-total-estimate').textContent = formatLAK(totalEstimatedPOCost);
+        }
+
+        // Waste Log Functions
+        function addWasteEntry(e) {
+            e.preventDefault();
+            const itemId = document.getElementById('waste-item-select').value;
+            const qty = parseFloat(document.getElementById('waste-qty-input').value);
+            const reason = document.getElementById('waste-reason-select').value;
+
+            const item = inventory.find(i => i.id === itemId);
+            if (!item || isNaN(qty) || qty <= 0) return;
+
+            const now = new Date();
+            const timestamp = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+            wasteLogs.unshift({
+                logId: Date.now(),
+                timestamp,
+                id: item.id,
+                nameLao: item.nameLao,
+                nameEn: item.nameEn,
+                uom: item.uom,
+                cost: item.cost,
+                qty,
+                reason
+            });
+
+            document.getElementById('waste-qty-input').value = '';
+            persistState();
+            refreshAllViews();
+            showToast(`ບັນທຶກຂອງເສຍ "${item.nameLao}" ຈຳນວນ ${qty} ${item.uom} ແລ້ວ`, 'success');
+        }
+
+        function deleteWasteEntry(logId) {
+            wasteLogs = wasteLogs.filter(w => w.logId !== logId);
+            persistState();
+            refreshAllViews();
+            showToast('ລຶບລາຍການບັນທຶກຂອງເສຍແລ້ວ', 'info');
+        }
+
+        function renderWasteTable() {
+            const tbody = document.getElementById('waste-table-body');
+            tbody.innerHTML = '';
+
+            const totalWaste = wasteLogs.reduce((sum, w) => sum + (w.qty * w.cost), 0);
+            document.getElementById('waste-table-total-badge').textContent = `ລວມ: ${formatLAK(totalWaste)}`;
+
+            if (wasteLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-10 text-center text-slate-500">
+                            ຍັງບໍ່ມີການບັນທຶກລາຍການຂອງເສຍໃນເດືອນນີ້
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            wasteLogs.forEach(w => {
+                const lineCost = w.qty * w.cost;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap">${w.timestamp}</td>
+                    <td class="py-3 px-4">
+                        <div class="font-bold text-slate-900 text-xs sm:text-sm">${w.nameLao}</div>
+                        <div class="text-xs text-slate-500">[${w.id}] ${w.nameEn}</div>
+                    </td>
+                    <td class="py-3 px-4 text-xs">
+                        <span class="bg-red-50 text-red-800 px-2 py-1 rounded-lg font-medium">${w.reason}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-xs font-bold text-slate-800 whitespace-nowrap">
+                        ${formatQty(w.qty)} ${w.uom}
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-xs text-slate-600 whitespace-nowrap">
+                        ${formatLAK(w.cost)}
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-xs sm:text-sm font-bold text-[#B91C1C] whitespace-nowrap">
+                        ${formatLAK(lineCost)}
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="deleteWasteEntry(${w.logId})" class="text-slate-400 hover:text-red-600 transition p-1 cursor-pointer" title="ລຶບລາຍການ">
+                            🗑️
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Tab Navigation
+        function switchTab(tabName) {
+            ['stock', 'rollover', 'waste'].forEach(t => {
+                const contentEl = document.getElementById(`tab-content-${t}`);
+                const btnEl = document.getElementById(`tab-btn-${t}`);
+                if (t === tabName) {
+                    contentEl.classList.remove('hidden');
+                    btnEl.className = "px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-[#B91C1C] text-white shadow-sm cursor-pointer";
+                } else {
+                    contentEl.classList.add('hidden');
+                    btnEl.className = "px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer";
+                }
+            });
+        }
+
+        // Quick Filter Helpers
+        function selectCategoryFilter(cat) {
+            document.getElementById('filter-category').value = cat;
+            renderCategoryBreakdown();
+            renderStockTable();
+        }
+
+        function filterLowStockQuick() {
+            switchTab('stock');
+            const checkbox = document.getElementById('filter-low-stock');
+            checkbox.checked = !checkbox.checked;
+            renderStockTable();
+            document.getElementById('stock-table-body').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function saveStockManually() {
+            persistState();
+            showToast('💾 ບັນທຶກຍອດນັບສະຕ໋ອກທັງໝົດ 100 ລາຍການສຳເລັດແລ້ວ!', 'success');
+        }
+
+        // Custom Modal Handling (No native confirm/alert)
+        function openConfirmModal(actionType) {
+            pendingModalAction = actionType;
+            const modal = document.getElementById('custom-modal');
+            const titleEl = document.getElementById('modal-title');
+            const msgEl = document.getElementById('modal-message');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+
+            if (actionType === 'reset') {
+                titleEl.textContent = "ຣີເຊັດຂໍ້ມູນກັບຄືນສູ່ຄ່າເດີມ (Excel Master)";
+                msgEl.textContent = "ຂໍ້ມູນທີ່ທ່ານແກ້ໄຂ ແລະ ບັນທຶກຂອງເສຍທັງໝົດຈະຖືກລ้าง ແລະ ກັບຄືນສູ່ຂໍ້ມູນຕັ້ງຕົ້ນຈາກໄຟລ໌ Inventory Mom's Touch NOV.xlsx ທ່ານຕ້ອງການດຳເນີນການຕໍ່ບໍ່?";
+                confirmBtn.onclick = executeReset;
+            } else if (actionType === 'rollover') {
+                titleEl.textContent = "ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນທັນວາ (DEC 2026)";
+                msgEl.textContent = "ລະບົບຈະນຳເອົາຍອດຄົງເຫຼືອປາຍເດືອນ (Ending Stock) ຂອງທັງໝົດ 100 ລາຍການ ໄປຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບເດືອນທັນວາ 2026. ຢືນຢັນການໂອນຍ້າຍບໍ່?";
+                confirmBtn.onclick = executeRollover;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+            pendingModalAction = null;
+        }
+
+        function executeReset() {
+            localStorage.removeItem(STORAGE_KEY_INV);
+            localStorage.removeItem(STORAGE_KEY_WASTE);
+            localStorage.removeItem(STORAGE_KEY_ROLLOVER);
+            isRolledOver = false;
+            document.getElementById('rollover-success-banner').classList.add('hidden');
+            document.getElementById('header-month-label').textContent = "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
+            inventory = JSON.parse(JSON.stringify(INITIAL_INVENTORY_DATA));
+            wasteLogs = [];
+            closeConfirmModal();
+            refreshAllViews();
+            showToast('🔄 ຣີເຊັດຂໍ້ມູນກັບຄືນສູ່ໄຟລ໌ Excel ຕົ້ນສະບັບແລ້ວ', 'info');
+        }
+
+        function executeRollover() {
+            inventory = inventory.map(item => ({
+                ...item,
+                beg: item.ending,
+                rec: 0
+            }));
+            isRolledOver = true;
+            persistState();
+            closeConfirmModal();
+            document.getElementById('rollover-success-banner').classList.remove('hidden');
+            document.getElementById('header-month-label').textContent = "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)";
+            refreshAllViews();
+            showToast('🚀 ໂອນຍ້າຍສະຕ໋ອກໄປເດືອນທັນວາ DEC 2026 ສຳເລັດແລ້ວ!', 'success');
+        }
+
+        // Export to CSV (UTF-8 with BOM so Excel displays Lao script properly)
+        function exportToCSV() {
+            const headers = [
+                "ID Code",
+                "Category",
+                "Lao Name",
+                "English Name",
+                "Supplier",
+                "Storage",
+                "Pack Size",
+                "UOM",
+                "Unit Cost (LAK)",
+                "Beginning Stock",
+                "Receiving",
+                "Ending Stock",
+                "Calculated Usage",
+                "Ending Value (LAK)"
+            ];
+
+            const rows = inventory.map(item => {
+                const usage = Math.max(0, (item.beg + item.rec) - item.ending);
+                const val = item.ending * item.cost;
+                return [
+                    item.id,
+                    `"${item.category}"`,
+                    `"${item.nameLao.replace(/"/g, '""')}"`,
+                    `"${item.nameEn.replace(/"/g, '""')}"`,
+                    `"${item.supplier.replace(/"/g, '""')}"`,
+                    item.storage,
+                    `"${item.pack}"`,
+                    item.uom,
+                    item.cost,
+                    item.beg,
+                    item.rec,
+                    item.ending,
+                    usage.toFixed(2),
+                    val.toFixed(2)
+                ].join(",");
+            });
+
+            const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `MomsTouch_Vangxai_Inventory_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast('📥 ດາວໂຫຼດໄຟລ໌ລາຍງານ CSV ສຳເລັດແລ້ວ!', 'success');
+        }
+
+        // Toast Feedback UI
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-slate-900 border-emerald-500' : 'bg-slate-800 border-amber-400';
+
+            toast.className = `${bgColor} text-white border-l-4 px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Start App on Window Load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
