@@ -34,6 +34,19 @@
         input[type="number"]::-webkit-outer-spin-button {
             opacity: 1;
         }
+            .print-only { display: none; } #print-area { display: none; }
+        @media print {
+            header, nav, footer, #tab-tools, #low-stock-banner, main > section.grid, #custom-modal, #toast-container, button, #stock-week-chips, #stock-week-hint, .no-print { display: none !important; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { background: #fff !important; } main { max-width: none !important; padding: 0 !important; }
+            .print-only { display: block !important; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+            [class*="overflow-x-auto"] { overflow: visible !important; } [class*="max-h-"] { max-height: none !important; } [class*="min-w-"] { min-width: 0 !important; }
+            .sticky { position: static !important; } table { font-size: 10px !important; } th, td { padding: 3px 4px !important; }
+            thead { display: table-header-group; } tr { break-inside: avoid; }
+            input { border: 0 !important; background: transparent !important; box-shadow: none !important; width: auto !important; max-width: 70px; text-align: right; }
+            .shadow-sm, .shadow-lg { box-shadow: none !important; }
+            body.print-doc > *:not(#print-area) { display: none !important; } body.print-doc #print-area { display: block !important; }
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -178,6 +191,8 @@
                 <span>🗑️</span> ບັນທຶກຂອງເສຍ (Waste Log)
             </button>
         </nav>
+        <div id="tab-tools" class="no-print flex flex-wrap items-center justify-end gap-2"></div>
+        <div id="print-title" class="print-only"></div>
 
         <!-- ==================== TAB 1: DASHBOARD & STOCK COUNT ==================== -->
         <section id="tab-content-stock" class="space-y-6">
@@ -269,6 +284,7 @@
 <th class="py-3.5 px-3 border-b border-slate-200 text-right">ລາຄາ/ໜ່ວຍ (₭)</th>
 <th class="py-3.5 px-3 border-b border-slate-200 text-right">ຍອດຍົກມາ (Beg)</th>
 <th class="py-3.5 px-3 border-b border-slate-200 text-right">ຮັບເຂົ້າ (Rec)</th>
+<th class="py-3.5 px-3 border-b border-slate-200 text-right">ຈ່າຍອອກ (Out)</th>
 <th class="py-3.5 px-3 border-b border-slate-200 text-center bg-amber-50/80 text-amber-950">ຍອດຄົງເຫຼືອ (Ending)</th>
 <th class="py-3.5 px-3 border-b border-slate-200 text-right">ໃຊ້ໄປ (Usage)</th>
 <th class="py-3.5 px-3 border-b border-slate-200 text-right">ມູນຄ່າຄົງເຫຼືອ (₭)</th>
@@ -475,6 +491,7 @@
     </main>
 
     <!-- Footer -->
+    <div id="print-area"></div>
     <footer class="bg-white border-t border-slate-200 mt-10 py-4">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
             <span>© 2026 Mom's Touch Vangxai - ລະບົບບໍລິຫານຈັດການສະຕ໋ອກສິນຄ້າ</span>
@@ -840,7 +857,7 @@
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="12" class="py-10 text-center text-slate-500">
+                        <td colspan="13" class="py-10 text-center text-slate-500">
                             ບໍ່ພົບລາຍການວັດຖຸດິບທີ່ຄົ້ນຫາ ກະລຸນາລອງປ່ຽນເງື່ອນໄຂການກອງໃໝ່
                         </td>
                     </tr>
@@ -1048,6 +1065,7 @@
 
         // Tab Navigation
         function switchTab(tabName) {
+            currentTab = tabName;
             if (tabName === 'pr') renderPR();
             ['stock', 'rollover', 'pr', 'sales', 'waste'].forEach(t => {
                 const contentEl = document.getElementById(`tab-content-${t}`);
@@ -1090,7 +1108,11 @@
             const msgEl = document.getElementById('modal-message');
             const confirmBtn = document.getElementById('modal-confirm-btn');
 
-            if (actionType === 'posclear') {
+            if (actionType === 'invimport') {
+                const P = pendingInv; titleEl.textContent = L('ນຳເຂົ້າໄຟລ໌ Inventory', 'Import Inventory file');
+                msgEl.textContent = L(`ພົບ ${P.items.length} ລາຍການ, ຂໍ້ມູນຂອງເສຍ ${P.waste.length} ແຖວ. ນັບແລ້ວ ອາທິດ 1-5: ${P.counted.join(' / ')} ລາຍການ. ຂໍ້ມູນສະຕ໋ອກປັດຈຸບັນຈະຖືກແທນທີ່. ດຳເນີນການຕໍ່ບໍ?`, `Found ${P.items.length} items and ${P.waste.length} waste lines. Items counted in weeks 1-5: ${P.counted.join(' / ')}. Current stock data will be replaced. Continue?`);
+                confirmBtn.onclick = executeInvImport;
+            } else if (actionType === 'posclear') {
                 titleEl.textContent = L('ລ້າງຂໍ້ມູນ POS', 'Clear POS data');
                 msgEl.textContent = L('ຂໍ້ມູນຍອດຂາຍທີ່ນຳເຂົ້າຈາກ POS ທັງໝົດຈະຖືກລຶບ (ຕົ້ນທຶນຕໍ່ໜ່ວຍທີ່ໃສ່ໄວ້ຍັງຢູ່). ດຳເນີນການຕໍ່ບໍ?', 'All imported POS sales data will be removed (the unit costs you entered are kept). Continue?');
                 confirmBtn.onclick = executePosClear;
@@ -1139,7 +1161,7 @@
             inventory = inventory.map(item => ({
                 ...item,
                 beg: item.ending,
-                rec: 0, rec0: 0, wk: null
+                rec: 0, out: 0, wk: null
             }));
             stockWeek = 0;
             isRolledOver = true;
@@ -1240,7 +1262,7 @@
         };
 
         // ---- i18n (English mode translates Lao UI text on the fly) ----
-        const I18N = [["ລະບົບຈັດການສະຕ໋ອກ ແລະ ນັບສະຕ໋ອກ", "Stock Management & Stock Count System"], ["ລະບົບຈັດການສະຕ໋ອກ", "Stock Management System"], ["ລາຍການວັດຖຸດິບທັງໝົດ", "Total items"], ["ກຳລັງກວດສອບລາຍການວັດຖຸດິບ...", "Checking items..."], ["ລາຍການວັດຖຸດິບ", "raw-material items"], ["ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026", "November 2026 ➔ December 2026"], ["ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)", "December 2026 (rolled over ✓)"], ["ສົ່ງອອກລາຍງານ Excel", "Export Excel report"], ["ຣີເຊັດຂໍ້ມູນເດີມ", "Reset data"], ["ແຈ້ງເຕືອນສະຕ໋ອກໃກ້ໝົດ / ໝົດສະຕ໋ອກ", "Low stock / out of stock alert"], ["ເບິ່ງສະເພາະສິນຄ້າໃກ້ໝົດ", "Show low-stock items only"], ["ຄົບຖ້ວນ 10 ໝວດໝູ່ຫຼັກ", "All 10 main categories"], ["ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອ", "Ending stock value"], ["ຄິດໄລ່ຈາກ ຍອດຄົງເຫຼືອ × ລາຄາຕໍ່ໜ່ວຍ", "Ending qty × unit price"], ["ສິນຄ້າໃກ້ໝົດ / ໝົດສະຕ໋ອກ", "Low / out of stock"], ["ຍອດຄົງເຫຼືອ ≤ 2 ໜ່ວຍ", "Ending ≤ 2 units"], ["ກົດເພື່ອກອງ", "Click to filter"], ["ມູນຄ່າຂອງເສຍລວມ (Waste)", "Total waste value"], ["ລາຍການບັນທຶກ", "records"], ["ຈັດການ ➔", "Manage ➔"], ["ແດຊບອດ & ນັບສະຕ໋ອກ (Stock Count)", "Dashboard & Stock Count"], ["ເຊື່ອມໂຍງເດືອນນີ້ & ເດືອນໜ້າ (NOV ➔ DEC)", "This month & next month (NOV ➔ DEC)"], ["ບັນທຶກຂອງເສຍ (Waste Log)", "Waste Log"], ["ໃບສະເໜີຊື້ (PR)", "Purchase Requisition (PR)"], ["ເປົ້າໝາຍຍອດຂາຍ (Target Sales)", "Target Sales"], ["ສະຫຼຸບມູນຄ່າສະຕ໋ອກແຍກຕາມໝວດໝູ່ (Category Breakdown)", "Stock value by category"], ["ກົດທີ່ກາດໝວດໝູ່ເພື່ອກອງລາຍການສິນຄ້າໃນຕາຕະລາງດ້ານລຸ່ມ", "Click a category card to filter the table below"], ["ສະແດງທຸກໝວດໝູ່", "Show all categories"], ["ຕາຕະລາງນັບສະຕ໋ອກສິນຄ້າປະຈຳເດືອນ (Stock Count Sheet)", "Monthly stock count sheet"], ["ປ້ອນຕົວເລກ", "Enter"], ["ຍອດຄົງເຫຼືອປາຍເດືອນ (Ending)", "month-end balance (Ending)"], ["ລະບົບຈະຄິດໄລ່ຍອດໃຊ້ໄປ ແລະ ມູນຄ່າຄົງເຫຼືອອັດຕະໂນມັດ", "- usage and remaining value are calculated automatically"], ["ບັນທຶກຍອດນັບສະຕ໋ອກທັງໝົດ", "Saved all stock counts -"], ["ບັນທຶກຍອດນັບສະຕ໋ອກ", "Save stock count"], ["ຄົ້ນຫາລະຫັດ (FV0001), ຊື່ລາວ ຫຼື ອັງກິດ...", "Search code (FV0001), Lao or English name..."], ["ທຸກໝວດໝູ່ (All Categories)", "All categories"], ["ບ່ອນເກັບທັງໝົດ (Storage)", "All storage"], ["(ອຸນຫະພູມຫ້ອງ)", "(room temp)"], ["(ຕູ້ເຢັນທຳມະດາ)", "(chilled)"], ["(ຕູ້ແຊ່ແຂງ)", "(frozen)"], ["ສະແດງສະເພາະສິນຄ້າໃກ້ໝົດ", "Low-stock only"], ["ສະແດງຜົນ", "Showing"], ["ຈາກທັງໝົດ", "of"], ["ຂໍ້ມູນຖືກບັນທຶກອັດຕະໂນມັດໃນ Browser (Auto-save)", "Data is auto-saved in this browser"], ["ລຳດັບ", "No."], ["ບາໂຄດ / ລະຫັດ", "Barcode / Code"], ["ຊື່ວັດຖຸດິບ (ລາວ / English)", "Item name"], ["ໜ່ວຍ / ຂະໜາດ", "Unit / Pack"], ["ບ່ອນເກັບ", "Storage"], ["ໝວດໝູ່", "Category"], ["ລາຄາ/ໜ່ວຍ (₭)", "Price/unit (₭)"], ["ຍອດຍົກມາ (Beg)", "Beginning (Beg)"], ["ຮັບເຂົ້າ (Rec)", "Received (Rec)"], ["ຍອດຄົງເຫຼືອ (Ending)", "Ending"], ["ໃຊ້ໄປ (Usage)", "Usage"], ["ມູນຄ່າຄົງເຫຼືອ (₭)", "Ending value (₭)"], ["ໝົດສະຕ໋ອກ", "Out of stock"], ["ໃກ້ໝົດ", "Low"], ["ພົບວັດຖຸດິບຄົງເຫຼືອຕ່ຳກວ່າເກນ (≤ 2):", "Items below threshold (≤ 2):"], ["ແລະ ອີກ", "and"], ["ສະຕ໋ອກວັດຖຸດິບທຸກລາຍການຢູ່ໃນເກນປົກກະຕິ ພ້ອມໃຫ້ບໍລິການ!", "All items are at normal levels. Ready to serve!"], ["ບໍ່ພົບລາຍການວັດຖຸດິບທີ່ຄົ້ນຫາ ກະລຸນາລອງປ່ຽນເງື່ອນໄຂການກອງໃໝ່", "No items found. Try changing the filters."], ["ໂອນຍ້າຍຍອດສະຕ໋ອກໄປເດືອນທັນວາ (DEC 2026) ສຳເລັດແລ້ວ!", "Stock rolled over to December (DEC 2026)!"], ["ຍອດຄົງເຫຼືອປາຍເດືອນພະຈິກ (Ending Stock) ໄດ້ຖືກຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບຮອບບັນຊີໃໝ່ຮຽບຮ້ອຍແລ້ວ.", "November ending stock has been set as the beginning stock of the new period."], ["ສະຫຼຸບຍອດເດືອນນີ້ (November 2026)", "This month summary (November 2026)"], ["ສະຖານະ: ກຳລັງປິດຍອດບັນຊີປາຍເດືອນ", "Status: closing month-end"], ["ມູນຄ່າສະຕ໋ອກຍົກມາຕົ້ນເດືອນ (Beginning):", "Beginning stock value:"], ["ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອປາຍເດືອນ (Ending):", "Ending stock value:"], ["ຈຳນວນລາຍການທີ່ຕ້ອງສັ່ງຊື້ເພີ່ມ (Low/Out):", "Items to reorder (Low/Out):"], ["ມູນຄ່າຂອງເສຍສະສົມໃນເດືອນນີ້:", "Waste this month:"], ["ເຊື່ອມຕໍ່ໄປເດືອນໜ້າ (December 2026)", "Roll over to next month (December 2026)"], ["ໂອນຍ້າຍ Ending Stock ➔ Beginning Stock", "Transfer Ending Stock ➔ Beginning Stock"], ["ເມື່ອກວດສອບຍອດນັບສະຕ໋ອກປາຍເດືອນພະຈິກຄົບຖ້ວນແລ້ວ ທ່ານສາມາດກົດປຸ່ມດ້ານລຸ່ມເພື່ອໂອນຍ້າຍຍອດຄົງເຫຼືອທັງໝົດ 100 ລາຍການ ໄປເປັນຍອດຕັ້ງຕົ້ນຂອງເດືອນທັນວາໂດຍອັດຕະໂນມັດ ໂດຍບໍ່ຕ້ອງພິມຂໍ້ມູນໃໝ່.", "Once the November month-end count is complete, press the button below to carry all ending balances over as December's beginning stock automatically."], ["ມູນຄ່າສະຕ໋ອກຕັ້ງຕົ້ນເດືອນທັນວາ (DEC Beginning):", "December beginning stock value:"], ["ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນໜ້າ (Rollover NOV ➔ DEC)", "Confirm rollover to next month (NOV ➔ DEC)"], ["ໃບສະເໜີສັ່ງຊື້ວັດຖຸດິບອັດຕະໂນມັດ (Auto Purchase Requisition)", "Auto Purchase Suggestions"], ["ລາຍການສິນຄ້າທີ່ມີຍອດຄົງເຫຼືອຕ່ຳກວ່າເກນ (≤ 2 ໜ່ວຍ) ທີ່ຄວນສັ່ງຊື້ເຂົ້າຮ້ານສຳລັບຕົ້ນເດືອນໜ້າ", "Items at or below the threshold (≤ 2 units) that should be ordered for next month"], ["ງົບປະມານສັ່ງຊື້ໂດຍປະມານ:", "Estimated order budget:"], ["ລະຫັດ", "Code"], ["ຜູ້ສະໜອງ (Supplier)", "Supplier"], ["ຮອບຈັດສົ່ງ", "Delivery cycle"], ["ຄົງເຫຼືອປັດຈຸບັນ", "Current stock"], ["ແນະນຳສັ່ງຊື້", "Suggested order"], ["ປະມານການຄ່າໃຊ້ຈ່າຍ (₭)", "Est. cost (₭)"], ["ຈັນ - ສຸກ (2-3 ມື້)", "Mon-Fri (2-3 days)"], ["ທຸກມື້ (Daily Fresh)", "Daily (fresh)"], ["ລ່ວງໜ້າ 7-14 ມື້", "7-14 days ahead"], ["ບໍ່ມີລາຍການສິນຄ້າໃກ້ໝົດສະຕ໋ອກ ຍັງບໍ່ຈຳເປັນຕ້ອງສັ່ງຊື້ເພີ່ມໃນຂະນະນີ້", "No low-stock items - nothing to order right now"], ["ບັນທຶກລາຍການຂອງເສຍໃໝ່", "Record new waste"], ["ເລືອກວັດຖຸດິບທີ່ເສຍຫາຍ ຫຼື ໝົດອາຍຸເພື່ອຄິດໄລ່ຕົ້ນທຶນສູນເສຍ", "Select damaged or expired items to calculate the loss"], ["ເລືອກວັດຖຸດິບ", "Select item"], ["ຈຳນວນທີ່ເສຍ", "Waste qty"], ["ສາເຫດ (Reason)", "Reason"], ["ເຊັ່ນ: 1.5", "e.g. 1.5"], ["ໝົດອາຍຸ (Expired)", "Expired"], ["ເສຍຫາຍ/ເນົ່າເສຍ (Spoiled)", "Spoiled"], ["ຕົກຫຼົ່ນ/ແຕກຫັກ (Dropped)", "Dropped / broken"], ["ປຸງແຕ່ງຜິດພາດ (Error)", "Kitchen error"], ["ບັນທຶກລາຍການຂອງເສຍ", "Save waste record"], ["ປະຫວັດການບັນທຶກຂອງເສຍ (Waste History)", "Waste history"], ["ລາຍການວັດຖຸດິບທີ່ຖືກຕັດເປັນຂອງເສຍໃນຮອບເດືອນນີ້", "Items written off as waste this month"], ["ລວມ:", "Total:"], ["ວັນທີ/ເວລາ", "Date/Time"], ["ວັດຖຸດິບ", "Item"], ["ຈຳນວນ", "Qty"], ["ລາຄາ/ໜ່ວຍ", "Price/unit"], ["ມູນຄ່າເສຍຫາຍ (₭)", "Loss value (₭)"], ["ລຶບ", "Delete"], ["ຍັງບໍ່ມີການບັນທຶກລາຍການຂອງເສຍໃນເດືອນນີ້", "No waste recorded this month"], ["ລຶບລາຍການບັນທຶກຂອງເສຍແລ້ວ", "Waste record deleted"], ["ລະບົບບໍລິຫານຈັດການສະຕ໋ອກສິນຄ້າ", "Stock management system"], ["ຂໍ້ມູນອ້າງອີງຈາກ:", "Source data:"], ["ຢືນຢັນການດຳເນີນການ", "Confirm action"], ["ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການດຳເນີນການນີ້?", "Are you sure?"], ["ຍົກເລີກ", "Cancel"], ["ຢືນຢັນ", "Confirm"], ["ຣີເຊັດຂໍ້ມູນກັບຄືນສູ່ໄຟລ໌ Excel ຕົ້ນສະບັບແລ້ວ", "Data reset to the original Excel file"], ["ໂອນຍ້າຍສະຕ໋ອກໄປເດືອນທັນວາ DEC 2026 ສຳເລັດແລ້ວ!", "Stock rolled over to December 2026!"], ["ສຳເລັດແລ້ວ", "done"], ["ລາຍການ", "items"], ["ສາເຫດ", "Reason"], ["ດາວໂຫຼດໄຟລ໌ລາຍງານ CSV", "Report downloaded"]].sort((a, b) => b[0].length - a[0].length);
+        const I18N = [["ລະບົບຈັດການສະຕ໋ອກ ແລະ ນັບສະຕ໋ອກ", "Stock Management & Stock Count System"], ["ລະບົບຈັດການສະຕ໋ອກ", "Stock Management System"], ["ລາຍການວັດຖຸດິບທັງໝົດ", "Total items"], ["ກຳລັງກວດສອບລາຍການວັດຖຸດິບ...", "Checking items..."], ["ລາຍການວັດຖຸດິບ", "raw-material items"], ["ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026", "November 2026 ➔ December 2026"], ["ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)", "December 2026 (rolled over ✓)"], ["ສົ່ງອອກລາຍງານ Excel", "Export Excel report"], ["ຣີເຊັດຂໍ້ມູນເດີມ", "Reset data"], ["ແຈ້ງເຕືອນສະຕ໋ອກໃກ້ໝົດ / ໝົດສະຕ໋ອກ", "Low stock / out of stock alert"], ["ເບິ່ງສະເພາະສິນຄ້າໃກ້ໝົດ", "Show low-stock items only"], ["ຄົບຖ້ວນ 10 ໝວດໝູ່ຫຼັກ", "All 10 main categories"], ["ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອ", "Ending stock value"], ["ຄິດໄລ່ຈາກ ຍອດຄົງເຫຼືອ × ລາຄາຕໍ່ໜ່ວຍ", "Ending qty × unit price"], ["ສິນຄ້າໃກ້ໝົດ / ໝົດສະຕ໋ອກ", "Low / out of stock"], ["ຍອດຄົງເຫຼືອ ≤ 2 ໜ່ວຍ", "Ending ≤ 2 units"], ["ກົດເພື່ອກອງ", "Click to filter"], ["ມູນຄ່າຂອງເສຍລວມ (Waste)", "Total waste value"], ["ລາຍການບັນທຶກ", "records"], ["ຈັດການ ➔", "Manage ➔"], ["ແດຊບອດ & ນັບສະຕ໋ອກ (Stock Count)", "Dashboard & Stock Count"], ["ເຊື່ອມໂຍງເດືອນນີ້ & ເດືອນໜ້າ (NOV ➔ DEC)", "This month & next month (NOV ➔ DEC)"], ["ບັນທຶກຂອງເສຍ (Waste Log)", "Waste Log"], ["ໃບສະເໜີຊື້ (PR)", "Purchase Requisition (PR)"], ["ເປົ້າໝາຍຍອດຂາຍ (Target Sales)", "Target Sales"], ["ສະຫຼຸບມູນຄ່າສະຕ໋ອກແຍກຕາມໝວດໝູ່ (Category Breakdown)", "Stock value by category"], ["ກົດທີ່ກາດໝວດໝູ່ເພື່ອກອງລາຍການສິນຄ້າໃນຕາຕະລາງດ້ານລຸ່ມ", "Click a category card to filter the table below"], ["ສະແດງທຸກໝວດໝູ່", "Show all categories"], ["ຕາຕະລາງນັບສະຕ໋ອກສິນຄ້າປະຈຳເດືອນ (Stock Count Sheet)", "Monthly stock count sheet"], ["ປ້ອນຕົວເລກ", "Enter"], ["ຍອດຄົງເຫຼືອປາຍເດືອນ (Ending)", "month-end balance (Ending)"], ["ລະບົບຈະຄິດໄລ່ຍອດໃຊ້ໄປ ແລະ ມູນຄ່າຄົງເຫຼືອອັດຕະໂນມັດ", "- usage and remaining value are calculated automatically"], ["ບັນທຶກຍອດນັບສະຕ໋ອກທັງໝົດ", "Saved all stock counts -"], ["ບັນທຶກຍອດນັບສະຕ໋ອກ", "Save stock count"], ["ຄົ້ນຫາລະຫັດ (FV0001), ຊື່ລາວ ຫຼື ອັງກິດ...", "Search code (FV0001), Lao or English name..."], ["ທຸກໝວດໝູ່ (All Categories)", "All categories"], ["ບ່ອນເກັບທັງໝົດ (Storage)", "All storage"], ["(ອຸນຫະພູມຫ້ອງ)", "(room temp)"], ["(ຕູ້ເຢັນທຳມະດາ)", "(chilled)"], ["(ຕູ້ແຊ່ແຂງ)", "(frozen)"], ["ສະແດງສະເພາະສິນຄ້າໃກ້ໝົດ", "Low-stock only"], ["ສະແດງຜົນ", "Showing"], ["ຈາກທັງໝົດ", "of"], ["ຂໍ້ມູນຖືກບັນທຶກອັດຕະໂນມັດໃນ Browser (Auto-save)", "Data is auto-saved in this browser"], ["ລຳດັບ", "No."], ["ບາໂຄດ / ລະຫັດ", "Barcode / Code"], ["ຊື່ວັດຖຸດິບ (ລາວ / English)", "Item name"], ["ໜ່ວຍ / ຂະໜາດ", "Unit / Pack"], ["ບ່ອນເກັບ", "Storage"], ["ໝວດໝູ່", "Category"], ["ລາຄາ/ໜ່ວຍ (₭)", "Price/unit (₭)"], ["ຍອດຍົກມາ (Beg)", "Beginning (Beg)"], ["ຮັບເຂົ້າ (Rec)", "Received (Rec)"], ["ຈ່າຍອອກ (Out)", "Out"], ["ຍອດຄົງເຫຼືອ (Ending)", "Ending"], ["ໃຊ້ໄປ (Usage)", "Usage"], ["ມູນຄ່າຄົງເຫຼືອ (₭)", "Ending value (₭)"], ["ໝົດສະຕ໋ອກ", "Out of stock"], ["ໃກ້ໝົດ", "Low"], ["ພົບວັດຖຸດິບຄົງເຫຼືອຕ່ຳກວ່າເກນ (≤ 2):", "Items below threshold (≤ 2):"], ["ແລະ ອີກ", "and"], ["ສະຕ໋ອກວັດຖຸດິບທຸກລາຍການຢູ່ໃນເກນປົກກະຕິ ພ້ອມໃຫ້ບໍລິການ!", "All items are at normal levels. Ready to serve!"], ["ບໍ່ພົບລາຍການວັດຖຸດິບທີ່ຄົ້ນຫາ ກະລຸນາລອງປ່ຽນເງື່ອນໄຂການກອງໃໝ່", "No items found. Try changing the filters."], ["ໂອນຍ້າຍຍອດສະຕ໋ອກໄປເດືອນທັນວາ (DEC 2026) ສຳເລັດແລ້ວ!", "Stock rolled over to December (DEC 2026)!"], ["ຍອດຄົງເຫຼືອປາຍເດືອນພະຈິກ (Ending Stock) ໄດ້ຖືກຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບຮອບບັນຊີໃໝ່ຮຽບຮ້ອຍແລ້ວ.", "November ending stock has been set as the beginning stock of the new period."], ["ສະຫຼຸບຍອດເດືອນນີ້ (November 2026)", "This month summary (November 2026)"], ["ສະຖານະ: ກຳລັງປິດຍອດບັນຊີປາຍເດືອນ", "Status: closing month-end"], ["ມູນຄ່າສະຕ໋ອກຍົກມາຕົ້ນເດືອນ (Beginning):", "Beginning stock value:"], ["ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອປາຍເດືອນ (Ending):", "Ending stock value:"], ["ຈຳນວນລາຍການທີ່ຕ້ອງສັ່ງຊື້ເພີ່ມ (Low/Out):", "Items to reorder (Low/Out):"], ["ມູນຄ່າຂອງເສຍສະສົມໃນເດືອນນີ້:", "Waste this month:"], ["ເຊື່ອມຕໍ່ໄປເດືອນໜ້າ (December 2026)", "Roll over to next month (December 2026)"], ["ໂອນຍ້າຍ Ending Stock ➔ Beginning Stock", "Transfer Ending Stock ➔ Beginning Stock"], ["ເມື່ອກວດສອບຍອດນັບສະຕ໋ອກປາຍເດືອນພະຈິກຄົບຖ້ວນແລ້ວ ທ່ານສາມາດກົດປຸ່ມດ້ານລຸ່ມເພື່ອໂອນຍ້າຍຍອດຄົງເຫຼືອທັງໝົດ 100 ລາຍການ ໄປເປັນຍອດຕັ້ງຕົ້ນຂອງເດືອນທັນວາໂດຍອັດຕະໂນມັດ ໂດຍບໍ່ຕ້ອງພິມຂໍ້ມູນໃໝ່.", "Once the November month-end count is complete, press the button below to carry all ending balances over as December's beginning stock automatically."], ["ມູນຄ່າສະຕ໋ອກຕັ້ງຕົ້ນເດືອນທັນວາ (DEC Beginning):", "December beginning stock value:"], ["ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນໜ້າ (Rollover NOV ➔ DEC)", "Confirm rollover to next month (NOV ➔ DEC)"], ["ໃບສະເໜີສັ່ງຊື້ວັດຖຸດິບອັດຕະໂນມັດ (Auto Purchase Requisition)", "Auto Purchase Suggestions"], ["ລາຍການສິນຄ້າທີ່ມີຍອດຄົງເຫຼືອຕ່ຳກວ່າເກນ (≤ 2 ໜ່ວຍ) ທີ່ຄວນສັ່ງຊື້ເຂົ້າຮ້ານສຳລັບຕົ້ນເດືອນໜ້າ", "Items at or below the threshold (≤ 2 units) that should be ordered for next month"], ["ງົບປະມານສັ່ງຊື້ໂດຍປະມານ:", "Estimated order budget:"], ["ລະຫັດ", "Code"], ["ຜູ້ສະໜອງ (Supplier)", "Supplier"], ["ຮອບຈັດສົ່ງ", "Delivery cycle"], ["ຄົງເຫຼືອປັດຈຸບັນ", "Current stock"], ["ແນະນຳສັ່ງຊື້", "Suggested order"], ["ປະມານການຄ່າໃຊ້ຈ່າຍ (₭)", "Est. cost (₭)"], ["ຈັນ - ສຸກ (2-3 ມື້)", "Mon-Fri (2-3 days)"], ["ທຸກມື້ (Daily Fresh)", "Daily (fresh)"], ["ລ່ວງໜ້າ 7-14 ມື້", "7-14 days ahead"], ["ບໍ່ມີລາຍການສິນຄ້າໃກ້ໝົດສະຕ໋ອກ ຍັງບໍ່ຈຳເປັນຕ້ອງສັ່ງຊື້ເພີ່ມໃນຂະນະນີ້", "No low-stock items - nothing to order right now"], ["ບັນທຶກລາຍການຂອງເສຍໃໝ່", "Record new waste"], ["ເລືອກວັດຖຸດິບທີ່ເສຍຫາຍ ຫຼື ໝົດອາຍຸເພື່ອຄິດໄລ່ຕົ້ນທຶນສູນເສຍ", "Select damaged or expired items to calculate the loss"], ["ເລືອກວັດຖຸດິບ", "Select item"], ["ຈຳນວນທີ່ເສຍ", "Waste qty"], ["ສາເຫດ (Reason)", "Reason"], ["ເຊັ່ນ: 1.5", "e.g. 1.5"], ["ໝົດອາຍຸ (Expired)", "Expired"], ["ເສຍຫາຍ/ເນົ່າເສຍ (Spoiled)", "Spoiled"], ["ຕົກຫຼົ່ນ/ແຕກຫັກ (Dropped)", "Dropped / broken"], ["ປຸງແຕ່ງຜິດພາດ (Error)", "Kitchen error"], ["ບັນທຶກລາຍການຂອງເສຍ", "Save waste record"], ["ປະຫວັດການບັນທຶກຂອງເສຍ (Waste History)", "Waste history"], ["ລາຍການວັດຖຸດິບທີ່ຖືກຕັດເປັນຂອງເສຍໃນຮອບເດືອນນີ້", "Items written off as waste this month"], ["ລວມ:", "Total:"], ["ວັນທີ/ເວລາ", "Date/Time"], ["ວັດຖຸດິບ", "Item"], ["ຈຳນວນ", "Qty"], ["ລາຄາ/ໜ່ວຍ", "Price/unit"], ["ມູນຄ່າເສຍຫາຍ (₭)", "Loss value (₭)"], ["ລຶບ", "Delete"], ["ຍັງບໍ່ມີການບັນທຶກລາຍການຂອງເສຍໃນເດືອນນີ້", "No waste recorded this month"], ["ລຶບລາຍການບັນທຶກຂອງເສຍແລ້ວ", "Waste record deleted"], ["ລະບົບບໍລິຫານຈັດການສະຕ໋ອກສິນຄ້າ", "Stock management system"], ["ຂໍ້ມູນອ້າງອີງຈາກ:", "Source data:"], ["ຢືນຢັນການດຳເນີນການ", "Confirm action"], ["ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການດຳເນີນການນີ້?", "Are you sure?"], ["ຍົກເລີກ", "Cancel"], ["ຢືນຢັນ", "Confirm"], ["ຣີເຊັດຂໍ້ມູນກັບຄືນສູ່ໄຟລ໌ Excel ຕົ້ນສະບັບແລ້ວ", "Data reset to the original Excel file"], ["ໂອນຍ້າຍສະຕ໋ອກໄປເດືອນທັນວາ DEC 2026 ສຳເລັດແລ້ວ!", "Stock rolled over to December 2026!"], ["ສຳເລັດແລ້ວ", "done"], ["ລາຍການ", "items"], ["ສາເຫດ", "Reason"], ["ດາວໂຫຼດໄຟລ໌ລາຍງານ CSV", "Report downloaded"]].sort((a, b) => b[0].length - a[0].length);
         const LAO_RE = /[\u0E80-\u0EFF]/;
         function tr(t) { for (const [a, b] of I18N) if (t.includes(a)) t = t.split(a).join(b); return t; }
         function trDom(root) {
@@ -1296,7 +1318,7 @@
                  <button onclick="pickRestore()" class="${bcls}">📂 ${L('ກູ້ຄືນ JSON', 'Restore JSON')}</button>
                  <button onclick="toggleLang()" class="${bcls}">🌐 ${LANG === 'en' ? 'ລາວ' : 'English'}</button>
                  <input type="file" id="restore-file" accept=".json,application/json" class="hidden" onchange="onRestoreFile(this)">`;
-            stockWeek = currentStockWeek();
+            stockWeek = currentStockWeek(); renderTabTools();
             renderPRShell();
             salesInit();
         }
@@ -1631,7 +1653,7 @@
                     else if (v) val = t === 's' ? sst[+v.textContent] : (t === 'str' || t === 'b' || t === 'e') ? v.textContent : parseFloat(v.textContent);
                     row[ix] = val;
                 });
-                rows.push(row);
+                rows[(+r.getAttribute('r') || rows.length + 1) - 1] = row;
             });
             return rows;
         }
@@ -1671,7 +1693,7 @@
             if ([iRef, iDt, iPr, iQ, iTax].some(i => i < 0)) throw new Error(L('ຫົວຖັນບໍ່ຄົບ: Order Ref, Created on, Product, Quantity, Tax Incl.', 'Missing columns: Order Ref, Created on, Product, Quantity, Tax Incl.'));
             const days = {}, prod = {}; let lines = 0;
             for (let i = 1; i < rows.length; i++) {
-                const r = rows[i], dt = dateKey(r[iDt]); if (!dt) continue;   // group/subtotal rows have no date
+                const r = rows[i]; if (!r) continue; const dt = dateKey(r[iDt]); if (!dt) continue;   // group/subtotal rows have no date
                 const tax = +r[iTax] || 0, q = +r[iQ] || 0, nameRaw = String(r[iPr] || '').trim();
                 const D = days[dt] || (days[dt] = { gross: 0, disc: 0, net: 0, refs: new Set() });
                 D.refs.add(String(r[iRef] || '')); D.net += tax; if (tax < 0) D.disc -= tax; else D.gross += tax; lines++;
@@ -1709,24 +1731,25 @@
             showToast(L('📥 ດາວໂຫຼດ P&L Excel ແລ້ວ', '📥 P&L Excel downloaded'), 'success');
         }
 
-        // ---- Weekly stock count (5 weeks, counted every Monday; week N ending -> week N+1 beginning) ----
-        let stockWeek = 'm';
-        function ensureWk(it) { if (!it.wk || it.wk.length !== 5) it.wk = Array.from({ length: 5 }, () => ({ rec: null, end: null })); if (it.rec0 == null) it.rec0 = it.rec || 0; return it; }
-        function hasWk(it) { ensureWk(it); return it.wk.some(x => x.rec != null || x.end != null); }
+        // ---- Weekly stock count (5 weeks Tue-Mon, counted every Monday; week N ending -> week N+1 beginning) ----
+        let stockWeek = 'm', currentTab = 'stock', pendingInv = null;
+        const r3 = x => Math.round(x * 1000) / 1000;
+        function ensureWk(it) { if (!it.wk || it.wk.length !== 5) it.wk = Array.from({ length: 5 }, () => ({ rec: null, out: null, end: null })); it.wk.forEach(x => { if (x.out === undefined) x.out = null; }); delete it.rec0; return it; }
+        function hasWk(it) { ensureWk(it); return it.wk.some(x => x.rec != null || x.out != null || x.end != null); }
         function wkCalc(it) {
             ensureWk(it); const out = []; let beg = it.beg;
             for (let w = 0; w < 5; w++) {
-                const W = it.wk[w], rec = W.rec != null ? W.rec : (w === 0 ? (it.rec0 || 0) : 0), counted = W.end != null;
-                out.push({ beg, rec, end: W.end, counted, used: counted ? Math.max(0, beg + rec - W.end) : null });
-                beg = counted ? W.end : beg + rec;    // an uncounted week is assumed to have no usage
+                const W = it.wk[w], rec = W.rec || 0, o = W.out || 0, counted = W.end != null, total = r3(beg + rec - o);
+                out.push({ beg: r3(beg), rec, out: o, total, end: W.end, counted, used: counted ? r3(total - W.end) : null });
+                beg = counted ? W.end : total;      // an uncounted week is assumed to have no usage
             }
             return out;
         }
         function syncItem(it) {
             if (!hasWk(it)) return;
             const c = wkCalc(it), r2 = x => Math.round(x * 100) / 100; let L2 = -1; c.forEach((x, i) => { if (x.counted) L2 = i; });
-            it.rec = r2(c.reduce((a, x) => a + x.rec, 0));
-            it.ending = r2(L2 >= 0 ? c[L2].end + c.slice(L2 + 1).reduce((a, x) => a + x.rec, 0) : it.beg + it.rec);
+            it.rec = r2(c.reduce((a, x) => a + x.rec, 0)); it.out = r2(c.reduce((a, x) => a + x.out, 0));
+            it.ending = r2(L2 >= 0 ? c[L2].end + c.slice(L2 + 1).reduce((a, x) => a + x.rec - x.out, 0) : it.beg + it.rec - it.out);
         }
         function stockMondays() {
             const y = 2026, m = isRolledOver ? 12 : 11, out = [], d = new Date(y, m - 1, 1);
@@ -1746,26 +1769,194 @@
             el.innerHTML = h;
             const hint = document.getElementById('stock-week-hint');
             if (hint) hint.textContent = stockWeek === 'm' ? L('ມຸມມອງທັງເດືອນ (ອ່ານຢ່າງດຽວ ຖ້າມີການນັບລາຍອາທິດ). ເລືອກອາທິດເພື່ອນັບສະຕ໋ອກ.', 'Whole-month view (read-only once weekly counts exist). Pick a week to count stock.')
-                : L(`ອາທິດ ${stockWeek + 1}: ປ້ອນ "ຮັບເຂົ້າ" ແລະ "ຍອດຄົງເຫຼືອ" ທີ່ນັບໄດ້ (ວັນຈັນ). ຍອດຕົ້ນອາທິດ = ຍອດນັບອາທິດກ່ອນ, ໃຊ້ໄປ = ຕົ້ນ + ຮັບເຂົ້າ − ຄົງເຫຼືອ. ສິ້ນເດືອນ ຍອດອາທິດສຸດທ້າຍຈະຍົກໄປເດືອນໜ້າ.`, `Week ${stockWeek + 1}: enter Received and the counted Ending (Monday count). Beginning = previous week's count; Usage = Beginning + Received − Ending. At month end the last count carries over to next month.`);
+                : L(`ອາທິດ ${stockWeek + 1} (ອັງຄານ-ຈັນ): ປ້ອນ "ຮັບເຂົ້າ", "ຈ່າຍອອກ" ແລະ "ຍອດຄົງເຫຼືອ" ທີ່ນັບໄດ້ໃນວັນຈັນ. ຕົ້ນອາທິດ = ຍອດນັບອາທິດກ່ອນ, ໃຊ້ໄປ = ຕົ້ນ + ຮັບເຂົ້າ − ຈ່າຍອອກ − ຄົງເຫຼືອ. ສິ້ນເດືອນ ຍອດອາທິດສຸດທ້າຍຈະຍົກໄປເດືອນໜ້າ.`, `Week ${stockWeek + 1} (Tue-Mon): enter Received, Out and the counted Ending (Monday count). Beginning = previous week's count; Usage = Beginning + Received − Out − Ending. At month end the last count carries over to next month. Amber Beginning = previous week not counted yet.`);
         }
         function setStockWeek(v) { stockWeek = v === 'm' ? 'm' : +v; renderStockWeekChips(); renderStockTable(); }
         function afterWk(it) { syncItem(it); persistState(); updateKPIsAndAlerts(); renderCategoryBreakdown(); renderRolloverAndPO(); renderStockTable(); renderStockWeekChips(); renderPR(); }
-        function handleWkRec(id, w, v) { const it = inventory.find(i => i.id === id); if (!it) return; ensureWk(it); it.wk[w].rec = v === '' ? null : Math.max(0, parseFloat(v) || 0); afterWk(it); }
-        function handleWkEnd(id, w, v) { const it = inventory.find(i => i.id === id); if (!it) return; ensureWk(it); it.wk[w].end = v === '' ? null : Math.max(0, parseFloat(v) || 0); afterWk(it); }
+        const wkSet = (id, w, k, v) => { const it = inventory.find(i => i.id === id); if (!it) return; ensureWk(it); it.wk[w][k] = v === '' ? null : Math.max(0, parseFloat(v) || 0); afterWk(it); };
+        function handleWkRec(id, w, v) { wkSet(id, w, 'rec', v); }
+        function handleWkOut(id, w, v) { wkSet(id, w, 'out', v); }
+        function handleWkEnd(id, w, v) { wkSet(id, w, 'end', v); }
         function stockCells(item) {
             const T = 'py-3 px-3 text-right font-mono text-xs whitespace-nowrap', low = isLowStockItem(item);
             const box = (v, ph, fn, cls) => `<input type="number" step="0.01" min="0" value="${v == null ? '' : v}" placeholder="${ph}" onchange="${fn}" class="w-20 sm:w-24 text-center font-mono font-bold text-sm px-2 py-1.5 rounded-lg border ${cls} focus:outline-none focus:ring-2 focus:ring-[#B91C1C]">`;
             if (stockWeek === 'm') {
-                const usage = Math.max(0, item.beg + item.rec - item.ending), locked = hasWk(item);
-                return `<td class="${T} text-slate-600">${formatQty(item.beg)}</td><td class="${T} text-emerald-700 font-semibold">+${formatQty(item.rec)}</td>
+                const usage = Math.max(0, item.beg + item.rec - (item.out || 0) - item.ending), locked = hasWk(item);
+                return `<td class="${T} text-slate-600">${formatQty(item.beg)}</td><td class="${T} text-emerald-700 font-semibold">+${formatQty(item.rec)}</td><td class="${T} text-slate-600">${item.out ? '-' + formatQty(item.out) : '-'}</td>
                   <td class="py-3 px-3 text-center bg-amber-50/40 whitespace-nowrap">${locked ? `<span class="font-mono font-bold text-sm text-slate-900">${formatQty(item.ending)}</span>` : box(item.ending, '', `handleEndingChange('${item.id}', this.value)`, low ? 'border-amber-400 bg-white text-amber-900' : 'border-slate-300 bg-white text-slate-900')}</td>
                   <td class="${T} text-slate-600">${formatQty(usage)}</td><td class="${T} sm:text-sm font-bold text-slate-900">${formatLAK(item.ending * item.cost)}</td>`;
             }
-            const w = stockWeek, c = wkCalc(item)[w], exp = Math.round((c.beg + c.rec) * 100) / 100;
-            return `<td class="${T} text-slate-600">${formatQty(c.beg)}</td>
-              <td class="py-3 px-3 text-center whitespace-nowrap">${box(item.wk[w].rec != null ? item.wk[w].rec : (c.rec || ''), '0', `handleWkRec('${item.id}', ${w}, this.value)`, 'border-emerald-300 bg-emerald-50 text-emerald-900')}</td>
+            const w = stockWeek, cc = wkCalc(item), c = cc[w], exp = r3(c.total), prevOff = w > 0 && !cc[w - 1].counted;
+            return `<td class="${T} ${prevOff ? 'text-amber-600 font-bold' : 'text-slate-600'}" title="${prevOff ? L('ອາທິດກ່ອນຍັງບໍ່ໄດ້ນັບ', 'Previous week not counted yet') : ''}">${formatQty(c.beg)}${prevOff ? ' ⚠' : ''}</td>
+              <td class="py-3 px-3 text-center whitespace-nowrap">${box(item.wk[w].rec, '0', `handleWkRec('${item.id}', ${w}, this.value)`, 'border-emerald-300 bg-emerald-50 text-emerald-900')}</td>
+              <td class="py-3 px-3 text-center whitespace-nowrap">${box(item.wk[w].out, '0', `handleWkOut('${item.id}', ${w}, this.value)`, 'border-slate-300 bg-slate-50 text-slate-700')}</td>
               <td class="py-3 px-3 text-center bg-amber-50/40 whitespace-nowrap">${box(c.end, formatQty(exp), `handleWkEnd('${item.id}', ${w}, this.value)`, c.counted ? 'border-slate-300 bg-white text-slate-900' : 'border-dashed border-amber-400 bg-white text-slate-900')}</td>
-              <td class="${T} text-slate-600">${c.counted ? formatQty(c.used) : '-'}</td><td class="${T} font-bold text-slate-900">${c.counted ? formatLAK(c.end * item.cost) : '-'}</td>`;
+              <td class="${T} ${c.counted && c.used < 0 ? 'text-red-600 font-bold' : 'text-slate-600'}">${c.counted ? formatQty(c.used) + `<div class="text-[10px] text-slate-400">${formatLAK(c.used * item.cost)}</div>` : '-'}</td><td class="${T} font-bold text-slate-900">${c.counted ? formatLAK(c.end * item.cost) : '-'}</td>`;
+        }
+
+        // ---- Print + Excel for every page ----
+        function setPage(o) { let s = document.getElementById('page-style'); if (!s) { s = document.createElement('style'); s.id = 'page-style'; document.head.appendChild(s); } s.textContent = `@page{size:A4 ${o};margin:10mm}`; }
+        function renderTabTools() {
+            const el = document.getElementById('tab-tools'); if (!el) return;
+            const b = 'px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer flex items-center gap-1.5';
+            el.innerHTML = `<span class="text-xs text-slate-500 mr-auto hidden sm:block">${L('ເຄື່ອງມື:', 'Tools:')}</span>
+              <button onclick="printTab()" class="${b}">🖨️ ${L('ພິມໜ້ານີ້ (Print)', 'Print this page')}</button>
+              <button onclick="exportTab()" class="${b}">📥 ${L('ດາວໂຫຼດ Excel ໜ້ານີ້', 'Download this page (Excel)')}</button>
+              <button onclick="document.getElementById('inv-file').click()" class="${b}">📤 ${L('ນຳເຂົ້າໄຟລ໌ Inventory (.xlsx)', 'Import Inventory file (.xlsx)')}</button>
+              <button onclick="exportInventoryXlsx()" class="${b}">📘 ${L('ດາວໂຫຼດໄຟລ໌ Inventory (ມີສູດ)', 'Download Inventory file (with formulas)')}</button>
+              <input type="file" id="inv-file" accept=".xlsx" class="hidden" onchange="onInvFile(this)">`;
+            window.addEventListener('afterprint', () => document.body.classList.remove('print-doc'));
+        }
+        function exportTab() { ({ stock: exportToCSV, rollover: exportPOxlsx, pr: exportPR, sales: exportSalesXlsx, waste: exportWasteXlsx }[currentTab] || exportToCSV)(); }
+        function printTab() {
+            if (currentTab === 'pr') { printPRDoc(); return; }
+            const names = { stock: L('ນັບສະຕ໋ອກ', 'Stock count'), rollover: L('ຍົກຍອດ & ສັ່ງຊື້', 'Month rollover & ordering'), sales: L('ເປົ້າໝາຍຍອດຂາຍ & P&L', 'Target sales & P&L'), waste: L('ບັນທຶກຂອງເສຍ', 'Waste log') };
+            let t = `Mom's Touch Vangxai - ${names[currentTab]}`;
+            if (currentTab === 'stock') t += ' - ' + (stockWeek === 'm' ? L('ທັງເດືອນ', 'Whole month') : `${L('ອາທິດ', 'Week')} ${stockWeek + 1} (${L('ຈັນ ', 'Mon ')}${fmtDM2(stockMondays()[stockWeek])})`);
+            document.getElementById('print-title').textContent = t + ' · ' + today();
+            setPage('landscape'); setTimeout(() => window.print(), 60);
+        }
+        function printPRDoc() {
+            const lines = sortedInv().filter(i => prState.q[i.id] > 0);
+            if (!lines.length) { showToast(L('ຍັງບໍ່ໄດ້ປ້ອນຈຳນວນສັ່ງຊື້', 'Enter at least one order quantity first'), 'info'); return; }
+            const H = prState.h, dm = d => d ? d.split('-').reverse().join('/') : '', b = 'border:1px solid #333;padding:6px 8px;', lab = b + 'background:#F1EEE7;font-weight:700;width:17%', th = b + 'background:#0F6B6B;color:#fff;text-align:center;font-weight:700';
+            const f = (l, v, l2, v2) => `<tr><td style="${lab}">${l}</td><td style="${b}width:33%">${esc(v || '')}</td><td style="${lab}">${l2}</td><td style="${b}width:33%">${esc(v2 || '')}</td></tr>`;
+            document.getElementById('print-area').innerHTML = `<div style="font-family:'Noto Sans Lao','Inter',sans-serif;color:#000;font-size:12px">
+              <table style="width:100%;border-collapse:collapse;margin-bottom:8px"><tr><td colspan="2" style="${b}font-size:16px;font-weight:700;height:48px">MOM'S TOUCH (ເມກ້າມໍ)<br><span style="font-size:12px;font-weight:400">${esc(H.addr || H.loc || '')}</span></td><td colspan="2" style="${b}background:#DFF0EE;font-size:20px;font-weight:700;text-align:center">Purchase Order</td></tr>
+              ${f('ຜູ້ເບີກ (Requested By):', H.by, 'ວັນທີຂໍເບີກ:', dm(H.date))}${f('ເບີໂທ (Tel):', H.tel, 'ວັນທີ່ຕ້ອງການໃຊ້:', dm(H.req))}${f('ສາຂາທີ່ສົ່ງ (Branch):', H.loc, 'ເລກທີ ຂໍສັ່ງຊື້:', H.no)}</table>
+              <table style="width:100%;border-collapse:collapse"><thead><tr><th style="${th}width:6%">No</th><th style="${th}width:17%">Items code</th><th style="${th}">Product Name</th><th style="${th}width:11%">QTY Request</th><th style="${th}width:9%">Unit</th><th style="${th}width:16%">ຮູບ / Photo</th></tr></thead><tbody>
+              ${lines.map((i, n) => `<tr style="height:62px;break-inside:avoid"><td style="${b}text-align:center">${n + 1}</td><td style="${b}">${esc(bc(i))}</td><td style="${b}">${esc(nm(i))}  ${esc(subName(i))}</td><td style="${b}text-align:center;font-weight:700">${prState.q[i.id]}</td><td style="${b}text-align:center">${esc(i.uom)}</td><td style="${b}"></td></tr>`).join('')}</tbody></table>
+              <p style="margin-top:10px"><b>ໝາຍເຫດ:</b> ${esc(H.rem || '')}</p></div>`;
+            setPage('portrait'); document.body.classList.add('print-doc'); setTimeout(() => window.print(), 80);
+        }
+        const sched = it => it.supplier.includes('Import') ? L('ລ່ວງໜ້າ 7-14 ມື້', '7-14 days ahead') : it.supplier.includes('Fresh') ? L('ທຸກມື້', 'Daily (fresh)') : L('ຈັນ - ສຸກ (2-3 ມື້)', 'Mon-Fri (2-3 days)');
+        function exportPOxlsx() {
+            const low = inventory.filter(isLowStockItem); if (!low.length) { showToast(L('ບໍ່ມີລາຍການໃກ້ໝົດ', 'No low-stock items'), 'info'); return; }
+            const hd = v => ({ v, s: 3 }), ce = v => ({ v, s: 4 }), nu = v => ({ v: Math.round(v), s: 5 });
+            const rows = [[L('ລຳດັບ', 'No.'), L('ບາໂຄດ', 'Barcode'), L('ຊື່ສິນຄ້າ', 'Item name'), L('ໜ່ວຍ', 'Unit'), L('ຜູ້ສະໜອງ', 'Supplier'), L('ຮອບຈັດສົ່ງ', 'Delivery'), L('ຄົງເຫຼືອ', 'In stock'), L('ແນະນຳສັ່ງ', 'Suggested qty'), L('ລາຄາ/ໜ່ວຍ', 'Unit cost'), L('ປະມານຄ່າໃຊ້ຈ່າຍ', 'Est. cost')].map(hd)];
+            low.forEach((i, n) => { const r = rows.length + 1, q = suggestQty(i); rows.push([ce(n + 1), ce(bc(i)), ce(`${nm(i)}  ${subName(i)}`), ce(i.uom), ce(i.supplier), ce(sched(i)), ce(i.ending), ce(q), nu(i.cost), { f: `H${r}*I${r}`, v: Math.round(q * i.cost), s: 5 }]); });
+            rows.push([null, null, null, null, null, null, null, null, { v: L('ລວມ', 'TOTAL'), s: 6 }, { f: `SUM(J2:J${rows.length})`, v: Math.round(low.reduce((a, i) => a + suggestQty(i) * i.cost, 0)), s: 7 }]);
+            dl(buildXlsx([{ name: 'Order suggestions', widths: [7, 16, 44, 9, 26, 20, 11, 13, 14, 16], rows, freeze: 1 }]), `Order-suggestions-${today()}.xlsx`);
+            showToast(L('📥 ດາວໂຫຼດ Excel ແລ້ວ', '📥 Excel downloaded'), 'success');
+        }
+        function exportWasteXlsx() {
+            const hd = v => ({ v, s: 3 }), ce = v => ({ v, s: 4 }), nu = v => ({ v: Math.round(v), s: 5 });
+            const rows = [[L('ວັນທີ', 'Date'), L('ລະຫັດ', 'Code'), L('ຊື່ວັດຖຸດິບ', 'Item'), L('ສາເຫດ', 'Reason'), L('ຈຳນວນ', 'Qty'), L('ໜ່ວຍ', 'Unit'), L('ລາຄາ/ໜ່ວຍ', 'Unit cost'), L('ມູນຄ່າເສຍຫາຍ', 'Loss value')].map(hd)];
+            wasteLogs.forEach(w => { const r = rows.length + 1; rows.push([ce(w.timestamp), ce(w.id), ce(`${nm(w)}  ${subName(w)}`), ce(w.reason), ce(w.qty), ce(w.uom), nu(w.cost), { f: `E${r}*G${r}`, v: Math.round(w.qty * w.cost), s: 5 }]); });
+            rows.push([null, null, null, null, null, null, { v: L('ລວມ', 'TOTAL'), s: 6 }, { f: `SUM(H2:H${rows.length})`, v: Math.round(wasteLogs.reduce((a, w) => a + w.qty * w.cost, 0)), s: 7 }]);
+            dl(buildXlsx([{ name: 'Waste', widths: [14, 12, 44, 22, 10, 9, 14, 16], rows, freeze: 1 }]), `Waste-log-${today()}.xlsx`);
+            showToast(L('📥 ດາວໂຫຼດ Excel ແລ້ວ', '📥 Excel downloaded'), 'success');
+        }
+
+        // ---- Full Inventory workbook with formulas (same layout as the original Inventory file) ----
+        function exportInventoryXlsx() {
+            const items = inventory, n = items.length, mons = stockMondays(), hd = v => ({ v, s: 3 }), ce = v => ({ v, s: 4 }), nu = v => ({ v: v == null || v === '' ? '' : v, s: 5 }), bl = { v: '', s: 4 };
+            const MI = `'Master Item List'!$C$4:$N$${3 + n + 1}`, eff = it => hasWk(it) ? it : { ...it, wk: [{ rec: it.rec || null, out: it.out || null, end: it.ending }, ...Array.from({ length: 4 }, () => ({ rec: null, out: null, end: null }))] };
+            const vl = (r, k, v, s) => ({ f: `IFERROR(VLOOKUP($C${r},${MI},${k},0),"")`, v, s: s || 4 });
+            // Master Item List
+            const master = [[], [null, { v: "Mom's Touch Master ItemList", s: 1 }], ['SUPPLY', 'Storage', 'ID Code', 'Product Code', 'Category', 'Product Name (ENG)', 'Product Name (LAO)', 'Purchase Pack Size', 'UOM', 'Conversion/UOM', 'Yield', '', 'Purchase Pack Size (LAK)', 'Cost / Unit'].map(hd)];
+            items.forEach((it, i) => { const r = 4 + i; master.push([ce(it.supplier), ce(it.storage), ce(it.id), ce(bc(it)), ce(it.category), ce(it.nameEn), ce(it.nameLao), ce(it.pack), ce(it.uom), ce(1), bl, bl, nu(it.cost), { f: `M${r}/J${r}`, v: it.cost, s: 5 }]); });
+            const sheets = [{ name: 'Master Item List', widths: [26, 9, 11, 14, 16, 34, 34, 18, 8, 12, 8, 4, 16, 12], rows: master, freeze: 3 }];
+            // Week 1-5
+            for (let w = 0; w < 5; w++) {
+                const mo = mons[w], dn = k => mo ? new Date(mo.getFullYear(), mo.getMonth(), mo.getDate() - 6 + k).getDate() : '';
+                const rows = [[], [null, null, { v: 'INVENTORY', s: 1 }, null, { v: 'Week ' + (w + 1), s: 1 }], [], [], [], [null, null, null, null, null, null, null, null, null, ...['TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'MON'].map(hd)],
+                    ['#', 'Category', 'Code', 'Product Name', 'Purchase Pack Size', 'UOM', 'Cost / Unit', 'Beginning', 'IN', ...[0, 1, 2, 3, 4, 5, 6].map(dn), 'OUT', 'Total', 'Ending', 'Usage', 'Total cost of usage'].map(hd)];
+                items.forEach((it, i) => {
+                    const r = 8 + i, c = wkCalc(eff(it))[w], W = eff(it).wk[w], pv = `'Week ${w}'`;
+                    rows.push([ce(i + 1), vl(r, 3, it.category), ce(it.id), vl(r, 4, it.nameEn), vl(r, 6, it.pack), vl(r, 7, it.uom), vl(r, 12, it.cost, 5),
+                        w === 0 ? nu(it.beg) : { f: `IF(${pv}!$S${r}="",${pv}!$R${r},${pv}!$S${r})`, v: c.beg, s: 4 },
+                        W.rec != null ? ce(W.rec) : bl, bl, bl, bl, bl, bl, bl, bl, W.out != null ? ce(W.out) : bl,
+                        { f: `SUM($H${r}:$P${r})-$Q${r}`, v: c.total, s: 4 }, c.counted ? ce(c.end) : bl,
+                        { f: `IF($S${r}="","",$R${r}-$S${r})`, v: c.counted ? c.used : '', s: 4 }, { f: `IFERROR($T${r}*$G${r},"")`, v: c.counted ? Math.round(c.used * it.cost) : '', s: 5 }]);
+                });
+                sheets.push({ name: 'Week ' + (w + 1), widths: [5, 16, 10, 34, 18, 7, 12, 11, 8, 6, 6, 6, 6, 6, 6, 6, 8, 11, 11, 11, 16], rows, freeze: 7 });
+            }
+            // Month
+            const mrows = [[], [null, null, { v: 'INVENTORY', s: 1 }, null, { v: 'MONTHLY', s: 1 }], [], [], [], [],
+                ['#', 'Category', 'Code', 'Product Name', 'Purchase Pack Size', 'UOM', 'Cost / Unit', 'Beginning', 'IN', 'WEEK1', 'WEEK2', 'WEEK3', 'WEEK4', 'WEEK5', 'OUT', 'Total', 'Ending', 'Usage', 'Total cost of usage'].map(hd)];
+            items.forEach((it, i) => {
+                const r = 8 + i, cc = wkCalc(eff(it)); let L2 = -1; cc.forEach((x, k) => { if (x.counted) L2 = k; });
+                const later = L1 => [1, 2, 3, 4, 5].filter(k => k > L1).map(k => `SUM('Week ${k}'!$I${r}:$P${r})-'Week ${k}'!$Q${r}`).join('+') || '0';
+                let endF = `$P${r}`; for (let L1 = 1; L1 <= 5; L1++) endF = `IF('Week ${L1}'!$S${r}<>"",'Week ${L1}'!$S${r}+${later(L1)},${endF})`;
+                const tot = cc[4].total + 0, recT = cc.reduce((a, x) => a + x.rec, 0), outT = cc.reduce((a, x) => a + x.out, 0), total = r3(it.beg + recT - outT), endV = L2 >= 0 ? r3(cc[L2].end + cc.slice(L2 + 1).reduce((a, x) => a + x.rec - x.out, 0)) : total;
+                mrows.push([ce(i + 1), vl(r, 3, it.category), ce(it.id), vl(r, 4, it.nameEn), vl(r, 6, it.pack), vl(r, 7, it.uom), vl(r, 12, it.cost, 5), { f: `'Week 1'!$H${r}`, v: it.beg, s: 4 }, { f: `SUM($J${r}:$N${r})`, v: recT, s: 4 },
+                    ...[1, 2, 3, 4, 5].map((k, x) => ({ f: `SUM('Week ${k}'!$I${r}:$P${r})`, v: cc[x].rec, s: 4 })), { f: `SUM('Week 1'!$Q${r},'Week 2'!$Q${r},'Week 3'!$Q${r},'Week 4'!$Q${r},'Week 5'!$Q${r})`, v: outT, s: 4 },
+                    { f: `$H${r}+$I${r}-$O${r}`, v: total, s: 4 }, { f: endF, v: endV, s: 4 }, { f: `$P${r}-$Q${r}`, v: r3(total - endV), s: 4 }, { f: `IFERROR($R${r}*$G${r},"")`, v: Math.round((total - endV) * it.cost), s: 5 }]);
+            });
+            sheets.push({ name: 'Month', widths: [5, 16, 10, 34, 18, 7, 12, 11, 9, 9, 9, 9, 9, 9, 9, 11, 11, 11, 16], rows: mrows, freeze: 7 });
+            // Ending stock
+            const erows = [[], [{ v: "MOM'S TOUCH LAOS VANGXAI ENDING STOCK", s: 2 }], [], [], ['NO', 'SUPPLIER', 'ITEMS CODE', 'CATEGORY', 'INGREDIENT', 'PURCHASE PACK SIZE', 'UOM', 'Cost / Unit (LAK)', 'Beginning', 'Receiving', 'Ending', 'Cost/Ending'].map(hd)];
+            let tv = 0; items.forEach((it, i) => { const r = 6 + i, m = 8 + i, ev = it.ending; tv += ev * it.cost; erows.push([ce(i + 1), ce(it.supplier), ce(it.id), ce(it.category), ce(nm(it)), ce(it.pack), ce(it.uom), nu(it.cost), { f: `Month!$H${m}`, v: it.beg, s: 4 }, { f: `Month!$I${m}`, v: it.rec || 0, s: 4 }, { f: `Month!$Q${m}`, v: ev, s: 4 }, { f: `IFERROR($K${r}*$H${r},"-")`, v: Math.round(ev * it.cost), s: 5 }]); });
+            erows[4] = erows[4]; erows.splice(5, 0, [null, null, null, null, null, null, null, null, null, null, { v: 'TOTAL', s: 6 }, { f: `SUM(L7:L${6 + n})`, v: Math.round(tv), s: 7 }]);
+            sheets.push({ name: 'Ending stock', widths: [5, 26, 11, 16, 34, 18, 7, 14, 11, 11, 11, 16], rows: erows, freeze: 5 });
+            // Waste
+            const wr = [[L('ວັນທີ', 'Date'), L('ລະຫັດ', 'Code'), L('ຊື່ວັດຖຸດິບ', 'Item'), L('ສາເຫດ', 'Reason'), L('ຈຳນວນ', 'Qty'), L('ໜ່ວຍ', 'Unit'), L('ລາຄາ/ໜ່ວຍ', 'Unit cost'), L('ມູນຄ່າເສຍຫາຍ', 'Loss value')].map(hd)];
+            wasteLogs.forEach(w => { const r = wr.length + 1; wr.push([ce(w.timestamp), ce(w.id), ce(`${w.nameEn} ${w.nameLao}`), ce(w.reason), ce(w.qty), ce(w.uom), nu(w.cost), { f: `E${r}*G${r}`, v: Math.round(w.qty * w.cost), s: 5 }]); });
+            sheets.push({ name: 'Waste', widths: [14, 12, 44, 22, 10, 9, 14, 16], rows: wr, freeze: 1 });
+            // Daily Data (sales from POS)
+            const dk = Object.keys(salesState.pos.days).sort();
+            if (dk.length) {
+                const vat = 1 + (+salesState.vat || 0) / 100, dr = [[], [], [], [null, { v: "Sales report - Mom's Touch Vangxai", s: 1 }], [], ['Date', 'Day', 'Sales Tax Incl.', 'Sales VAT excluded', 'Docket (orders)', 'Gross sales', 'Discounts'].map(hd)];
+                dk.forEach(k => { const d = salesState.pos.days[k], r = dr.length + 1, wd = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8)).getDay(); dr.push([ce(k), ce(WD[wd][1]), nu(d.net), { f: `C${r}/${vat}`, v: Math.round(d.net / vat), s: 5 }, ce(d.orders), nu(d.gross), nu(d.disc)]); });
+                sheets.push({ name: 'Daily Data', widths: [12, 7, 16, 18, 14, 16, 14], rows: dr, freeze: 6 });
+            }
+            dl(buildXlsx(sheets), `Inventory_Mom_s_Touch_${today()}.xlsx`);
+            showToast(L('📘 ດາວໂຫຼດໄຟລ໌ Inventory (ມີສູດ) ແລ້ວ', '📘 Inventory file (with formulas) downloaded'), 'success');
+        }
+
+        // ---- Import the Inventory workbook (Master Item List + Week 1-5 + Waste) ----
+        async function readWorkbook(f) {
+            const z = readZip(await f.arrayBuffer()), wbx = await zipText(z, 'xl/workbook.xml'), relx = await zipText(z, 'xl/_rels/workbook.xml.rels');
+            if (!wbx || !relx) throw new Error('not an Excel workbook');
+            const rel = {}; Array.from(new DOMParser().parseFromString(relx, 'application/xml').getElementsByTagName('Relationship')).forEach(r => { let t = r.getAttribute('Target').replace(/^\//, ''); if (!t.startsWith('xl/')) t = 'xl/' + t; rel[r.getAttribute('Id')] = t; });
+            const sheets = {}; Array.from(new DOMParser().parseFromString(wbx, 'application/xml').getElementsByTagName('sheet')).forEach(s => { sheets[s.getAttribute('name')] = rel[s.getAttribute('r:id')]; });
+            let sst = []; const sx = await zipText(z, 'xl/sharedStrings.xml');
+            if (sx) sst = Array.from(new DOMParser().parseFromString(sx, 'application/xml').getElementsByTagName('si')).map(si => Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join(''));
+            return { async rows(name) { const p = sheets[name]; return p ? parseSheetXml(await zipText(z, p), sst) : null; } };
+        }
+        async function invParse(wb) {
+            const num = x => typeof x === 'number' && isFinite(x) ? x : null, str = x => x == null ? '' : String(x).trim();
+            const ml = await wb.rows('Master Item List'); if (!ml) throw new Error(L('ບໍ່ພົບແຊັດ "Master Item List"', 'Sheet "Master Item List" not found'));
+            const master = {}; ml.forEach((r, i) => { if (r && i >= 3 && typeof r[2] === 'string' && r[2].trim()) master[r[2].trim()] = r; });
+            const wk = [];
+            for (let w = 1; w <= 5; w++) {
+                const rows = await wb.rows('Week ' + w); if (!rows) throw new Error(L(`ບໍ່ພົບແຊັດ "Week ${w}"`, `Sheet "Week ${w}" not found`));
+                const m = {}, order = []; rows.forEach((r, i) => { if (!r || i < 7) return; const c = str(r[2]); if (c && c !== 'Code' && master[c] && !m[c]) { m[c] = r; order.push(c); } });
+                wk.push({ m, order });
+            }
+            if (!wk[0].order.length) throw new Error(L('ບໍ່ພົບລາຍການໃນແຊັດ Week 1', 'No items found in sheet Week 1'));
+            const items = wk[0].order.map(c => {
+                const M = master[c], w1 = wk[0].m[c];
+                const it = { id: c, category: str(M[4]), nameEn: str(M[5]), nameLao: str(M[6]), supplier: str(M[0]), storage: str(M[1]) || 'R/T', pack: str(M[7]), uom: str(M[8]), cost: num(M[13]) != null ? num(M[13]) : (num(M[12]) || 0) / (num(M[9]) || 1), barcode: str(M[3]), beg: num(w1[7]) || 0, rec: 0, out: 0, ending: 0, wk: [] };
+                for (let w = 0; w < 5; w++) {
+                    const r = wk[w].m[c]; let rec = null;
+                    if (r) { const p = [8, 9, 10, 11, 12, 13, 14, 15].map(k => num(r[k])).filter(x => x != null); rec = p.length ? Math.round(p.reduce((a, b) => a + b, 0) * 1000) / 1000 : null; }
+                    it.wk.push({ rec, out: r ? num(r[16]) : null, end: r && num(r[18]) != null ? Math.round(num(r[18]) * 1000) / 1000 : null });
+                }
+                it.ending = it.beg; syncItem(it); return it;
+            });
+            const byId = {}; items.forEach(i => byId[i.id] = i); const waste = [];
+            const wr = await wb.rows('Waste');
+            if (wr && wr[0]) {
+                const cols = []; wr[0].forEach((v, ci) => { if (typeof v === 'number' && v > 40000 && v < 60000) cols.push([ci, dateKey(v)]); });
+                wr.forEach((r, i) => { if (!r || i < 3) return; const it = byId[str(r[2])]; if (!it) return; cols.forEach(([ci, dk]) => { const q = num(r[ci]); if (q > 0) waste.push({ logId: new Date(+dk.slice(0, 4), +dk.slice(5, 7) - 1, +dk.slice(8), 12).getTime() + waste.length, timestamp: dk.split('-').reverse().join('/'), id: it.id, nameLao: it.nameLao, nameEn: it.nameEn, uom: it.uom, cost: it.cost, qty: Math.round(q * 1000) / 1000, reason: L('ນຳເຂົ້າຈາກ Excel', 'Imported from Excel'), imp: true }); }); });
+            }
+            return { items, waste, counted: [0, 1, 2, 3, 4].map(w => items.filter(i => i.wk[w].end != null).length) };
+        }
+        async function onInvFile(inp) {
+            const f = inp.files[0]; inp.value = ''; if (!f) return;
+            try { pendingInv = await invParse(await readWorkbook(f)); openConfirmModal('invimport'); }
+            catch (e) { showToast(L('ອ່ານໄຟລ໌ Inventory ບໍ່ໄດ້: ', 'Could not read the Inventory file: ') + (e.message || e), 'info'); }
+        }
+        function executeInvImport() {
+            const P = pendingInv; if (!P) return;
+            inventory = P.items; wasteLogs = wasteLogs.filter(w => !w.imp).concat(P.waste).sort((a, b) => b.logId - a.logId);
+            isRolledOver = false; document.getElementById('rollover-success-banner').classList.add('hidden');
+            document.getElementById('header-month-label').textContent = "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
+            stockWeek = currentStockWeek(); persistState(); pendingInv = null; closeConfirmModal();
+            populateDropdowns(); refreshAllViews(); renderStockWeekChips();
+            showToast(L(`📤 ນຳເຂົ້າ Inventory ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Inventory imported: ${P.items.length} items`), 'success');
         }
 
         // ---- Minimal XLSX writer (no external library, works offline) ----
@@ -1798,7 +1989,7 @@
                 if (c == null) return '';
                 const o = typeof c === 'object' ? c : { v: c }, ref = colName(ci) + (ri + 1), st = o.s ? ` s="${o.s}"` : '';
                 if (o.v === '') return `<c r="${ref}"${st}/>`;
-                if (o.f) return `<c r="${ref}"${st}><f>${xe(o.f)}</f><v>${o.v}</v></c>`;
+                if (o.f) { const isS = typeof o.v === 'string'; return `<c r="${ref}"${st}${isS ? ' t="str"' : ''}><f>${xe(o.f)}</f><v>${isS ? xe(o.v) : o.v}</v></c>`; }
                 if (typeof o.v === 'number' && isFinite(o.v)) return `<c r="${ref}"${st}><v>${o.v}</v></c>`;
                 return `<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xe(o.v)}</t></is></c>`;
             }).join('') + '</row>').join('');
@@ -1820,7 +2011,7 @@
             const n = sheets.length, enc = new TextEncoder(), files = [
                 ['[Content_Types].xml', `${H}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`],
                 ['_rels/.rels', `${H}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
-                ['xl/workbook.xml', `${H}<workbook xmlns="${NS}" xmlns:r="${RN}"><sheets>${sheets.map((s, i) => `<sheet name="${xe(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`],
+                ['xl/workbook.xml', `${H}<workbook xmlns="${NS}" xmlns:r="${RN}"><sheets>${sheets.map((s, i) => `<sheet name="${xe(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets><calcPr fullCalcOnLoad="1"/></workbook>`],
                 ['xl/_rels/workbook.xml.rels', `${H}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${n + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
                 ['xl/styles.xml', styles], ...sheets.map((s, i) => [`xl/worksheets/sheet${i + 1}.xml`, sheetXml(s)])
             ].map(([name, txt]) => ({ name, data: enc.encode(txt) }));
