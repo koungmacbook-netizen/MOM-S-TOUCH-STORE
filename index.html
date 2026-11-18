@@ -61,7 +61,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-tight">
-                        Mom's Touch Vangxai - ລະບົບຈັດການສະຕ໋ອກ
+                        <span id="branch-title">Mom's Touch Vangxai</span> - ລະບົບຈັດການສະຕ໋ອກ
                     </h1>
                     <p class="text-xs text-red-100 opacity-90">
                         Inventory & Stock Management System (100 ລາຍການວັດຖຸດິບ)
@@ -670,6 +670,7 @@
 
         // Initialize Data from localStorage or fallback to Master Excel Data
         function initApp() {
+            loadBranches();
             startI18n();
             try {
                 const savedInv = localStorage.getItem(STORAGE_KEY_INV);
@@ -1108,9 +1109,13 @@
             const msgEl = document.getElementById('modal-message');
             const confirmBtn = document.getElementById('modal-confirm-btn');
 
-            if (actionType === 'invimport') {
+            if (actionType === 'branchdel') {
+                titleEl.textContent = L('ລຶບສາຂາ', 'Delete branch');
+                msgEl.textContent = L(`ຂໍ້ມູນທັງໝົດຂອງສາຂາ ${brName()} ຈະຖືກລຶບ ແລະ ບໍ່ສາມາດກູ້ຄືນໄດ້ (ແນະນຳໃຫ້ສຳຮອງ JSON ກ່ອນ). ດຳເນີນການຕໍ່ບໍ?`, `All data of branch ${brName()} will be deleted and cannot be restored (back up the JSON first). Continue?`);
+                confirmBtn.onclick = executeBranchDelete;
+            } else if (actionType === 'invimport') {
                 const P = pendingInv; titleEl.textContent = L('ນຳເຂົ້າໄຟລ໌ Inventory', 'Import Inventory file');
-                msgEl.textContent = L(`ພົບ ${P.items.length} ລາຍການ, ຂໍ້ມູນຂອງເສຍ ${P.waste.length} ແຖວ. ນັບແລ້ວ ອາທິດ 1-5: ${P.counted.join(' / ')} ລາຍການ. ຂໍ້ມູນສະຕ໋ອກປັດຈຸບັນຈະຖືກແທນທີ່. ດຳເນີນການຕໍ່ບໍ?`, `Found ${P.items.length} items and ${P.waste.length} waste lines. Items counted in weeks 1-5: ${P.counted.join(' / ')}. Current stock data will be replaced. Continue?`);
+                msgEl.textContent = L(`ສາຂາ ${brName()}: ພົບ ${P.items.length} ລາຍການ, ຂໍ້ມູນຂອງເສຍ ${P.waste.length} ແຖວ. ນັບແລ້ວ ອາທິດ 1-5: ${P.counted.join(' / ')} ລາຍການ. ຂໍ້ມູນສະຕ໋ອກປັດຈຸບັນຈະຖືກແທນທີ່. ດຳເນີນການຕໍ່ບໍ?`, `Branch ${brName()}: found ${P.items.length} items and ${P.waste.length} waste lines. Items counted in weeks 1-5: ${P.counted.join(' / ')}. Current stock data will be replaced. Continue?`);
                 confirmBtn.onclick = executeInvImport;
             } else if (actionType === 'posclear') {
                 titleEl.textContent = L('ລ້າງຂໍ້ມູນ POS', 'Clear POS data');
@@ -1302,7 +1307,7 @@
         // ---- PR state ----
         let prState = null, pendingImport = null;
         const prNo = seq => 'PR-' + today().replace(/-/g, '') + '-' + String(seq).padStart(3, '0');
-        function newPR() { return { seq: 1, group: 'all', h: { no: '', date: today(), req: '', loc: "Mom's Touch Vangxai", addr: '', by: '', tel: '', rem: '' }, q: {} }; }
+        function newPR() { return { seq: 1, group: 'all', h: { no: '', date: today(), req: '', loc: brFull(), addr: '', by: '', tel: '', rem: '' }, q: {} }; }
         function normalizePR(p) {
             const d = newPR();
             if (p && typeof p === 'object') { Object.assign(d, p); d.h = Object.assign(newPR().h, p.h || {}); d.q = p.q && typeof p.q === 'object' ? p.q : {}; }
@@ -1314,13 +1319,15 @@
             try { prState = normalizePR(JSON.parse(localStorage.getItem(STORAGE_KEY_PR))); } catch (e) { prState = normalizePR(null); }
             const bcls = 'bg-white/15 hover:bg-white/25 text-white border border-white/25 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5 cursor-pointer';
             document.getElementById('hdr-extra').innerHTML =
-                `<button onclick="backupJSON()" class="${bcls}">💾 ${L('ສຳຮອງຂໍ້ມູນ JSON', 'Backup JSON')}</button>
+                `<button onclick="openBranchPanel()" class="${bcls}">🏬 <span id="branch-btn-name"></span> ▾</button>
+                 <button onclick="backupJSON()" class="${bcls}">💾 ${L('ສຳຮອງຂໍ້ມູນ JSON', 'Backup JSON')}</button>
                  <button onclick="pickRestore()" class="${bcls}">📂 ${L('ກູ້ຄືນ JSON', 'Restore JSON')}</button>
                  <button onclick="toggleLang()" class="${bcls}">🌐 ${LANG === 'en' ? 'ລາວ' : 'English'}</button>
                  <input type="file" id="restore-file" accept=".json,application/json" class="hidden" onchange="onRestoreFile(this)">`;
             stockWeek = currentStockWeek(); renderTabTools();
             renderPRShell();
             salesInit();
+            updateBranchUi();
         }
         function renderPRShell() {
             const el = document.getElementById('tab-content-pr'); if (!el) return;
@@ -1727,7 +1734,7 @@
             const rows1 = [head, ...m.weeks.map(w => line(L('ອາທິດ', 'Week') + ' ' + (w.w + 1), `${w.from}-${w.to}/${salesState.month.slice(5)}`, w, w.target)), line(L('ລວມເດືອນ', 'Month total'), salesState.month, m.tot, m.T)];
             const pr = scopeProducts(salesState, m.days.map(d => d.key));
             const rows2 = [[L('ລະຫັດ', 'Code'), L('ເມນູ', 'Menu item'), L('ຈຳນວນ', 'Units'), L('ຍອດຂາຍ', 'Sales'), L('ຕົ້ນທຶນ/ໜ່ວຍ', 'Unit cost'), L('ຕົ້ນທຶນລວມ', 'Total cost'), L('ກຳໄລ', 'Profit')].map(hd), ...pr.map(r => [ce(r.c), ce(r.n), ce(r.q), nu(r.v), r.uc != null ? ce(r.uc) : ce(''), nu(r.cost), nu(r.profit)])];
-            dl(buildXlsx([{ name: 'Weekly P&L', widths: [14, 14, 9, 18, 14, 18, 18, 16, 16, 8, 12, 14, 18, 9, 16], rows: rows1, freeze: 1 }, { name: 'Menu items', widths: [14, 40, 9, 16, 14, 16, 16], rows: rows2, freeze: 1 }]), `Sales-PnL-${salesState.month}.xlsx`);
+            dl(buildXlsx([{ name: 'Weekly P&L', widths: [14, 14, 9, 18, 14, 18, 18, 16, 16, 8, 12, 14, 18, 9, 16], rows: rows1, freeze: 1 }, { name: 'Menu items', widths: [14, 40, 9, 16, 14, 16, 16], rows: rows2, freeze: 1 }]), `Sales-PnL-${brSlug()}-${salesState.month}.xlsx`);
             showToast(L('📥 ດາວໂຫຼດ P&L Excel ແລ້ວ', '📥 P&L Excel downloaded'), 'success');
         }
 
@@ -1805,16 +1812,17 @@
               <button onclick="document.getElementById('inv-file').click()" class="${b}">📤 ${L('ນຳເຂົ້າໄຟລ໌ Inventory (.xlsx)', 'Import Inventory file (.xlsx)')}</button>
               <button onclick="exportInventoryXlsx()" class="${b}">📘 ${L('ດາວໂຫຼດໄຟລ໌ Inventory (ມີສູດ)', 'Download Inventory file (with formulas)')}</button>
               <input type="file" id="inv-file" accept=".xlsx" class="hidden" onchange="onInvFile(this)">`;
-            window.addEventListener('afterprint', () => document.body.classList.remove('print-doc'));
+            window.addEventListener('afterprint', () => { document.body.classList.remove('print-doc'); document.body.style.zoom = ''; });
         }
         function exportTab() { ({ stock: exportToCSV, rollover: exportPOxlsx, pr: exportPR, sales: exportSalesXlsx, waste: exportWasteXlsx }[currentTab] || exportToCSV)(); }
         function printTab() {
             if (currentTab === 'pr') { printPRDoc(); return; }
+            if (currentTab === 'stock') { printStockDoc(); return; }
             const names = { stock: L('ນັບສະຕ໋ອກ', 'Stock count'), rollover: L('ຍົກຍອດ & ສັ່ງຊື້', 'Month rollover & ordering'), sales: L('ເປົ້າໝາຍຍອດຂາຍ & P&L', 'Target sales & P&L'), waste: L('ບັນທຶກຂອງເສຍ', 'Waste log') };
-            let t = `Mom's Touch Vangxai - ${names[currentTab]}`;
+            let t = `${brFull()} - ${names[currentTab]}`;
             if (currentTab === 'stock') t += ' - ' + (stockWeek === 'm' ? L('ທັງເດືອນ', 'Whole month') : `${L('ອາທິດ', 'Week')} ${stockWeek + 1} (${L('ຈັນ ', 'Mon ')}${fmtDM2(stockMondays()[stockWeek])})`);
             document.getElementById('print-title').textContent = t + ' · ' + today();
-            setPage('landscape'); setTimeout(() => window.print(), 60);
+            setPage('portrait'); document.body.style.zoom = fitZoom(); setTimeout(() => window.print(), 60);
         }
         function printPRDoc() {
             const lines = sortedInv().filter(i => prState.q[i.id] > 0);
@@ -1836,7 +1844,7 @@
             const rows = [[L('ລຳດັບ', 'No.'), L('ບາໂຄດ', 'Barcode'), L('ຊື່ສິນຄ້າ', 'Item name'), L('ໜ່ວຍ', 'Unit'), L('ຜູ້ສະໜອງ', 'Supplier'), L('ຮອບຈັດສົ່ງ', 'Delivery'), L('ຄົງເຫຼືອ', 'In stock'), L('ແນະນຳສັ່ງ', 'Suggested qty'), L('ລາຄາ/ໜ່ວຍ', 'Unit cost'), L('ປະມານຄ່າໃຊ້ຈ່າຍ', 'Est. cost')].map(hd)];
             low.forEach((i, n) => { const r = rows.length + 1, q = suggestQty(i); rows.push([ce(n + 1), ce(bc(i)), ce(`${nm(i)}  ${subName(i)}`), ce(i.uom), ce(i.supplier), ce(sched(i)), ce(i.ending), ce(q), nu(i.cost), { f: `H${r}*I${r}`, v: Math.round(q * i.cost), s: 5 }]); });
             rows.push([null, null, null, null, null, null, null, null, { v: L('ລວມ', 'TOTAL'), s: 6 }, { f: `SUM(J2:J${rows.length})`, v: Math.round(low.reduce((a, i) => a + suggestQty(i) * i.cost, 0)), s: 7 }]);
-            dl(buildXlsx([{ name: 'Order suggestions', widths: [7, 16, 44, 9, 26, 20, 11, 13, 14, 16], rows, freeze: 1 }]), `Order-suggestions-${today()}.xlsx`);
+            dl(buildXlsx([{ name: 'Order suggestions', widths: [7, 16, 44, 9, 26, 20, 11, 13, 14, 16], rows, freeze: 1 }]), `Order-suggestions-${brSlug()}-${today()}.xlsx`);
             showToast(L('📥 ດາວໂຫຼດ Excel ແລ້ວ', '📥 Excel downloaded'), 'success');
         }
         function exportWasteXlsx() {
@@ -1844,7 +1852,7 @@
             const rows = [[L('ວັນທີ', 'Date'), L('ລະຫັດ', 'Code'), L('ຊື່ວັດຖຸດິບ', 'Item'), L('ສາເຫດ', 'Reason'), L('ຈຳນວນ', 'Qty'), L('ໜ່ວຍ', 'Unit'), L('ລາຄາ/ໜ່ວຍ', 'Unit cost'), L('ມູນຄ່າເສຍຫາຍ', 'Loss value')].map(hd)];
             wasteLogs.forEach(w => { const r = rows.length + 1; rows.push([ce(w.timestamp), ce(w.id), ce(`${nm(w)}  ${subName(w)}`), ce(w.reason), ce(w.qty), ce(w.uom), nu(w.cost), { f: `E${r}*G${r}`, v: Math.round(w.qty * w.cost), s: 5 }]); });
             rows.push([null, null, null, null, null, null, { v: L('ລວມ', 'TOTAL'), s: 6 }, { f: `SUM(H2:H${rows.length})`, v: Math.round(wasteLogs.reduce((a, w) => a + w.qty * w.cost, 0)), s: 7 }]);
-            dl(buildXlsx([{ name: 'Waste', widths: [14, 12, 44, 22, 10, 9, 14, 16], rows, freeze: 1 }]), `Waste-log-${today()}.xlsx`);
+            dl(buildXlsx([{ name: 'Waste', widths: [14, 12, 44, 22, 10, 9, 14, 16], rows, freeze: 1 }]), `Waste-log-${brSlug()}-${today()}.xlsx`);
             showToast(L('📥 ດາວໂຫຼດ Excel ແລ້ວ', '📥 Excel downloaded'), 'success');
         }
 
@@ -1886,7 +1894,7 @@
             });
             sheets.push({ name: 'Month', widths: [5, 16, 10, 34, 18, 7, 12, 11, 9, 9, 9, 9, 9, 9, 9, 11, 11, 11, 16], rows: mrows, freeze: 7 });
             // Ending stock
-            const erows = [[], [{ v: "MOM'S TOUCH LAOS VANGXAI ENDING STOCK", s: 2 }], [], [], ['NO', 'SUPPLIER', 'ITEMS CODE', 'CATEGORY', 'INGREDIENT', 'PURCHASE PACK SIZE', 'UOM', 'Cost / Unit (LAK)', 'Beginning', 'Receiving', 'Ending', 'Cost/Ending'].map(hd)];
+            const erows = [[], [{ v: `MOM'S TOUCH LAOS ${brName().toUpperCase()} ENDING STOCK`, s: 2 }], [], [], ['NO', 'SUPPLIER', 'ITEMS CODE', 'CATEGORY', 'INGREDIENT', 'PURCHASE PACK SIZE', 'UOM', 'Cost / Unit (LAK)', 'Beginning', 'Receiving', 'Ending', 'Cost/Ending'].map(hd)];
             let tv = 0; items.forEach((it, i) => { const r = 6 + i, m = 8 + i, ev = it.ending; tv += ev * it.cost; erows.push([ce(i + 1), ce(it.supplier), ce(it.id), ce(it.category), ce(nm(it)), ce(it.pack), ce(it.uom), nu(it.cost), { f: `Month!$H${m}`, v: it.beg, s: 4 }, { f: `Month!$I${m}`, v: it.rec || 0, s: 4 }, { f: `Month!$Q${m}`, v: ev, s: 4 }, { f: `IFERROR($K${r}*$H${r},"-")`, v: Math.round(ev * it.cost), s: 5 }]); });
             erows[4] = erows[4]; erows.splice(5, 0, [null, null, null, null, null, null, null, null, null, null, { v: 'TOTAL', s: 6 }, { f: `SUM(L7:L${6 + n})`, v: Math.round(tv), s: 7 }]);
             sheets.push({ name: 'Ending stock', widths: [5, 26, 11, 16, 34, 18, 7, 14, 11, 11, 11, 16], rows: erows, freeze: 5 });
@@ -1897,11 +1905,11 @@
             // Daily Data (sales from POS)
             const dk = Object.keys(salesState.pos.days).sort();
             if (dk.length) {
-                const vat = 1 + (+salesState.vat || 0) / 100, dr = [[], [], [], [null, { v: "Sales report - Mom's Touch Vangxai", s: 1 }], [], ['Date', 'Day', 'Sales Tax Incl.', 'Sales VAT excluded', 'Docket (orders)', 'Gross sales', 'Discounts'].map(hd)];
+                const vat = 1 + (+salesState.vat || 0) / 100, dr = [[], [], [], [null, { v: `Sales report - ${brFull()}`, s: 1 }], [], ['Date', 'Day', 'Sales Tax Incl.', 'Sales VAT excluded', 'Docket (orders)', 'Gross sales', 'Discounts'].map(hd)];
                 dk.forEach(k => { const d = salesState.pos.days[k], r = dr.length + 1, wd = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8)).getDay(); dr.push([ce(k), ce(WD[wd][1]), nu(d.net), { f: `C${r}/${vat}`, v: Math.round(d.net / vat), s: 5 }, ce(d.orders), nu(d.gross), nu(d.disc)]); });
                 sheets.push({ name: 'Daily Data', widths: [12, 7, 16, 18, 14, 16, 14], rows: dr, freeze: 6 });
             }
-            dl(buildXlsx(sheets), `Inventory_Mom_s_Touch_${today()}.xlsx`);
+            dl(buildXlsx(sheets), `Inventory_Mom_s_Touch_${brSlug()}_${today()}.xlsx`);
             showToast(L('📘 ດາວໂຫຼດໄຟລ໌ Inventory (ມີສູດ) ແລ້ວ', '📘 Inventory file (with formulas) downloaded'), 'success');
         }
 
@@ -1957,6 +1965,104 @@
             stockWeek = currentStockWeek(); persistState(); pendingInv = null; closeConfirmModal();
             populateDropdowns(); refreshAllViews(); renderStockWeekChips();
             showToast(L(`📤 ນຳເຂົ້າ Inventory ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Inventory imported: ${P.items.length} items`), 'success');
+        }
+
+        // ---- Branches (each branch keeps its own inventory, waste, PR, sales/POS) ----
+        const BR_KEY = 'mt_branches_v1';
+        let branches = { cur: 'b1', list: [{ id: 'b1', name: 'Vangxai' }] };
+        function loadBranches() { try { const b = JSON.parse(localStorage.getItem(BR_KEY)); if (b && Array.isArray(b.list) && b.list.length && b.list.find(x => x.id === b.cur)) branches = b; } catch (e) { } }
+        function saveBranches() { try { localStorage.setItem(BR_KEY, JSON.stringify(branches)); } catch (e) { } }
+        const curBranch = () => branches.list.find(b => b.id === branches.cur) || branches.list[0];
+        const brName = () => curBranch().name, brFull = () => "Mom's Touch " + brName(), brSlug = () => brName().replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || 'branch';
+        const snapshot = () => ({ inventory, wasteLogs, isRolledOver, pr: prState, sales: salesState });
+        function saveSnapshot() { try { localStorage.setItem('mt_branch_' + branches.cur, JSON.stringify(snapshot())); } catch (e) { } }
+        function loadSnapshot(d) {
+            inventory = d.inventory.map(i => ({ ...i, cost: +i.cost || 0, beg: +i.beg || 0, rec: +i.rec || 0, ending: +i.ending || 0 }));
+            wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : []; isRolledOver = !!d.isRolledOver;
+            prState = normalizePR(d.pr); salesState = normalizeSales(d.sales);
+            document.getElementById('rollover-success-banner').classList.toggle('hidden', !isRolledOver);
+            document.getElementById('header-month-label').textContent = isRolledOver ? "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)" : "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
+            persistState(); persistPR(); persistSales(); stockWeek = currentStockWeek();
+            populateDropdowns(); renderPRShell(); renderSalesShell(); refreshAllViews(); renderStockWeekChips(); updateBranchUi();
+        }
+        function blankBranchData() { const inv = inventory.map(i => ({ ...i, beg: 0, rec: 0, out: 0, ending: 0, wk: null })); inv.forEach(ensureWk); return { inventory: inv, wasteLogs: [], isRolledOver: false, pr: null, sales: null }; }
+        function updateBranchUi() {
+            const t = document.getElementById('branch-title'); if (t) t.textContent = brFull();
+            const b = document.getElementById('branch-btn-name'); if (b) b.textContent = brName();
+            document.title = (document.title.split(' - ')[0] || '') + ' - ' + brFull();
+        }
+        function switchBranch(id) {
+            if (id === branches.cur) return;
+            saveSnapshot(); branches.cur = id; saveBranches(); closeBranchPanel();
+            let d = null; try { d = JSON.parse(localStorage.getItem('mt_branch_' + id)); } catch (e) { }
+            loadSnapshot(d && Array.isArray(d.inventory) ? d : blankBranchData());
+            showToast(L(`ສະຫຼັບໄປສາຂາ ${brName()} ແລ້ວ`, `Switched to branch ${brName()}`), 'success');
+        }
+        async function createBranch() {
+            const name = document.getElementById('br-new').value.trim(), f = document.getElementById('br-file').files[0];
+            if (!name) { showToast(L('ກະລຸນາໃສ່ຊື່ສາຂາ', 'Enter a branch name'), 'info'); return; }
+            const blank = blankBranchData(); saveSnapshot();
+            branches.list.push({ id: 'b' + Date.now().toString(36), name }); branches.cur = branches.list[branches.list.length - 1].id; saveBranches(); closeBranchPanel();
+            loadSnapshot(blank);
+            if (f) { try { pendingInv = await invParse(await readWorkbook(f)); executeInvImport(); } catch (e) { showToast(L('ອ່ານໄຟລ໌ Inventory ບໍ່ໄດ້: ', 'Could not read the Inventory file: ') + (e.message || e), 'info'); } }
+            else showToast(L(`ສ້າງສາຂາ ${name} ແລ້ວ - ກົດ "ນຳເຂົ້າໄຟລ໌ Inventory" ເພື່ອໃສ່ຂໍ້ມູນຂອງສາຂານີ້`, `Branch ${name} created - use "Import Inventory file" to load its data`), 'success');
+        }
+        function renameBranch() { const v = document.getElementById('br-rename').value.trim(); if (!v) return; curBranch().name = v; saveBranches(); updateBranchUi(); closeBranchPanel(); showToast(L('ປ່ຽນຊື່ສາຂາແລ້ວ', 'Branch renamed'), 'success'); }
+        function executeBranchDelete() {
+            if (branches.list.length < 2) return;
+            const id = branches.cur; localStorage.removeItem('mt_branch_' + id);
+            branches.list = branches.list.filter(b => b.id !== id); branches.cur = branches.list[0].id; saveBranches(); closeConfirmModal();
+            let d = null; try { d = JSON.parse(localStorage.getItem('mt_branch_' + branches.cur)); } catch (e) { }
+            if (!d && branches.cur === 'b1') d = null;
+            loadSnapshot(d && Array.isArray(d.inventory) ? d : blankBranchData());
+            showToast(L('ລຶບສາຂາແລ້ວ', 'Branch deleted'), 'info');
+        }
+        function closeBranchPanel() { const e = document.getElementById('branch-panel'); if (e) e.remove(); }
+        function openBranchPanel() {
+            closeBranchPanel();
+            const el = document.createElement('div'); el.id = 'branch-panel'; el.className = 'no-print fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4'; el.onclick = e => { if (e.target === el) closeBranchPanel(); };
+            const inp = 'w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C]', bt = 'px-3 py-2 rounded-xl text-xs font-bold cursor-pointer';
+            el.innerHTML = `<div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+              <div class="flex justify-between items-center"><h3 class="font-bold text-lg text-slate-900">🏬 ${L('ສາຂາ', 'Branches')}</h3><button onclick="closeBranchPanel()" class="text-slate-500 hover:text-slate-800 text-lg cursor-pointer">✕</button></div>
+              <div class="space-y-2">${branches.list.map(b => `<div class="flex items-center gap-2 border rounded-xl px-3 py-2 ${b.id === branches.cur ? 'bg-red-50 border-red-300' : 'border-slate-200'}"><span class="flex-1 font-semibold text-slate-800">${esc(b.name)}</span>${b.id === branches.cur ? `<span class="text-xs text-red-700 font-bold">${L('ກຳລັງໃຊ້', 'Current')}</span>` : `<button onclick="switchBranch('${b.id}')" class="${bt} bg-slate-100 hover:bg-slate-200 text-slate-700">${L('ສະຫຼັບ', 'Switch')}</button>`}</div>`).join('')}</div>
+              <div class="border-t border-slate-200 pt-3 space-y-2"><p class="text-xs font-bold text-slate-700">${L('ປ່ຽນຊື່ສາຂາປັດຈຸບັນ', 'Rename current branch')}</p><div class="flex gap-2"><input id="br-rename" value="${esc(brName())}" class="${inp}"><button onclick="renameBranch()" class="${bt} bg-slate-800 text-white hover:bg-slate-700">${L('ບັນທຶກ', 'Save')}</button></div></div>
+              <div class="border-t border-slate-200 pt-3 space-y-2"><p class="text-xs font-bold text-slate-700">➕ ${L('ເພີ່ມສາຂາໃໝ່', 'Add a new branch')}</p>
+                <input id="br-new" placeholder="${L('ຊື່ສາຂາ ເຊັ່ນ Vientiane Center', 'Branch name, e.g. Vientiane Center')}" class="${inp}">
+                <label class="block text-xs text-slate-600">${L('ໄຟລ໌ Inventory ຂອງສາຂານີ້ (.xlsx) - ບໍ່ບັງຄັບ', 'This branch\'s Inventory file (.xlsx) - optional')}<input type="file" id="br-file" accept=".xlsx" class="block mt-1 text-xs"></label>
+                <button onclick="createBranch()" class="${bt} w-full bg-[#B91C1C] text-white hover:bg-red-800">${L('ສ້າງສາຂາ', 'Create branch')}</button></div>
+              ${branches.list.length > 1 ? `<button onclick="closeBranchPanel(); openConfirmModal('branchdel')" class="text-xs text-red-600 underline cursor-pointer">${L('ລຶບສາຂາປັດຈຸບັນ', 'Delete current branch')}</button>` : ''}</div>`;
+            document.body.appendChild(el);
+        }
+
+        // ---- A4 print sheet for the stock count (fits portrait A4 in every browser) ----
+        function stockFilteredItems() {
+            const g = id => document.getElementById(id), q = g('filter-search').value.trim().toLowerCase(), cf = g('filter-category').value, sf = g('filter-storage').value, lo = g('filter-low-stock').checked;
+            return inventory.filter(i => (!q || i.id.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q) || i.nameLao.toLowerCase().includes(q)) && (cf === 'ALL' || i.category === cf) && (sf === 'ALL' || i.storage === sf) && (!lo || isLowStockItem(i)));
+        }
+        function fitZoom() { const sec = document.getElementById('tab-content-' + currentTab); let w = sec.scrollWidth; sec.querySelectorAll('table').forEach(t => { w = Math.max(w, t.scrollWidth); }); return Math.min(1, 700 / Math.max(w, 1)); }
+        function printStockDoc() {
+            const items = stockFilteredItems(); if (!items.length) { showToast(L('ບໍ່ມີລາຍການທີ່ຈະພິມ', 'Nothing to print'), 'info'); return; }
+            const wkm = stockWeek !== 'm', b = 'border:1px solid #555;padding:2px 4px;', th = b + 'background:#0F6B6B;color:#fff;font-weight:700;text-align:center;font-size:8px', nm2 = b + 'text-align:right;font-family:monospace;white-space:nowrap';
+            const catSel = document.getElementById('filter-category').value, mons = stockMondays();
+            const wl = wkm ? `${L('ອາທິດ', 'Week')} ${stockWeek + 1}${mons[stockWeek] ? ' (' + L('ວັນຈັນ ', 'Mon ') + fmtDM2(mons[stockWeek]) + ')' : ''}` : L('ທັງເດືອນ', 'Whole month');
+            const cats = Object.keys(CATEGORY_META).map(k => { const its = inventory.filter(i => i.category === k); return { k, n: its.length, v: its.reduce((a, i) => a + i.ending * i.cost, 0) }; }).filter(c => c.n);
+            let cs = ''; for (let i = 0; i < cats.length; i += 5) { cs += '<tr>' + [0, 1, 2, 3, 4].map(x => { const c = cats[i + x]; return c ? `<td style="${b}width:20%;vertical-align:top"><b>${CATEGORY_META[c.k].icon} ${esc(CATEGORY_META[c.k].lao)}</b><br>${c.n} ${L('ລາຍການ', 'items')}<br><span style="font-family:monospace">${formatLAK(c.v)}</span></td>` : `<td style="${b}"></td>`; }).join('') + '</tr>'; }
+            let rows = '', last = '', n = 0;
+            items.forEach(it => {
+                if (it.category !== last) { last = it.category; rows += `<tr><td colspan="10" style="${b}background:#F1EEE7;font-weight:700">${CATEGORY_META[it.category] ? CATEGORY_META[it.category].icon + ' ' + esc(CATEGORY_META[it.category].lao) : esc(it.category)}</td></tr>`; }
+                n++; let beg, rec, out, end, use, val;
+                if (wkm) { const c = wkCalc(it)[stockWeek]; beg = formatQty(c.beg); rec = c.rec ? formatQty(c.rec) : ''; out = c.out ? formatQty(c.out) : ''; end = c.counted ? formatQty(c.end) : ''; use = c.counted ? formatQty(c.used) : ''; val = c.counted ? formatLAK(c.end * it.cost) : ''; }
+                else { beg = formatQty(it.beg); rec = it.rec ? formatQty(it.rec) : ''; out = it.out ? formatQty(it.out) : ''; end = formatQty(it.ending); use = formatQty(Math.max(0, it.beg + it.rec - (it.out || 0) - it.ending)); val = formatLAK(it.ending * it.cost); }
+                rows += `<tr style="height:20px;break-inside:avoid"><td style="${b}text-align:center">${n}</td><td style="${b}font-family:monospace">${esc(bc(it))}</td><td style="${b}"><b>${esc(nm(it))}</b> <span style="color:#555">${esc(subName(it))}</span></td><td style="${b}text-align:center">${esc(it.uom)}<br><span style="font-size:7px;color:#555">${esc(it.pack)}</span></td><td style="${nm2}">${beg}</td><td style="${nm2}">${rec}</td><td style="${nm2}">${out}</td><td style="${nm2}font-weight:700${wkm ? ';background:#FFFBEB' : ''}">${end}</td><td style="${nm2}">${use}</td><td style="${nm2}">${val}</td></tr>`;
+            });
+            const sig = t => `<td style="${b}height:46px;vertical-align:bottom;text-align:center;width:33%">${t}</td>`;
+            document.getElementById('print-area').innerHTML = `<div style="font-family:'Noto Sans Lao','Inter',sans-serif;color:#000;font-size:9px">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"><div><div style="font-size:15px;font-weight:700">${esc(brFull())}</div><div style="font-size:12px;font-weight:700">${L('ໃບນັບສະຕ໋ອກ', 'Stock Count Sheet')} - ${wl}${catSel !== 'ALL' && CATEGORY_META[catSel] ? ' - ' + esc(CATEGORY_META[catSel].lao) : ''}</div></div><div style="text-align:right">${L('ວັນທີພິມ', 'Printed')}: ${today()}<br>${L('ວັນທີນັບ', 'Count date')}: ____ / ____ / ________</div></div>
+              <table style="width:100%;border-collapse:collapse;margin-bottom:6px">${cs}</table>
+              <table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup><col style="width:4%"><col style="width:13%"><col style="width:27%"><col style="width:8%"><col style="width:8%"><col style="width:7%"><col style="width:6%"><col style="width:9%"><col style="width:8%"><col style="width:10%"></colgroup>
+              <thead><tr><th style="${th}">${L('ລຳດັບ', 'No.')}</th><th style="${th}">${L('ບາໂຄດ', 'Barcode')}</th><th style="${th}">${L('ຊື່ວັດຖຸດິບ', 'Item name')}</th><th style="${th}">${L('ໜ່ວຍ', 'Unit')}</th><th style="${th}">${L('ຕົ້ນ', 'Beg')}</th><th style="${th}">${L('ຮັບເຂົ້າ', 'In')}</th><th style="${th}">${L('ອອກ', 'Out')}</th><th style="${th}">${L('ຄົງເຫຼືອ (ນັບ)', 'Ending (count)')}</th><th style="${th}">${L('ໃຊ້ໄປ', 'Usage')}</th><th style="${th}">${L('ມູນຄ່າ ₭', 'Value ₭')}</th></tr></thead><tbody>${rows}</tbody></table>
+              <table style="width:100%;border-collapse:collapse;margin-top:12px;break-inside:avoid"><tr>${sig(L('ຜູ້ນັບ', 'Counted by'))}${sig(L('ຜູ້ກວດ', 'Checked by'))}${sig(L('ຜູ້ຈັດການ', 'Manager'))}</tr></table></div>`;
+            setPage('portrait'); document.body.classList.add('print-doc'); setTimeout(() => window.print(), 80);
         }
 
         // ---- Minimal XLSX writer (no external library, works offline) ----
@@ -2050,13 +2156,13 @@
             const hd = v => ({ v, s: 3 }), ce = v => ({ v, s: 4 }), nu = v => ({ v, s: 5 });
             const rows = [[L('ລຳດັບ', 'No.'), L('ບາໂຄດ', 'Barcode'), L('ຊື່ (ລາວ)', 'Name (Lao)'), L('ຊື່ (EN)', 'Name (EN)'), L('ໜ່ວຍ', 'Unit'), L('ຂະໜາດບັນຈຸ', 'Pack size'), L('ໝວດໝູ່', 'Category'), L('ບ່ອນເກັບ', 'Storage'), L('ຜູ້ສະໜອງ', 'Supplier'), L('ລາຄາ/ໜ່ວຍ', 'Unit cost'), L('ຍອດຍົກມາ', 'Beginning'), L('ຮັບເຂົ້າ', 'Received'), L('ຄົງເຫຼືອ', 'Ending'), L('ໃຊ້ໄປ', 'Usage'), L('ມູນຄ່າຄົງເຫຼືອ', 'Ending value'), ...[1, 2, 3, 4, 5].map(w => L('ນັບອາທິດ ', 'Count W') + w)].map(hd)];
             inventory.forEach((i, n) => rows.push([ce(n + 1), ce(bc(i)), ce(i.nameLao), ce(i.nameEn), ce(i.uom), ce(i.pack), ce(i.category), ce(i.storage), ce(i.supplier), nu(i.cost), ce(i.beg), ce(i.rec), ce(i.ending), ce(Math.round(Math.max(0, i.beg + i.rec - i.ending) * 100) / 100), nu(Math.round(i.ending * i.cost)), ...[0, 1, 2, 3, 4].map(w => ce(hasWk(i) && i.wk[w].end != null ? i.wk[w].end : ''))]));
-            dl(buildXlsx([{ name: 'Stock', widths: [7, 14, 30, 30, 9, 22, 18, 9, 26, 14, 12, 12, 12, 12, 16, 11, 11, 11, 11, 11], rows, freeze: 1 }]), `MomsTouch_Vangxai_Inventory_${today()}.xlsx`);
+            dl(buildXlsx([{ name: 'Stock', widths: [7, 14, 30, 30, 9, 22, 18, 9, 26, 14, 12, 12, 12, 12, 16, 11, 11, 11, 11, 11], rows, freeze: 1 }]), `MomsTouch_${brSlug()}_Inventory_${today()}.xlsx`);
             showToast(L('📥 ດາວໂຫຼດລາຍງານ Excel ແລ້ວ', '📥 Excel report downloaded'), 'success');
         }
 
         // ---- JSON backup / restore (move data between devices) ----
         function backupJSON() {
-            const d = { app: 'momstouch-vangxai', version: 2, exportedAt: new Date().toISOString(), inventory, wasteLogs, isRolledOver, pr: prState, sales: salesState };
+            const d = { app: 'momstouch-vangxai', version: 2, exportedAt: new Date().toISOString(), inventory, wasteLogs, isRolledOver, pr: prState, sales: salesState, branches, branchData: (saveSnapshot(), Object.fromEntries(branches.list.map(b => { let x = null; try { x = JSON.parse(localStorage.getItem('mt_branch_' + b.id)); } catch (e) { } return [b.id, x]; }))) };
             dl(new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' }), `MomsTouch_Backup_${today()}.json`);
             showToast(L('💾 ສຳຮອງຂໍ້ມູນ JSON ແລ້ວ', '💾 JSON backup saved'), 'success');
         }
@@ -2079,10 +2185,11 @@
             wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : [];
             isRolledOver = !!d.isRolledOver;
             prState = normalizePR(d.pr); salesState = normalizeSales(d.sales);
+            if (d.branches && d.branches.list && d.branchData) { branches = d.branches; saveBranches(); branches.list.forEach(b => { if (b.id !== branches.cur && d.branchData[b.id]) localStorage.setItem('mt_branch_' + b.id, JSON.stringify(d.branchData[b.id])); }); }
             document.getElementById('rollover-success-banner').classList.toggle('hidden', !isRolledOver);
             document.getElementById('header-month-label').textContent = isRolledOver ? "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)" : "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
             persistState(); persistPR(); persistSales(); pendingImport = null; closeConfirmModal();
-            populateDropdowns(); renderPRShell(); renderSalesShell(); refreshAllViews();
+            populateDropdowns(); renderPRShell(); renderSalesShell(); refreshAllViews(); updateBranchUi();
             showToast(L('📂 ກູ້ຄືນຂໍ້ມູນສຳເລັດ', '📂 Data restored successfully'), 'success');
         }
 
