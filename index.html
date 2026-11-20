@@ -64,7 +64,8 @@
                         <span id="branch-title">Mom's Touch Vangxai</span> - ລະບົບຈັດການສະຕ໋ອກ
                     </h1>
                     <p class="text-xs text-red-100 opacity-90">
-                        Inventory & Stock Management System (100 ລາຍການວັດຖຸດິບ)
+                        Inventory & Stock Management System (<span id="inv-count">100</span> ລາຍການວັດຖຸດິບ)
+                        <span id="app-version-badge" class="ml-1 inline-flex items-center gap-1 bg-white/15 border border-white/25 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white whitespace-nowrap"></span>
                     </p>
                 </div>
             </div>
@@ -747,6 +748,7 @@
             renderWasteTable();
             renderPR();
             renderStockWeekChips();
+            updateBranchUi();
         }
 
         // Check if an item is Low Stock / Out of Stock (Ending <= 2)
@@ -1255,6 +1257,7 @@
 
         /* ================= v2 additions ================= */
         const STORAGE_KEY_PR = "momstouch_vangxai_pr_v1";
+        const APP_VERSION = '1.4', APP_DATE = '20/11', APP_BUILD = 'Build 2026-11-20 · set-cost v3 · branches · weekly stock count';
         const L = (lo, en) => LANG === 'en' ? en : lo;
         const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
         const nm = o => LANG === 'en' ? o.nameEn : o.nameLao;
@@ -1462,10 +1465,22 @@
         // The components are learned from the POS data (bom) and their cost is rolled into the Set.
         const isSet = (S, pk) => !!(S.pos.bom && S.pos.bom[pk] && S.pos.bom[pk].n);
         const compCosted = (S, pk) => isSet(S, pk) && Object.keys(S.pos.bom[pk].c).some(c => S.costs[c] != null);
-        function prodCost(S, pk, q, v, f, vat, cp) {
-            const uc = S.costs[pk], qp = q - f; let own;
-            if (uc != null) own = qp * uc; else if (compCosted(S, pk)) own = 0; else own = v / vat * cp;
-            return { own, free: uc != null ? f * uc : 0 };
+        // Per-day cost allocation. A Set that has its own unit cost is treated as FULL cost (components included), so the free
+        // component lines inside it add nothing. A Set with no unit cost gets the cost of its components (bottom-up).
+        function dayAlloc(S, key, vat, cp) {
+            const bom = S.pos.bom || {}, R = {};
+            for (const pk in S.pos.prod) {
+                const e = S.pos.prod[pk].d[key]; if (!e) continue;
+                const q = e[0], v = e[1], f = e[2] || 0, qp = q - f, uc = S.costs[pk];
+                let own; if (uc != null) own = qp * uc; else if (compCosted(S, pk)) own = 0; else own = v / vat * cp;
+                R[pk] = { q, v, f, qp, own, free: uc != null ? f * uc : 0, moved: 0, attr: 0 };
+            }
+            Object.keys(R).forEach(ck => {
+                const C = R[ck]; if (!C.f) return;
+                const sets = Object.keys(bom).filter(sk => R[sk] && R[sk].qp > 0 && bom[sk].n && bom[sk].c[ck]), w = sets.map(sk => R[sk].qp * bom[sk].c[ck] / bom[sk].n), W = w.reduce((a, b) => a + b, 0);
+                if (W > 0) { sets.forEach((sk, i) => { if (S.costs[sk] == null) R[sk].attr += C.free * w[i] / W; }); C.moved = C.free; }
+            });
+            return R;
         }
         function salesDays(S) {
             const [y, m] = S.month.split('-').map(Number), dim = new Date(y, m, 0).getDate(), vat = 1 + (+S.vat || 0) / 100, cp = (+S.costPct || 0) / 100;
@@ -1474,7 +1489,7 @@
             for (let dd = 1; dd <= dim; dd++) {
                 const key = S.month + '-' + p2(dd), p = S.pos.days[key], man = S.manual[key];
                 const net = man != null ? man : (p ? p.net : null); let cogs = 0;
-                if (p) { for (const pk in S.pos.prod) { const e = S.pos.prod[pk].d[key]; if (!e) continue; const c = prodCost(S, pk, e[0], e[1], e[2] || 0, vat, cp); cogs += c.own + c.free; } }
+                if (p) { const D = dayAlloc(S, key, vat, cp); for (const pk in D) { const d = D[pk]; cogs += d.own + (d.free - d.moved) + d.attr; } }
                 else if (net) cogs = net / vat * cp;
                 days.push({ dd, key, wd: new Date(y, m - 1, dd).getDay(), net, has: net != null, pos: !!p && man == null, gross: p ? p.gross : (net || 0), disc: p ? p.disc : 0, orders: p ? p.orders : 0, cogs, waste: waste[key] || 0, rev: (net || 0) / vat });
             }
@@ -1495,21 +1510,12 @@
             return { dim, T, weeks, tot, days };
         }
         function scopeProducts(S, keys) {
-            const vat = 1 + (+S.vat || 0) / 100, cp = (+S.costPct || 0) / 100, bom = S.pos.bom || {}, R = {};
-            for (const pk in S.pos.prod) {
-                const P = S.pos.prod[pk]; let q = 0, v = 0, f = 0;
-                keys.forEach(k => { const e = P.d[k]; if (e) { q += e[0]; v += e[1]; f += e[2] || 0; } });
-                if (!q && !v) continue;
-                const c = prodCost(S, pk, q, v, f, vat, cp);
-                R[pk] = { key: pk, c: P.c, n: P.n, q, f, qp: q - f, v, rev: v / vat, uc: S.costs[pk], own: c.own, free: c.free, moved: 0, attr: 0 };
-            }
-            // move the cost of free component units onto the Sets they belong to
-            Object.keys(R).forEach(ck => {
-                const C = R[ck]; if (!C.free) return;
-                const sets = Object.keys(bom).filter(sk => R[sk] && bom[sk].n && bom[sk].c[ck]), w = sets.map(sk => R[sk].qp * bom[sk].c[ck] / bom[sk].n), W = w.reduce((a, b) => a + b, 0);
-                if (W > 0) { sets.forEach((sk, i) => { R[sk].attr += C.free * w[i] / W; }); C.moved = C.free; }
-            });
-            return Object.values(R).map(r => ({ ...r, isSet: isSet(S, r.key), cost: r.own + (r.free - r.moved) + r.attr, profit: r.rev - (r.own + (r.free - r.moved) + r.attr) })).sort((a, b) => b.v - a.v);
+            const vat = 1 + (+S.vat || 0) / 100, cp = (+S.costPct || 0) / 100, A = {};
+            keys.forEach(k => { const D = dayAlloc(S, k, vat, cp); for (const pk in D) { const d = D[pk], a = A[pk] || (A[pk] = { q: 0, v: 0, f: 0, own: 0, free: 0, moved: 0, attr: 0 }); ['q', 'v', 'f', 'own', 'free', 'moved', 'attr'].forEach(x => { a[x] += d[x]; }); } });
+            return Object.entries(A).filter(([, a]) => a.q || a.v).map(([pk, a]) => {
+                const P = S.pos.prod[pk], rev = a.v / vat, cost = a.own + (a.free - a.moved) + a.attr;
+                return { key: pk, c: P.c, n: P.n, q: a.q, f: a.f, qp: a.q - a.f, v: a.v, rev, uc: S.costs[pk], own: a.own, cost, profit: rev - cost, isSet: isSet(S, pk) };
+            }).sort((a, b) => b.v - a.v);
         }
 
         // ---- UI ----
@@ -1556,7 +1562,7 @@
                 <p class="text-xs text-slate-500">${L('ຊ່ອງສີຂຽວ = ຂໍ້ມູນຈາກ POS, ສີເຫຼືອງ = ປ້ອນເອງ (ລຶບເພື່ອກັບໄປໃຊ້ຄ່າ POS)', 'Green = from POS, amber = typed manually (clear it to go back to the POS value)')}</p></div>
                 <div class="overflow-x-auto"><table class="w-full text-left border-collapse min-w-[950px]"><tbody id="sales-grid" class="divide-y divide-slate-100"></tbody></table></div></div>
               <div class="${card}"><div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-900">${L('ຕົ້ນທຶນຕໍ່ໜ່ວຍຂອງແຕ່ລະເມນູ', 'Unit cost per menu item')}</h3>
-                <p class="text-xs text-slate-500">${L('ເມນູ SET: ລະບົບອ່ານສ່ວນປະກອບຈາກ POS (ລາຍການລາຄາ 0 ໃນອໍເດີດຽວກັນ) ແລ້ວລວມຕົ້ນທຶນຂອງແຕ່ລະສ່ວນປະກອບເຂົ້າໃນ Set ອັດຕະໂນມັດ. ໃສ່ຕົ້ນທຶນຕໍ່ໜ່ວຍຂອງສ່ວນປະກອບ (Coke, ເບີເກີ, ມັນ...) ແລະ ສຳລັບ Set ໃຫ້ໃສ່ສະເພາະຕົ້ນທຶນເພີ່ມ (ເຊັ່ນ ກ່ອງ, ຊອດ) ຫຼື ປ່ອຍວ່າງ. ຖ້າຍັງບໍ່ໃສ່ຕົ້ນທຶນສ່ວນປະກອບ ລະບົບໃຊ້ ຕົ້ນທຶນມາດຕະຖານ (% ຂອງຍອດຂາຍ)', 'SET menus: the app reads each Set\'s components from the POS (zero-price lines in the same order) and adds their costs into the Set automatically. Enter the unit cost of the components (Coke, burger, fries...) and, for a Set, only its extra cost (box, sauce) or leave it blank. Until components are costed, the default cost % of sales is used')}</p></div>
+                <p class="text-xs text-slate-500">${L('ເມນູ SET: ລະບົບອ່ານສ່ວນປະກອບຈາກ POS (ລາຍການລາຄາ 0 ໃນອໍເດີດຽວກັນ). ຖ້າໃສ່ ຕົ້ນທຶນຂອງ Set ເປັນຕົ້ນທຶນເຕັມ (ລວມເບີເກີ, ມັນ, Coke ແລ້ວ ຕາມໃບ COGS) ລະບົບຈະບໍ່ຄິດຕົ້ນທຶນສ່ວນປະກອບທີ່ແຖມໃນ Set ຊ້ຳອີກ. ຖ້າປ່ອຍຕົ້ນທຶນ Set ວ່າງ ແຕ່ໃສ່ຕົ້ນທຶນສ່ວນປະກອບ ລະບົບລວມສ່ວນປະກອບເຂົ້າ Set ໃຫ້. ຖ້າບໍ່ໃສ່ຫຍັງເລີຍ ໃຊ້ ຕົ້ນທຶນມາດຕະຖານ (% ຂອງຍອດຂາຍ)', 'SET menus: the app reads each Set\'s components from the POS (zero-price lines in the same order). If you enter a Set\'s unit cost as its FULL cost (burger, fries and Coke already included, like your COGS sheet), the free component lines inside that Set are NOT charged again. If you leave a Set\'s cost blank but cost its components, their cost is added to the Set automatically. If neither is entered, the default cost % of sales is used')}</p></div>
                 <div class="overflow-x-auto max-h-[600px]"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-100 text-slate-700 text-xs font-bold sticky top-0"><tr>
                   ${[['ລະຫັດ', 'Code', ''], ['ເມນູ / ສິນຄ້າ', 'Menu item', ''], ['ຈຳນວນຂາຍ', 'Units sold', ' text-right'], ['ໃນເຊັດ (ລາຄາ 0)', 'Free in sets', ' text-right'], ['ຍອດຂາຍ', 'Sales', ' text-right'], ['ລາຄາສະເລ່ຍ', 'Avg price', ' text-right'], ['ຕົ້ນທຶນ/ໜ່ວຍ (₭)', 'Unit cost (LAK)', ' text-center bg-amber-50'], ['% ຕົ້ນທຶນ', 'Cost %', ' text-right'], ['ຕົ້ນທຶນລວມ', 'Total cost', ' text-right'], ['ກຳໄລ', 'Profit', ' text-right']].map(c => `<th class="${th}${c[2]}">${L(c[0], c[1])}</th>`).join('')}</tr></thead>
                   <tbody id="sales-costs" class="divide-y divide-slate-100 text-sm"></tbody><tfoot id="sales-costs-total" class="bg-slate-100 font-bold text-sm"></tfoot></table></div></div>`;
@@ -1615,7 +1621,7 @@
             const f = v => `<span class="${v < 0 ? 'text-red-600' : ''}">${formatLAK(v)}</span>`;
             const card = (lo, en, big, small, cls) => `<div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200"><p class="text-xs font-medium text-slate-500">${L(lo, en)}</p><p class="text-lg sm:text-xl font-bold mt-1 ${cls}">${big}</p><p class="text-xs text-slate-500 mt-1">${small}</p></div>`;
             const info = S.pos.files.length ? (() => { const ks = Object.keys(S.pos.days).sort(); return L('ຂໍ້ມູນ POS: ', 'POS data: ') + ks[0] + ' → ' + ks[ks.length - 1] + ` (${ks.length} ${L('ວັນ', 'days')}, ${S.pos.files.length} ${L('ໄຟລ໌ນຳເຂົ້າ', 'imports')}) · ${L('ຫຼ້າສຸດ: ', 'latest: ')}${esc(S.pos.files[S.pos.files.length - 1].name)}`; })() : L('ຍັງບໍ່ໄດ້ນຳເຂົ້າໄຟລ໌ POS - ກົດ "ນຳເຂົ້າໄຟລ໌ POS" ຫຼື ປ້ອນຍອດຂາຍລາຍວັນເອງ', 'No POS file imported yet - tap "Import POS file" or type daily sales manually');
-            document.getElementById('sales-posinfo').textContent = info;
+            document.getElementById('sales-posinfo').textContent = info + (S.pos.files.length && !Object.keys(S.pos.bom || {}).length ? L('  ⚠ ຂໍ້ມູນ POS ນີ້ນຳເຂົ້າກ່ອນອັບເດດ - ກະລຸນານຳເຂົ້າໄຟລ໌ POS ໃໝ່ອີກຄັ້ງ ເພື່ອໃຫ້ລະບົບອ່ານ Set ແລະ ສ່ວນປະກອບໄດ້', '  ⚠ This POS data was imported before the Set update - import the POS file again so Sets and components can be read') : '');
             document.getElementById('sales-kpis').innerHTML =
                 card('ເປົ້າໝາຍລາຍເດືອນ', 'Monthly target', formatLAK(T), L('ແບ່ງຕາມວັນ: ອາທິດ 1-4 ≈ ', 'By days: weeks 1-4 ≈ ') + formatLAK(T * 7 / m.dim), 'text-slate-900') +
                 card('ຍອດຂາຍສຸດທິ (ເດືອນນີ້)', 'Net sales (this month)', formatLAK(c.net), noT ? '-' : L('ບັນລຸແລ້ວ ', 'Achieved ') + pc(pct), 'text-blue-700') +
@@ -1843,7 +1849,7 @@
         function renderTabTools() {
             const el = document.getElementById('tab-tools'); if (!el) return;
             const b = 'px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer flex items-center gap-1.5';
-            el.innerHTML = `<span class="text-xs text-slate-500 mr-auto hidden sm:block">${L('ເຄື່ອງມື:', 'Tools:')}</span>
+            el.innerHTML = `<span class="text-xs text-slate-500 mr-auto">${L('ເຄື່ອງມື:', 'Tools:')}</span>
               <button onclick="printTab()" class="${b}">🖨️ ${L('ພິມໜ້ານີ້ (Print)', 'Print this page')}</button>
               <button onclick="exportTab()" class="${b}">📥 ${L('ດາວໂຫຼດ Excel ໜ້ານີ້', 'Download this page (Excel)')}</button>
               <button onclick="document.getElementById('inv-file').click()" class="${b}">📤 ${L('ນຳເຂົ້າໄຟລ໌ Inventory (.xlsx)', 'Import Inventory file (.xlsx)')}</button>
@@ -2026,6 +2032,8 @@
         function updateBranchUi() {
             const t = document.getElementById('branch-title'); if (t) t.textContent = brFull();
             const b = document.getElementById('branch-btn-name'); if (b) b.textContent = brName();
+            const vb = document.getElementById('app-version-badge'); if (vb) { vb.textContent = '🔖 v' + APP_VERSION + ' · ' + APP_DATE; vb.title = APP_BUILD; }
+            const ic = document.getElementById('inv-count'); if (ic) ic.textContent = inventory.length;
             document.title = (document.title.split(' - ')[0] || '') + ' - ' + brFull();
         }
         function switchBranch(id) {
