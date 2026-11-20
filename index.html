@@ -694,6 +694,7 @@
 
                 isRolledOver = savedRollover === "true";
                 { const sp = localStorage.getItem(STORAGE_KEY_PERIOD); basePeriod = /^\d{4}-\d{2}$/.test(sp || '') ? sp : DEFAULT_PERIOD; }
+                if (isRolledOver) { basePeriod = addMonths(basePeriod, 1); isRolledOver = false; }
                 if (isRolledOver) {
                     document.getElementById('rollover-success-banner').classList.remove('hidden');
                     updatePeriodUI();
@@ -1190,19 +1191,14 @@
         }
 
         function executeRollover() {
-            inventory = inventory.map(item => ({
-                ...item,
-                beg: item.ending,
-                rec: 0, out: 0, wk: null
-            }));
-            stockWeek = 0;
-            isRolledOver = true;
+            inventory = inventory.map(item => ({ ...item, beg: item.ending, rec: 0, out: 0, wk: null }));
+            const from = basePeriod; basePeriod = addMonths(basePeriod, 1); isRolledOver = false;
+            stockWeek = currentStockWeek();
             persistState();
             closeConfirmModal();
-            document.getElementById('rollover-success-banner').classList.remove('hidden');
-            updatePeriodUI();
-            refreshAllViews();
-            { const nx = addMonths(basePeriod, 1); showToast(L(`🚀 ໂອນຍ້າຍສະຕ໋ອກໄປ${mLao(nx)} ${monthLabel(nx)} ສຳເລັດແລ້ວ!`, `🚀 Stock rolled over to ${mFull(nx)}!`), 'success'); }
+            document.getElementById('rollover-success-banner').classList.add('hidden');
+            refreshAllViews(); renderStockWeekChips();
+            showToast(L(`🚀 ຍົກຍອດຈາກ ${monthLabel(from)} ມາເປັນ ${monthLabel(basePeriod)} ແລ້ວ - ຕອນນີ້ກຳລັງນັບສະຕ໋ອກ ${monthLabel(basePeriod)}`, `🚀 Carried ${monthLabel(from)} over to ${monthLabel(basePeriod)} - now counting ${monthLabel(basePeriod)}`), 'success');
         }
 
         // Export to CSV (UTF-8 with BOM so Excel displays Lao script properly)
@@ -1282,7 +1278,7 @@
 
         /* ================= v2 additions ================= */
         const STORAGE_KEY_PR = "momstouch_vangxai_pr_v1";
-        const APP_VERSION = '1.7', APP_DATE = '20/11', APP_BUILD = 'Build 2026-11-20 · previous-month file carry-over · BOM import · A4 stock print · set-cost v3 · branches · weekly stock count';
+        const APP_VERSION = '1.8', APP_DATE = '20/11', APP_BUILD = 'Build 2026-11-20 · previous-month file carry-over · BOM import · A4 stock print · set-cost v3 · branches · weekly stock count';
         const L = (lo, en) => LANG === 'en' ? en : lo;
         const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
         const nm = o => LANG === 'en' ? o.nameEn : o.nameLao;
@@ -2001,7 +1997,7 @@
         const dispPeriod = () => isRolledOver ? addMonths(basePeriod, 1) : basePeriod;   // the month being worked on right now
         function updatePeriodUI() {
             const b = basePeriod, n = addMonths(b, 1), set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
-            set('header-month-label', isRolledOver ? L(`${mLao(n)} ${monthLabel(n)} (ໂອນຍ້າຍຍອດແລ້ວ ✓)`, `${mFull(n)} (rolled over ✓)`) : L(`${mLao(b)} ${monthLabel(b)} ➔ ${mLao(n)} ${monthLabel(n)}`, `${mFull(b)} ➔ ${mFull(n)}`));
+            set('header-month-label', L(`${mLao(b)} ${monthLabel(b)} ➔ ${mLao(n)} ${monthLabel(n)}`, `${mFull(b)} ➔ ${mFull(n)}`));
             set('rb-title', L(`ໂອນຍ້າຍຍອດສະຕ໋ອກໄປ${mLao(n)} (${monthLabel(n)}) ສຳເລັດແລ້ວ!`, `Stock rolled over to ${mFull(n)} successfully!`));
             set('rb-desc', L(`ຍອດຄົງເຫຼືອປາຍ${mLao(b)} (Ending Stock) ໄດ້ຖືກຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບຮອບບັນຊີໃໝ່ຮຽບຮ້ອຍແລ້ວ.`, `${mFull(b)} ending stock has been set as the beginning stock for the new period.`));
             set('rl-title', L(`ສະຫຼຸບຍອດເດືອນນີ້ (${mFull(b)})`, `This month summary (${mFull(b)})`));
@@ -2074,14 +2070,14 @@
             const P = pendingInv; if (!P) return;
             if (typeof mode !== 'string') { const r = document.querySelector('input[name="inv-mode"]:checked'); mode = r ? r.value : (resolveInvMode(P, 'auto') || 'asis'); }
             const carry = mode === 'carry';
-            basePeriod = P.month || (carry ? addMonths(curMonthKey(), -1) : basePeriod);   // the file's month is "this month"
+            basePeriod = carry ? (P.month ? addMonths(P.month, 1) : curMonthKey()) : (P.month || basePeriod);   // as-is: file month is "this month"; carry: the month after
             inventory = carry ? carryInv(P.items) : P.items;
-            isRolledOver = carry;                                                          // carry = import + press Rollover
+            isRolledOver = false;
             wasteLogs = wasteLogs.filter(w => !w.imp).concat(carry ? [] : P.waste).sort((a, b) => b.logId - a.logId);
-            document.getElementById('rollover-success-banner').classList.toggle('hidden', !carry);
+            document.getElementById('rollover-success-banner').classList.add('hidden');
             stockWeek = currentStockWeek(); persistState(); pendingInv = null; closeConfirmModal();
             populateDropdowns(); refreshAllViews(); renderStockWeekChips();
-            const from = monthLabel(basePeriod), to = monthLabel(addMonths(basePeriod, 1));
+            const from = monthLabel(carry ? addMonths(basePeriod, -1) : basePeriod), to = monthLabel(carry ? basePeriod : addMonths(basePeriod, 1));
             showToast(carry ? L(`📤 ຍົກຍອດຈາກ ${from} ມາເປັນ ${to} ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Carried ${from} ending stock over to ${to}: ${P.items.length} items`)
                 : L(`📤 ນຳເຂົ້າ Inventory ${from} ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Inventory (${from}) imported: ${P.items.length} items`), 'success');
         }
@@ -2097,7 +2093,7 @@
         function saveSnapshot() { try { localStorage.setItem('mt_branch_' + branches.cur, JSON.stringify(snapshot())); } catch (e) { } }
         function loadSnapshot(d) {
             inventory = d.inventory.map(i => ({ ...i, cost: +i.cost || 0, beg: +i.beg || 0, rec: +i.rec || 0, ending: +i.ending || 0 }));
-            wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : []; isRolledOver = !!d.isRolledOver; basePeriod = /^\d{4}-\d{2}$/.test(d.basePeriod || '') ? d.basePeriod : DEFAULT_PERIOD;
+            wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : []; isRolledOver = !!d.isRolledOver; basePeriod = /^\d{4}-\d{2}$/.test(d.basePeriod || '') ? d.basePeriod : DEFAULT_PERIOD; if (isRolledOver) { basePeriod = addMonths(basePeriod, 1); isRolledOver = false; }
             prState = normalizePR(d.pr); salesState = normalizeSales(d.sales);
             document.getElementById('rollover-success-banner').classList.toggle('hidden', !isRolledOver);
             updatePeriodUI();
@@ -2373,7 +2369,7 @@
             const d = pendingImport; if (!d) return;
             inventory = d.inventory.map(i => ({ ...i, cost: +i.cost || 0, beg: +i.beg || 0, rec: +i.rec || 0, ending: +i.ending || 0 }));
             wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : [];
-            isRolledOver = !!d.isRolledOver; basePeriod = /^\d{4}-\d{2}$/.test(d.basePeriod || '') ? d.basePeriod : DEFAULT_PERIOD;
+            isRolledOver = !!d.isRolledOver; basePeriod = /^\d{4}-\d{2}$/.test(d.basePeriod || '') ? d.basePeriod : DEFAULT_PERIOD; if (isRolledOver) { basePeriod = addMonths(basePeriod, 1); isRolledOver = false; }
             prState = normalizePR(d.pr); salesState = normalizeSales(d.sales);
             if (d.branches && d.branches.list && d.branchData) { branches = d.branches; saveBranches(); branches.list.forEach(b => { if (b.id !== branches.cur && d.branchData[b.id]) localStorage.setItem('mt_branch_' + b.id, JSON.stringify(d.branchData[b.id])); }); }
             document.getElementById('rollover-success-banner').classList.toggle('hidden', !isRolledOver);
