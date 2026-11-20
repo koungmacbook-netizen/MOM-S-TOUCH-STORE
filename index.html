@@ -512,6 +512,7 @@
             <p id="modal-message" class="text-sm text-slate-600 leading-relaxed">
                 ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການດຳເນີນການນີ້?
             </p>
+            <div id="modal-extra" class="hidden"></div>
             <div class="flex justify-end gap-3 pt-2">
                 <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
                     ຍົກເລີກ
@@ -1106,19 +1107,36 @@
         // Custom Modal Handling (No native confirm/alert)
         function openConfirmModal(actionType) {
             pendingModalAction = actionType;
+            { const ex = document.getElementById('modal-extra'); if (ex) { ex.classList.add('hidden'); ex.innerHTML = ''; } }
             const modal = document.getElementById('custom-modal');
             const titleEl = document.getElementById('modal-title');
             const msgEl = document.getElementById('modal-message');
             const confirmBtn = document.getElementById('modal-confirm-btn');
 
-            if (actionType === 'branchdel') {
+            if (actionType === 'bomimport') {
+                const P = pendingBom, upd = P.inv.filter(x => x.apply).length, rev = P.inv.filter(x => x.nw == null).length;
+                titleEl.textContent = L('ນຳເຂົ້າໄຟລ໌ BOM (ຕົ້ນທຶນ)', 'Import BOM / cost file');
+                msgEl.textContent = L(`ເມນູ ${P.menus.length} ລາຍການ (ຈັບຄູ່ກັບ POS ${Object.keys(P.menuMap).length}/${P.posCount}). ວັດຖຸດິບ ${P.ingCount} ລາຍການ: ຈັບຄູ່ກັບສະຕ໋ອກ ${P.inv.length}, ອັບເດດລາຄາ ${upd}, ຂ້າມ (ໜ່ວຍຕ່າງກັນ) ${rev}. ຕົ້ນທຶນເມນູຈະຖືກໃຊ້ເປັນຄ່າເລີ່ມຕົ້ນໃນໜ້າ P&L (ຄ່າທີ່ໃສ່ເອງມີສິດທິກ່ອນ). ດຳເນີນການຕໍ່ບໍ?`, `${P.menus.length} menus (${Object.keys(P.menuMap).length}/${P.posCount} matched to POS items). ${P.ingCount} ingredients: ${P.inv.length} matched to stock, ${upd} prices updated, ${rev} skipped (different pack basis). Menu COGS become the default unit cost in P&L (values you typed take priority). Continue?`);
+                confirmBtn.onclick = executeBomImport;
+            } else if (actionType === 'branchdel') {
                 titleEl.textContent = L('ລຶບສາຂາ', 'Delete branch');
                 msgEl.textContent = L(`ຂໍ້ມູນທັງໝົດຂອງສາຂາ ${brName()} ຈະຖືກລຶບ ແລະ ບໍ່ສາມາດກູ້ຄືນໄດ້ (ແນະນຳໃຫ້ສຳຮອງ JSON ກ່ອນ). ດຳເນີນການຕໍ່ບໍ?`, `All data of branch ${brName()} will be deleted and cannot be restored (back up the JSON first). Continue?`);
                 confirmBtn.onclick = executeBranchDelete;
             } else if (actionType === 'invimport') {
                 const P = pendingInv; titleEl.textContent = L('ນຳເຂົ້າໄຟລ໌ Inventory', 'Import Inventory file');
                 msgEl.textContent = L(`ສາຂາ ${brName()}: ພົບ ${P.items.length} ລາຍການ, ຂໍ້ມູນຂອງເສຍ ${P.waste.length} ແຖວ. ນັບແລ້ວ ອາທິດ 1-5: ${P.counted.join(' / ')} ລາຍການ. ຂໍ້ມູນສະຕ໋ອກປັດຈຸບັນຈະຖືກແທນທີ່. ດຳເນີນການຕໍ່ບໍ?`, `Branch ${brName()}: found ${P.items.length} items and ${P.waste.length} waste lines. Items counted in weeks 1-5: ${P.counted.join(' / ')}. Current stock data will be replaced. Continue?`);
-                confirmBtn.onclick = executeInvImport;
+                confirmBtn.onclick = () => executeInvImport();
+                {
+                    const det = P.month, tgt = monthLabel(TARGET_MONTH), def = resolveInvMode(P, 'auto') || 'carry';
+                    const val = P.items.reduce((a, i) => a + (i.ending || 0) * (i.cost || 0), 0);
+                    const info = det ? L(`ກວດພົບວ່າໄຟລ໌ນີ້ເປັນຂອງເດືອນ ${monthLabel(det)}`, `This file looks like ${monthLabel(det)}`) : L('ກວດບໍ່ພົບວ່າໄຟລ໌ເປັນຂອງເດືອນໃດ - ກະລຸນາເລືອກ', 'Could not detect the file month - please choose');
+                    const ex = document.getElementById('modal-extra');
+                    ex.className = 'text-sm text-slate-700 space-y-2 border border-slate-200 rounded-xl p-3 bg-slate-50';
+                    ex.innerHTML = `<p class="text-xs font-bold text-slate-800">📅 ${info}</p>
+                      <label class="flex gap-2 items-start cursor-pointer"><input type="radio" name="inv-mode" value="carry" ${def === 'carry' ? 'checked' : ''} class="mt-1"><span><b>${L('ຍົກຍອດມາເປັນ', 'Carry over to')} ${tgt}</b> - ${L('ເອົາຍອດຄົງເຫຼືອປາຍເດືອນຂອງໄຟລ໌ເປັນຍອດຕົ້ນເດືອນ, ເລີ່ມນັບລາຍອາທິດໃໝ່', 'file\'s month-end stock becomes the opening stock; weekly counts start fresh')} (≈ ${formatLAK(val)})</span></label>
+                      <label class="flex gap-2 items-start cursor-pointer"><input type="radio" name="inv-mode" value="asis" ${def === 'asis' ? 'checked' : ''} class="mt-1"><span><b>${L('ໂຫຼດຕາມໄຟລ໌', 'Load as-is')}</b> - ${L(`ໄຟລ໌ເປັນຂອງ ${tgt} ຢູ່ແລ້ວ (ເກັບຂໍ້ມູນລາຍອາທິດ ແລະ ຂອງເສຍ)`, `file is already ${tgt} (keeps weekly data and waste)`)}</span></label>`;
+                    ex.classList.remove('hidden');
+                }
             } else if (actionType === 'posclear') {
                 titleEl.textContent = L('ລ້າງຂໍ້ມູນ POS', 'Clear POS data');
                 msgEl.textContent = L('ຂໍ້ມູນຍອດຂາຍທີ່ນຳເຂົ້າຈາກ POS ທັງໝົດຈະຖືກລຶບ (ຕົ້ນທຶນຕໍ່ໜ່ວຍທີ່ໃສ່ໄວ້ຍັງຢູ່). ດຳເນີນການຕໍ່ບໍ?', 'All imported POS sales data will be removed (the unit costs you entered are kept). Continue?');
@@ -1145,6 +1163,7 @@
 
         function closeConfirmModal() {
             document.getElementById('custom-modal').classList.add('hidden');
+            { const ex = document.getElementById('modal-extra'); if (ex) { ex.classList.add('hidden'); ex.innerHTML = ''; } }
             pendingModalAction = null;
         }
 
@@ -1257,7 +1276,7 @@
 
         /* ================= v2 additions ================= */
         const STORAGE_KEY_PR = "momstouch_vangxai_pr_v1";
-        const APP_VERSION = '1.4', APP_DATE = '20/11', APP_BUILD = 'Build 2026-11-20 · set-cost v3 · branches · weekly stock count';
+        const APP_VERSION = '1.6', APP_DATE = '20/11', APP_BUILD = 'Build 2026-11-20 · previous-month file carry-over · BOM import · A4 stock print · set-cost v3 · branches · weekly stock count';
         const L = (lo, en) => LANG === 'en' ? en : lo;
         const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
         const nm = o => LANG === 'en' ? o.nameEn : o.nameLao;
@@ -1438,13 +1457,14 @@
         const p2 = n => String(n).padStart(2, '0');
         const pc = v => (Math.round(v * 10) / 10) + '%';
         const WD = [['ອາທິດ', 'Sun'], ['ຈັນ', 'Mon'], ['ອັງຄານ', 'Tue'], ['ພຸດ', 'Wed'], ['ພະຫັດ', 'Thu'], ['ສຸກ', 'Fri'], ['ເສົາ', 'Sat']];
-        function newSales() { return { month: today().slice(0, 7), target: 0, costPct: 35, vat: 0, manual: {}, other: {}, costs: {}, pos: { files: [], days: {}, prod: {}, bom: {} } }; }
+        function newSales() { return { month: today().slice(0, 7), target: 0, costPct: 35, vat: 0, manual: {}, other: {}, costs: {}, bomMap: {}, bomMenus: [], bomInfo: null, pos: { files: [], days: {}, prod: {}, bom: {} } }; }
         function normalizeSales(p) {
             const s = newSales();
             if (p && typeof p === 'object') {
                 if (/^\d{4}-\d{2}$/.test(p.month)) s.month = p.month;
                 ['target', 'costPct', 'vat'].forEach(k => { if (p[k] != null && !isNaN(+p[k])) s[k] = +p[k]; });
-                ['manual', 'other', 'costs'].forEach(k => { if (p[k] && typeof p[k] === 'object' && !Array.isArray(p[k])) s[k] = p[k]; });
+                ['manual', 'other', 'costs', 'bomMap'].forEach(k => { if (p[k] && typeof p[k] === 'object' && !Array.isArray(p[k])) s[k] = p[k]; });
+                if (Array.isArray(p.bomMenus)) s.bomMenus = p.bomMenus; if (p.bomInfo) s.bomInfo = p.bomInfo;
                 if (p.pos && p.pos.days && p.pos.prod) s.pos = { files: Array.isArray(p.pos.files) ? p.pos.files : [], days: p.pos.days, prod: p.pos.prod, bom: p.pos.bom && typeof p.pos.bom === 'object' ? p.pos.bom : {} };
             }
             return s;
@@ -1464,21 +1484,21 @@
         // Set costing: a Set item (POS line with price) is followed by zero-price component lines in the same order.
         // The components are learned from the POS data (bom) and their cost is rolled into the Set.
         const isSet = (S, pk) => !!(S.pos.bom && S.pos.bom[pk] && S.pos.bom[pk].n);
-        const compCosted = (S, pk) => isSet(S, pk) && Object.keys(S.pos.bom[pk].c).some(c => S.costs[c] != null);
+        const compCosted = (S, pk) => isSet(S, pk) && Object.keys(S.pos.bom[pk].c).some(c => ucOf(S, c) != null);
         // Per-day cost allocation. A Set that has its own unit cost is treated as FULL cost (components included), so the free
         // component lines inside it add nothing. A Set with no unit cost gets the cost of its components (bottom-up).
         function dayAlloc(S, key, vat, cp) {
             const bom = S.pos.bom || {}, R = {};
             for (const pk in S.pos.prod) {
                 const e = S.pos.prod[pk].d[key]; if (!e) continue;
-                const q = e[0], v = e[1], f = e[2] || 0, qp = q - f, uc = S.costs[pk];
+                const q = e[0], v = e[1], f = e[2] || 0, qp = q - f, uc = ucOf(S, pk);
                 let own; if (uc != null) own = qp * uc; else if (compCosted(S, pk)) own = 0; else own = v / vat * cp;
                 R[pk] = { q, v, f, qp, own, free: uc != null ? f * uc : 0, moved: 0, attr: 0 };
             }
             Object.keys(R).forEach(ck => {
                 const C = R[ck]; if (!C.f) return;
                 const sets = Object.keys(bom).filter(sk => R[sk] && R[sk].qp > 0 && bom[sk].n && bom[sk].c[ck]), w = sets.map(sk => R[sk].qp * bom[sk].c[ck] / bom[sk].n), W = w.reduce((a, b) => a + b, 0);
-                if (W > 0) { sets.forEach((sk, i) => { if (S.costs[sk] == null) R[sk].attr += C.free * w[i] / W; }); C.moved = C.free; }
+                if (W > 0) { sets.forEach((sk, i) => { if (ucOf(S, sk) == null) R[sk].attr += C.free * w[i] / W; }); C.moved = C.free; }
             });
             return R;
         }
@@ -1514,7 +1534,7 @@
             keys.forEach(k => { const D = dayAlloc(S, k, vat, cp); for (const pk in D) { const d = D[pk], a = A[pk] || (A[pk] = { q: 0, v: 0, f: 0, own: 0, free: 0, moved: 0, attr: 0 }); ['q', 'v', 'f', 'own', 'free', 'moved', 'attr'].forEach(x => { a[x] += d[x]; }); } });
             return Object.entries(A).filter(([, a]) => a.q || a.v).map(([pk, a]) => {
                 const P = S.pos.prod[pk], rev = a.v / vat, cost = a.own + (a.free - a.moved) + a.attr;
-                return { key: pk, c: P.c, n: P.n, q: a.q, f: a.f, qp: a.q - a.f, v: a.v, rev, uc: S.costs[pk], own: a.own, cost, profit: rev - cost, isSet: isSet(S, pk) };
+                return { key: pk, c: P.c, n: P.n, q: a.q, f: a.f, qp: a.q - a.f, v: a.v, rev, uc: ucOf(S, pk), own: a.own, cost, profit: rev - cost, isSet: isSet(S, pk) };
             }).sort((a, b) => b.v - a.v);
         }
 
@@ -1563,6 +1583,7 @@
                 <div class="overflow-x-auto"><table class="w-full text-left border-collapse min-w-[950px]"><tbody id="sales-grid" class="divide-y divide-slate-100"></tbody></table></div></div>
               <div class="${card}"><div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-900">${L('ຕົ້ນທຶນຕໍ່ໜ່ວຍຂອງແຕ່ລະເມນູ', 'Unit cost per menu item')}</h3>
                 <p class="text-xs text-slate-500">${L('ເມນູ SET: ລະບົບອ່ານສ່ວນປະກອບຈາກ POS (ລາຍການລາຄາ 0 ໃນອໍເດີດຽວກັນ). ຖ້າໃສ່ ຕົ້ນທຶນຂອງ Set ເປັນຕົ້ນທຶນເຕັມ (ລວມເບີເກີ, ມັນ, Coke ແລ້ວ ຕາມໃບ COGS) ລະບົບຈະບໍ່ຄິດຕົ້ນທຶນສ່ວນປະກອບທີ່ແຖມໃນ Set ຊ້ຳອີກ. ຖ້າປ່ອຍຕົ້ນທຶນ Set ວ່າງ ແຕ່ໃສ່ຕົ້ນທຶນສ່ວນປະກອບ ລະບົບລວມສ່ວນປະກອບເຂົ້າ Set ໃຫ້. ຖ້າບໍ່ໃສ່ຫຍັງເລີຍ ໃຊ້ ຕົ້ນທຶນມາດຕະຖານ (% ຂອງຍອດຂາຍ)', 'SET menus: the app reads each Set\'s components from the POS (zero-price lines in the same order). If you enter a Set\'s unit cost as its FULL cost (burger, fries and Coke already included, like your COGS sheet), the free component lines inside that Set are NOT charged again. If you leave a Set\'s cost blank but cost its components, their cost is added to the Set automatically. If neither is entered, the default cost % of sales is used')}</p></div>
+                <div id="sales-bominfo" class="px-4 py-2 text-xs text-slate-600 border-b border-slate-200"></div>
                 <div class="overflow-x-auto max-h-[600px]"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-100 text-slate-700 text-xs font-bold sticky top-0"><tr>
                   ${[['ລະຫັດ', 'Code', ''], ['ເມນູ / ສິນຄ້າ', 'Menu item', ''], ['ຈຳນວນຂາຍ', 'Units sold', ' text-right'], ['ໃນເຊັດ (ລາຄາ 0)', 'Free in sets', ' text-right'], ['ຍອດຂາຍ', 'Sales', ' text-right'], ['ລາຄາສະເລ່ຍ', 'Avg price', ' text-right'], ['ຕົ້ນທຶນ/ໜ່ວຍ (₭)', 'Unit cost (LAK)', ' text-center bg-amber-50'], ['% ຕົ້ນທຶນ', 'Cost %', ' text-right'], ['ຕົ້ນທຶນລວມ', 'Total cost', ' text-right'], ['ກຳໄລ', 'Profit', ' text-right']].map(c => `<th class="${th}${c[2]}">${L(c[0], c[1])}</th>`).join('')}</tr></thead>
                   <tbody id="sales-costs" class="divide-y divide-slate-100 text-sm"></tbody><tfoot id="sales-costs-total" class="bg-slate-100 font-bold text-sm"></tfoot></table></div></div>`;
@@ -1597,10 +1618,12 @@
             const tb = document.getElementById('sales-costs'); if (!tb) return;
             const S = salesState, keys = salesDays(S).days.map(d => d.key), bom = S.pos.bom || {};
             costRows = scopeProducts(S, keys).filter(r => r.q || r.v);
+            const bi = document.getElementById('sales-bominfo');
+            if (bi) { const miss = costRows.filter(r => !(S.bomMap && S.bomMap[r.key])); bi.textContent = S.bomInfo ? L(`BOM: ${S.bomInfo.file} (${S.bomInfo.at}) · ເມນູ ${S.bomInfo.menus} · ຈັບຄູ່ POS ${costRows.length - miss.length}/${costRows.length}. ບໍ່ພົບໃນ BOM (ໃສ່ເອງ): ${miss.map(r => r.n.trim()).join(', ') || '-'}`, `BOM: ${S.bomInfo.file} (${S.bomInfo.at}) · ${S.bomInfo.menus} menus · POS matched ${costRows.length - miss.length}/${costRows.length}. Not in BOM (enter manually): ${miss.map(r => r.n.trim()).join(', ') || '-'}`) : L('ຍັງບໍ່ໄດ້ນຳເຂົ້າໄຟລ໌ BOM - ກົດ "ນຳເຂົ້າໄຟລ໌ BOM (ຕົ້ນທຶນ)" ໃນແຖບເຄື່ອງມື ເພື່ອໃສ່ຕົ້ນທຶນເມນູອັດຕະໂນມັດ', 'No BOM file imported yet - use "Import BOM / cost file" in the tools bar to fill menu costs automatically'); }
             const parts = r => { const B = bom[r.key]; if (!B || !B.n) return ''; return Object.entries(B.c).map(([ck, u]) => [ck, u / B.n]).filter(x => x[1] >= 0.2).sort((a, b) => b[1] - a[1]).map(([ck, x]) => `${esc((S.pos.prod[ck] || { n: ck }).n.trim())} ×${Math.round(x * 10) / 10}`).join(' + '); };
             tb.innerHTML = costRows.length ? costRows.map((r, i) => `<tr><td class="py-2.5 px-3 font-mono text-xs text-slate-500 whitespace-nowrap">${esc(r.c)}</td><td class="py-2.5 px-3 text-xs sm:text-sm font-bold text-slate-900">${esc(r.n)}${r.isSet ? ` <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">SET</span><div class="text-[11px] font-normal text-slate-500">= ${parts(r)}</div>` : ''}</td>
                 <td class="py-2.5 px-3 text-right font-mono text-xs">${formatQty(r.q)}</td><td class="py-2.5 px-3 text-right font-mono text-xs ${r.f ? 'text-amber-700 font-bold' : 'text-slate-300'}">${r.f ? formatQty(r.f) : '-'}</td><td class="py-2.5 px-3 text-right font-mono text-xs">${formatLAK(r.v)}</td><td class="py-2.5 px-3 text-right font-mono text-xs">${r.qp ? formatLAK(r.v / r.qp) : '-'}</td>
-                <td class="py-2 px-3 text-center bg-amber-50/40"><input type="number" min="0" step="any" value="${S.costs[r.key] != null ? S.costs[r.key] : ''}" oninput="salesSetCost(${i}, this.value)" class="w-28 text-right font-mono text-sm px-2 py-1.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"></td>
+                <td class="py-2 px-3 text-center bg-amber-50/40"><input type="number" min="0" step="any" placeholder="${S.bomMap && S.bomMap[r.key] ? Math.round(S.bomMap[r.key].cogs) : ''}" value="${S.costs[r.key] != null ? S.costs[r.key] : ''}" oninput="salesSetCost(${i}, this.value)" class="w-28 text-right font-mono text-sm px-2 py-1.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">${S.bomMap && S.bomMap[r.key] ? `<div class="text-[10px] ${S.costs[r.key] == null ? 'text-sky-700 font-semibold' : 'text-slate-400'}">BOM ${formatLAK(S.bomMap[r.key].cogs)}</div>` : ''}</td>
                 <td id="sc-pct-${i}"></td><td id="sc-tot-${i}" class="py-2.5 px-3 text-right font-mono text-xs font-bold"></td><td id="sc-pf-${i}"></td></tr>`).join('')
                 : `<tr><td colspan="10" class="py-8 text-center text-slate-500">${L('ຍັງບໍ່ມີຂໍ້ມູນ POS ໃນເດືອນນີ້ - ກົດ "ນຳເຂົ້າໄຟລ໌ POS"', 'No POS data for this month yet - tap "Import POS file"')}</td></tr>`;
             costRows.forEach((_, i) => updateCostRow(i)); updateCostTotal();
@@ -1765,7 +1788,7 @@
             try {
                 const r = posIngest(await readTable(f), f.name), last = r.keys[r.keys.length - 1];
                 if (!last.startsWith(salesState.month)) salesState.month = last.slice(0, 7);
-                salesSel = defaultSel(); persistSales(); renderSalesShell();
+                bomRemap(); salesSel = defaultSel(); persistSales(); renderSalesShell();
                 showToast(L(`📤 ນຳເຂົ້າ POS ແລ້ວ: ${r.keys[0]} → ${last}, ${r.lines} ແຖວ, ຍອດຂາຍ ${formatLAK(r.net)}`, `📤 POS imported: ${r.keys[0]} → ${last}, ${r.lines} lines, sales ${formatLAK(r.net)}`), 'success');
             } catch (e) { showToast(L('ອ່ານໄຟລ໌ບໍ່ໄດ້: ', 'Could not read file: ') + (e.message || e), 'info'); }
         }
@@ -1845,7 +1868,7 @@
         }
 
         // ---- Print + Excel for every page ----
-        function setPage(o) { let s = document.getElementById('page-style'); if (!s) { s = document.createElement('style'); s.id = 'page-style'; document.head.appendChild(s); } s.textContent = `@page{size:A4 ${o};margin:10mm}`; }
+        function setPage(o) { let s = document.getElementById('page-style'); if (!s) { s = document.createElement('style'); s.id = 'page-style'; document.head.appendChild(s); } s.textContent = `@page{size:A4 ${o};margin:8mm}`; }
         function renderTabTools() {
             const el = document.getElementById('tab-tools'); if (!el) return;
             const b = 'px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer flex items-center gap-1.5';
@@ -1853,23 +1876,26 @@
               <button onclick="printTab()" class="${b}">🖨️ ${L('ພິມໜ້ານີ້ (Print)', 'Print this page')}</button>
               <button onclick="exportTab()" class="${b}">📥 ${L('ດາວໂຫຼດ Excel ໜ້ານີ້', 'Download this page (Excel)')}</button>
               <button onclick="document.getElementById('inv-file').click()" class="${b}">📤 ${L('ນຳເຂົ້າໄຟລ໌ Inventory (.xlsx)', 'Import Inventory file (.xlsx)')}</button>
+              <button onclick="document.getElementById('bom-file').click()" class="${b}">💲 ${L('ນຳເຂົ້າໄຟລ໌ BOM (ຕົ້ນທຶນ)', 'Import BOM / cost file')}</button>
               <button onclick="exportInventoryXlsx()" class="${b}">📘 ${L('ດາວໂຫຼດໄຟລ໌ Inventory (ມີສູດ)', 'Download Inventory file (with formulas)')}</button>
-              <input type="file" id="inv-file" accept=".xlsx" class="hidden" onchange="onInvFile(this)">`;
-            window.addEventListener('afterprint', () => { document.body.classList.remove('print-doc'); document.body.style.zoom = ''; });
+              <input type="file" id="inv-file" accept=".xlsx" class="hidden" onchange="onInvFile(this)"><input type="file" id="bom-file" accept=".xlsx" class="hidden" onchange="onBomFile(this)">`;
+            window.addEventListener('beforeprint', autoPrintPrep); window.addEventListener('afterprint', afterPrintClean);
+            try { const mq = window.matchMedia('print'); const h = e => { if (e.matches) autoPrintPrep(); else afterPrintClean(); }; mq.addEventListener ? mq.addEventListener('change', h) : mq.addListener(h); } catch (e) { }
         }
         function exportTab() { ({ stock: exportToCSV, rollover: exportPOxlsx, pr: exportPR, sales: exportSalesXlsx, waste: exportWasteXlsx }[currentTab] || exportToCSV)(); }
+        function domPrintPrep() {
+            const names = { stock: L('ນັບສະຕ໋ອກ', 'Stock count'), rollover: L('ຍົກຍອດ & ສັ່ງຊື້', 'Month rollover & ordering'), sales: L('ເປົ້າໝາຍຍອດຂາຍ & P&L', 'Target sales & P&L'), waste: L('ບັນທຶກຂອງເສຍ', 'Waste log') };
+            document.getElementById('print-title').textContent = `${brFull()} - ${names[currentTab] || ''} · ${today()}`;
+            setPage('portrait'); document.body.style.zoom = fitZoom();
+        }
         function printTab() {
             if (currentTab === 'pr') { printPRDoc(); return; }
             if (currentTab === 'stock') { printStockDoc(); return; }
-            const names = { stock: L('ນັບສະຕ໋ອກ', 'Stock count'), rollover: L('ຍົກຍອດ & ສັ່ງຊື້', 'Month rollover & ordering'), sales: L('ເປົ້າໝາຍຍອດຂາຍ & P&L', 'Target sales & P&L'), waste: L('ບັນທຶກຂອງເສຍ', 'Waste log') };
-            let t = `${brFull()} - ${names[currentTab]}`;
-            if (currentTab === 'stock') t += ' - ' + (stockWeek === 'm' ? L('ທັງເດືອນ', 'Whole month') : `${L('ອາທິດ', 'Week')} ${stockWeek + 1} (${L('ຈັນ ', 'Mon ')}${fmtDM2(stockMondays()[stockWeek])})`);
-            document.getElementById('print-title').textContent = t + ' · ' + today();
-            setPage('portrait'); document.body.style.zoom = fitZoom(); setTimeout(() => window.print(), 60);
+            domPrintPrep(); setTimeout(() => window.print(), 60);
         }
-        function printPRDoc() {
+        function buildPRDoc() {
             const lines = sortedInv().filter(i => prState.q[i.id] > 0);
-            if (!lines.length) { showToast(L('ຍັງບໍ່ໄດ້ປ້ອນຈຳນວນສັ່ງຊື້', 'Enter at least one order quantity first'), 'info'); return; }
+            if (!lines.length) { showToast(L('ຍັງບໍ່ໄດ້ປ້ອນຈຳນວນສັ່ງຊື້', 'Enter at least one order quantity first'), 'info'); return false; }
             const H = prState.h, dm = d => d ? d.split('-').reverse().join('/') : '', b = 'border:1px solid #333;padding:6px 8px;', lab = b + 'background:#F1EEE7;font-weight:700;width:17%', th = b + 'background:#0F6B6B;color:#fff;text-align:center;font-weight:700';
             const f = (l, v, l2, v2) => `<tr><td style="${lab}">${l}</td><td style="${b}width:33%">${esc(v || '')}</td><td style="${lab}">${l2}</td><td style="${b}width:33%">${esc(v2 || '')}</td></tr>`;
             document.getElementById('print-area').innerHTML = `<div style="font-family:'Noto Sans Lao','Inter',sans-serif;color:#000;font-size:12px">
@@ -1878,8 +1904,9 @@
               <table style="width:100%;border-collapse:collapse"><thead><tr><th style="${th}width:6%">No</th><th style="${th}width:17%">Items code</th><th style="${th}">Product Name</th><th style="${th}width:11%">QTY Request</th><th style="${th}width:9%">Unit</th><th style="${th}width:16%">ຮູບ / Photo</th></tr></thead><tbody>
               ${lines.map((i, n) => `<tr style="height:62px;break-inside:avoid"><td style="${b}text-align:center">${n + 1}</td><td style="${b}">${esc(bc(i))}</td><td style="${b}">${esc(nm(i))}  ${esc(subName(i))}</td><td style="${b}text-align:center;font-weight:700">${prState.q[i.id]}</td><td style="${b}text-align:center">${esc(i.uom)}</td><td style="${b}"></td></tr>`).join('')}</tbody></table>
               <p style="margin-top:10px"><b>ໝາຍເຫດ:</b> ${esc(H.rem || '')}</p></div>`;
-            setPage('portrait'); document.body.classList.add('print-doc'); setTimeout(() => window.print(), 80);
+            return true;
         }
+        function printPRDoc() { if (buildPRDoc()) { document.body.classList.add('print-doc'); setPage('portrait'); setTimeout(() => window.print(), 80); } }
         const sched = it => it.supplier.includes('Import') ? L('ລ່ວງໜ້າ 7-14 ມື້', '7-14 days ahead') : it.supplier.includes('Fresh') ? L('ທຸກມື້', 'Daily (fresh)') : L('ຈັນ - ສຸກ (2-3 ມື້)', 'Mon-Fri (2-3 days)');
         function exportPOxlsx() {
             const low = inventory.filter(isLowStockItem); if (!low.length) { showToast(L('ບໍ່ມີລາຍການໃກ້ໝົດ', 'No low-stock items'), 'info'); return; }
@@ -1957,6 +1984,21 @@
         }
 
         // ---- Import the Inventory workbook (Master Item List + Week 1-5 + Waste) ----
+        // ---- Previous-month files: detect the file's month and carry its ending stock into the current month ----
+        const TARGET_MONTH = '2026-11';
+        const MON3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const monthLabel = k => k ? MON3[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4) : '';
+        function monthFromName(n) {
+            const s = String(n || '').toLowerCase(), mm = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            for (let i = 0; i < 12; i++) if (new RegExp('(^|[^a-z])' + mm[i]).test(s)) return (s.match(/20\d\d/) || ['2026'])[0] + '-' + p2(i + 1);
+            return null;
+        }
+        // sel: 'carry' | 'asis' | 'auto'. Returns 'carry' | 'asis', or null when 'auto' cannot tell the month.
+        function resolveInvMode(P, sel) {
+            if (sel === 'carry' || sel === 'asis') return sel;
+            return P.month ? (P.month < TARGET_MONTH ? 'carry' : 'asis') : null;
+        }
+        function carryInv(items) { return items.map(it => ensureWk({ ...it, beg: it.ending, rec: 0, out: 0, ending: it.ending, wk: null })); }
         async function readWorkbook(f) {
             const z = readZip(await f.arrayBuffer()), wbx = await zipText(z, 'xl/workbook.xml'), relx = await zipText(z, 'xl/_rels/workbook.xml.rels');
             if (!wbx || !relx) throw new Error('not an Excel workbook');
@@ -1966,14 +2008,15 @@
             if (sx) sst = Array.from(new DOMParser().parseFromString(sx, 'application/xml').getElementsByTagName('si')).map(si => Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join(''));
             return { async rows(name) { const p = sheets[name]; return p ? parseSheetXml(await zipText(z, p), sst) : null; } };
         }
-        async function invParse(wb) {
+        async function invParse(wb, fname) {
             const num = x => typeof x === 'number' && isFinite(x) ? x : null, str = x => x == null ? '' : String(x).trim();
             const ml = await wb.rows('Master Item List'); if (!ml) throw new Error(L('ບໍ່ພົບແຊັດ "Master Item List"', 'Sheet "Master Item List" not found'));
             const master = {}; ml.forEach((r, i) => { if (r && i >= 3 && typeof r[2] === 'string' && r[2].trim()) master[r[2].trim()] = r; });
-            const wk = [];
+            const wk = [], cnt = {};
+            const scanDates = rs => rs.forEach(r => r && r.forEach(v => { if (typeof v === 'number' && v > 40000 && v < 60000) { const k = dateKey(v).slice(0, 7); cnt[k] = (cnt[k] || 0) + 1; } }));
             for (let w = 1; w <= 5; w++) {
                 const rows = await wb.rows('Week ' + w); if (!rows) throw new Error(L(`ບໍ່ພົບແຊັດ "Week ${w}"`, `Sheet "Week ${w}" not found`));
-                const m = {}, order = []; rows.forEach((r, i) => { if (!r || i < 7) return; const c = str(r[2]); if (c && c !== 'Code' && master[c] && !m[c]) { m[c] = r; order.push(c); } });
+                scanDates(rows.slice(0, 7)); const m = {}, order = []; rows.forEach((r, i) => { if (!r || i < 7) return; const c = str(r[2]); if (c && c !== 'Code' && master[c] && !m[c]) { m[c] = r; order.push(c); } });
                 wk.push({ m, order });
             }
             if (!wk[0].order.length) throw new Error(L('ບໍ່ພົບລາຍການໃນແຊັດ Week 1', 'No items found in sheet Week 1'));
@@ -1988,26 +2031,33 @@
                 it.ending = it.beg; syncItem(it); return it;
             });
             const byId = {}; items.forEach(i => byId[i.id] = i); const waste = [];
-            const wr = await wb.rows('Waste');
+            const wr = await wb.rows('Waste'); if (wr && wr[0]) scanDates([wr[0]]);
             if (wr && wr[0]) {
                 const cols = []; wr[0].forEach((v, ci) => { if (typeof v === 'number' && v > 40000 && v < 60000) cols.push([ci, dateKey(v)]); });
                 wr.forEach((r, i) => { if (!r || i < 3) return; const it = byId[str(r[2])]; if (!it) return; cols.forEach(([ci, dk]) => { const q = num(r[ci]); if (q > 0) waste.push({ logId: new Date(+dk.slice(0, 4), +dk.slice(5, 7) - 1, +dk.slice(8), 12).getTime() + waste.length, timestamp: dk.split('-').reverse().join('/'), id: it.id, nameLao: it.nameLao, nameEn: it.nameEn, uom: it.uom, cost: it.cost, qty: Math.round(q * 1000) / 1000, reason: L('ນຳເຂົ້າຈາກ Excel', 'Imported from Excel'), imp: true }); }); });
             }
-            return { items, waste, counted: [0, 1, 2, 3, 4].map(w => items.filter(i => i.wk[w].end != null).length) };
+            let month = null; const ks = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+            if (ks.length) month = ks[0]; else month = monthFromName(fname);
+            return { items, waste, month, counted: [0, 1, 2, 3, 4].map(w => items.filter(i => i.wk[w].end != null).length) };
         }
         async function onInvFile(inp) {
             const f = inp.files[0]; inp.value = ''; if (!f) return;
-            try { pendingInv = await invParse(await readWorkbook(f)); openConfirmModal('invimport'); }
+            try { pendingInv = await invParse(await readWorkbook(f), f.name); openConfirmModal('invimport'); }
             catch (e) { showToast(L('ອ່ານໄຟລ໌ Inventory ບໍ່ໄດ້: ', 'Could not read the Inventory file: ') + (e.message || e), 'info'); }
         }
-        function executeInvImport() {
+        function executeInvImport(mode) {
             const P = pendingInv; if (!P) return;
-            inventory = P.items; wasteLogs = wasteLogs.filter(w => !w.imp).concat(P.waste).sort((a, b) => b.logId - a.logId);
+            if (typeof mode !== 'string') { const r = document.querySelector('input[name="inv-mode"]:checked'); mode = r ? r.value : (resolveInvMode(P, 'auto') || 'asis'); }
+            const carry = mode === 'carry';
+            inventory = carry ? carryInv(P.items) : P.items;
+            wasteLogs = wasteLogs.filter(w => !w.imp).concat(carry ? [] : P.waste).sort((a, b) => b.logId - a.logId);
             isRolledOver = false; document.getElementById('rollover-success-banner').classList.add('hidden');
             document.getElementById('header-month-label').textContent = "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
-            stockWeek = currentStockWeek(); persistState(); pendingInv = null; closeConfirmModal();
+            stockWeek = carry ? 0 : currentStockWeek(); persistState(); pendingInv = null; closeConfirmModal();
             populateDropdowns(); refreshAllViews(); renderStockWeekChips();
-            showToast(L(`📤 ນຳເຂົ້າ Inventory ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Inventory imported: ${P.items.length} items`), 'success');
+            const from = monthLabel(P.month) || L('ເດືອນກ່ອນ', 'previous month'), to = monthLabel(TARGET_MONTH);
+            showToast(carry ? L(`📤 ຍົກຍອດຈາກ ${from} ມາເປັນ ${to} ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Carried ${from} ending stock over to ${to}: ${P.items.length} items`)
+                : L(`📤 ນຳເຂົ້າ Inventory ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Inventory imported: ${P.items.length} items`), 'success');
         }
 
         // ---- Branches (each branch keeps its own inventory, waste, PR, sales/POS) ----
@@ -2044,12 +2094,12 @@
             showToast(L(`ສະຫຼັບໄປສາຂາ ${brName()} ແລ້ວ`, `Switched to branch ${brName()}`), 'success');
         }
         async function createBranch() {
-            const name = document.getElementById('br-new').value.trim(), f = document.getElementById('br-file').files[0];
+            const name = document.getElementById('br-new').value.trim(), f = document.getElementById('br-file').files[0], mode = (document.getElementById('br-mode') || {}).value || 'auto';
             if (!name) { showToast(L('ກະລຸນາໃສ່ຊື່ສາຂາ', 'Enter a branch name'), 'info'); return; }
             const blank = blankBranchData(); saveSnapshot();
             branches.list.push({ id: 'b' + Date.now().toString(36), name }); branches.cur = branches.list[branches.list.length - 1].id; saveBranches(); closeBranchPanel();
             loadSnapshot(blank);
-            if (f) { try { pendingInv = await invParse(await readWorkbook(f)); executeInvImport(); } catch (e) { showToast(L('ອ່ານໄຟລ໌ Inventory ບໍ່ໄດ້: ', 'Could not read the Inventory file: ') + (e.message || e), 'info'); } }
+            if (f) { try { pendingInv = await invParse(await readWorkbook(f), f.name); const m = resolveInvMode(pendingInv, mode); if (m) executeInvImport(m); else openConfirmModal('invimport'); } catch (e) { showToast(L('ອ່ານໄຟລ໌ Inventory ບໍ່ໄດ້: ', 'Could not read the Inventory file: ') + (e.message || e), 'info'); } }
             else showToast(L(`ສ້າງສາຂາ ${name} ແລ້ວ - ກົດ "ນຳເຂົ້າໄຟລ໌ Inventory" ເພື່ອໃສ່ຂໍ້ມູນຂອງສາຂານີ້`, `Branch ${name} created - use "Import Inventory file" to load its data`), 'success');
         }
         function renameBranch() { const v = document.getElementById('br-rename').value.trim(); if (!v) return; curBranch().name = v; saveBranches(); updateBranchUi(); closeBranchPanel(); showToast(L('ປ່ຽນຊື່ສາຂາແລ້ວ', 'Branch renamed'), 'success'); }
@@ -2074,6 +2124,7 @@
               <div class="border-t border-slate-200 pt-3 space-y-2"><p class="text-xs font-bold text-slate-700">➕ ${L('ເພີ່ມສາຂາໃໝ່', 'Add a new branch')}</p>
                 <input id="br-new" placeholder="${L('ຊື່ສາຂາ ເຊັ່ນ Vientiane Center', 'Branch name, e.g. Vientiane Center')}" class="${inp}">
                 <label class="block text-xs text-slate-600">${L('ໄຟລ໌ Inventory ຂອງສາຂານີ້ (.xlsx) - ບໍ່ບັງຄັບ', 'This branch\'s Inventory file (.xlsx) - optional')}<input type="file" id="br-file" accept=".xlsx" class="block mt-1 text-xs"></label>
+                <label class="block text-xs text-slate-600">${L('ໄຟລ໌ນີ້ເປັນຂອງເດືອນໃດ?', 'Which month is this file?')}<select id="br-mode" class="${inp} mt-1"><option value="auto">${L('ກວດອັດຕະໂນມັດ (ແນະນຳ)', 'Auto-detect (recommended)')}</option><option value="carry">${L('ເດືອນກ່ອນ → ຍົກຍອດມາເປັນ NOV 2026', 'Previous month → carry over to NOV 2026')}</option><option value="asis">${L('ເປັນ NOV 2026 ຢູ່ແລ້ວ → ໂຫຼດຕາມໄຟລ໌', 'Already NOV 2026 → load as-is')}</option></select></label>
                 <button onclick="createBranch()" class="${bt} w-full bg-[#B91C1C] text-white hover:bg-red-800">${L('ສ້າງສາຂາ', 'Create branch')}</button></div>
               ${branches.list.length > 1 ? `<button onclick="closeBranchPanel(); openConfirmModal('branchdel')" class="text-xs text-red-600 underline cursor-pointer">${L('ລຶບສາຂາປັດຈຸບັນ', 'Delete current branch')}</button>` : ''}</div>`;
             document.body.appendChild(el);
@@ -2085,30 +2136,98 @@
             return inventory.filter(i => (!q || i.id.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q) || i.nameLao.toLowerCase().includes(q)) && (cf === 'ALL' || i.category === cf) && (sf === 'ALL' || i.storage === sf) && (!lo || isLowStockItem(i)));
         }
         function fitZoom() { const sec = document.getElementById('tab-content-' + currentTab); let w = sec.scrollWidth; sec.querySelectorAll('table').forEach(t => { w = Math.max(w, t.scrollWidth); }); return Math.min(1, 700 / Math.max(w, 1)); }
-        function printStockDoc() {
-            const items = stockFilteredItems(); if (!items.length) { showToast(L('ບໍ່ມີລາຍການທີ່ຈະພິມ', 'Nothing to print'), 'info'); return; }
-            const wkm = stockWeek !== 'm', b = 'border:1px solid #555;padding:2px 4px;', th = b + 'background:#0F6B6B;color:#fff;font-weight:700;text-align:center;font-size:8px', nm2 = b + 'text-align:right;font-family:monospace;white-space:nowrap';
+        function buildStockDoc() {
+            const items = stockFilteredItems(); if (!items.length) { showToast(L('ບໍ່ມີລາຍການທີ່ຈະພິມ', 'Nothing to print'), 'info'); return false; }
+            const wkm = stockWeek !== 'm', b = 'border:1px solid #666;padding:1px 3px;', th = b + 'background:#0F6B6B;color:#fff;font-weight:700;text-align:center;font-size:6.5px;line-height:1.15', n2 = b + 'text-align:right;font-family:monospace;white-space:nowrap';
             const catSel = document.getElementById('filter-category').value, mons = stockMondays();
             const wl = wkm ? `${L('ອາທິດ', 'Week')} ${stockWeek + 1}${mons[stockWeek] ? ' (' + L('ວັນຈັນ ', 'Mon ') + fmtDM2(mons[stockWeek]) + ')' : ''}` : L('ທັງເດືອນ', 'Whole month');
             const cats = Object.keys(CATEGORY_META).map(k => { const its = inventory.filter(i => i.category === k); return { k, n: its.length, v: its.reduce((a, i) => a + i.ending * i.cost, 0) }; }).filter(c => c.n);
-            let cs = ''; for (let i = 0; i < cats.length; i += 5) { cs += '<tr>' + [0, 1, 2, 3, 4].map(x => { const c = cats[i + x]; return c ? `<td style="${b}width:20%;vertical-align:top"><b>${CATEGORY_META[c.k].icon} ${esc(CATEGORY_META[c.k].lao)}</b><br>${c.n} ${L('ລາຍການ', 'items')}<br><span style="font-family:monospace">${formatLAK(c.v)}</span></td>` : `<td style="${b}"></td>`; }).join('') + '</tr>'; }
+            let cs = ''; for (let i = 0; i < cats.length; i += 5) { cs += '<tr>' + [0, 1, 2, 3, 4].map(x => { const c = cats[i + x]; return c ? `<td style="${b}width:20%;font-size:7px;line-height:1.25"><b>${CATEGORY_META[c.k].icon} ${esc(CATEGORY_META[c.k].lao)}</b> (${c.n})<br><span style="font-family:monospace">${formatLAK(c.v)}</span></td>` : `<td style="${b}"></td>`; }).join('') + '</tr>'; }
+            const k0 = x => Math.round(x).toLocaleString('en-US');
             let rows = '', last = '', n = 0;
             items.forEach(it => {
-                if (it.category !== last) { last = it.category; rows += `<tr><td colspan="10" style="${b}background:#F1EEE7;font-weight:700">${CATEGORY_META[it.category] ? CATEGORY_META[it.category].icon + ' ' + esc(CATEGORY_META[it.category].lao) : esc(it.category)}</td></tr>`; }
-                n++; let beg, rec, out, end, use, val;
-                if (wkm) { const c = wkCalc(it)[stockWeek]; beg = formatQty(c.beg); rec = c.rec ? formatQty(c.rec) : ''; out = c.out ? formatQty(c.out) : ''; end = c.counted ? formatQty(c.end) : ''; use = c.counted ? formatQty(c.used) : ''; val = c.counted ? formatLAK(c.end * it.cost) : ''; }
-                else { beg = formatQty(it.beg); rec = it.rec ? formatQty(it.rec) : ''; out = it.out ? formatQty(it.out) : ''; end = formatQty(it.ending); use = formatQty(Math.max(0, it.beg + it.rec - (it.out || 0) - it.ending)); val = formatLAK(it.ending * it.cost); }
-                rows += `<tr style="height:20px;break-inside:avoid"><td style="${b}text-align:center">${n}</td><td style="${b}font-family:monospace">${esc(bc(it))}</td><td style="${b}"><b>${esc(nm(it))}</b> <span style="color:#555">${esc(subName(it))}</span></td><td style="${b}text-align:center">${esc(it.uom)}<br><span style="font-size:7px;color:#555">${esc(it.pack)}</span></td><td style="${nm2}">${beg}</td><td style="${nm2}">${rec}</td><td style="${nm2}">${out}</td><td style="${nm2}font-weight:700${wkm ? ';background:#FFFBEB' : ''}">${end}</td><td style="${nm2}">${use}</td><td style="${nm2}">${val}</td></tr>`;
+                if (it.category !== last) { last = it.category; rows += `<tr><td colspan="13" style="${b}background:#F1EEE7;font-weight:700;font-size:7.5px">${CATEGORY_META[it.category] ? CATEGORY_META[it.category].icon + ' ' + esc(CATEGORY_META[it.category].lao) : esc(it.category)}</td></tr>`; }
+                n++; let beg, rec, out, tot, end, use, val;
+                if (wkm) { const c = wkCalc(it)[stockWeek]; beg = formatQty(c.beg); rec = c.rec ? formatQty(c.rec) : ''; out = c.out ? formatQty(c.out) : ''; tot = formatQty(c.total); end = c.counted ? formatQty(c.end) : ''; use = c.counted ? formatQty(c.used) : ''; val = c.counted ? k0(c.end * it.cost) : ''; }
+                else { const total = r3(it.beg + it.rec - (it.out || 0)); beg = formatQty(it.beg); rec = it.rec ? formatQty(it.rec) : ''; out = it.out ? formatQty(it.out) : ''; tot = formatQty(total); end = formatQty(it.ending); use = formatQty(r3(total - it.ending)); val = k0(it.ending * it.cost); }
+                rows += `<tr style="break-inside:avoid;line-height:1.2"><td style="${b}text-align:center">${n}</td><td style="${b}font-family:monospace;font-size:7px">${esc(it.id)}${bc(it) !== it.id ? `<br><span style="color:#555">${esc(bc(it))}</span>` : ''}</td><td style="${b}"><b>${esc(nm(it))}</b><br><span style="color:#555;font-size:7px">${esc(subName(it))}</span></td><td style="${b}font-size:7px">${esc(it.pack)}</td><td style="${b}text-align:center">${esc(it.uom)}</td><td style="${n2}">${k0(it.cost)}</td><td style="${n2}">${beg}</td><td style="${n2}">${rec}</td><td style="${n2}">${out}</td><td style="${n2}">${tot}</td><td style="${n2}font-weight:700${wkm ? ';background:#FFFBEB' : ''}">${end}</td><td style="${n2}">${use}</td><td style="${n2}">${val}</td></tr>`;
             });
-            const sig = t => `<td style="${b}height:46px;vertical-align:bottom;text-align:center;width:33%">${t}</td>`;
-            document.getElementById('print-area').innerHTML = `<div style="font-family:'Noto Sans Lao','Inter',sans-serif;color:#000;font-size:9px">
-              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"><div><div style="font-size:15px;font-weight:700">${esc(brFull())}</div><div style="font-size:12px;font-weight:700">${L('ໃບນັບສະຕ໋ອກ', 'Stock Count Sheet')} - ${wl}${catSel !== 'ALL' && CATEGORY_META[catSel] ? ' - ' + esc(CATEGORY_META[catSel].lao) : ''}</div></div><div style="text-align:right">${L('ວັນທີພິມ', 'Printed')}: ${today()}<br>${L('ວັນທີນັບ', 'Count date')}: ____ / ____ / ________</div></div>
-              <table style="width:100%;border-collapse:collapse;margin-bottom:6px">${cs}</table>
-              <table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup><col style="width:4%"><col style="width:13%"><col style="width:27%"><col style="width:8%"><col style="width:8%"><col style="width:7%"><col style="width:6%"><col style="width:9%"><col style="width:8%"><col style="width:10%"></colgroup>
-              <thead><tr><th style="${th}">${L('ລຳດັບ', 'No.')}</th><th style="${th}">${L('ບາໂຄດ', 'Barcode')}</th><th style="${th}">${L('ຊື່ວັດຖຸດິບ', 'Item name')}</th><th style="${th}">${L('ໜ່ວຍ', 'Unit')}</th><th style="${th}">${L('ຕົ້ນ', 'Beg')}</th><th style="${th}">${L('ຮັບເຂົ້າ', 'In')}</th><th style="${th}">${L('ອອກ', 'Out')}</th><th style="${th}">${L('ຄົງເຫຼືອ (ນັບ)', 'Ending (count)')}</th><th style="${th}">${L('ໃຊ້ໄປ', 'Usage')}</th><th style="${th}">${L('ມູນຄ່າ ₭', 'Value ₭')}</th></tr></thead><tbody>${rows}</tbody></table>
-              <table style="width:100%;border-collapse:collapse;margin-top:12px;break-inside:avoid"><tr>${sig(L('ຜູ້ນັບ', 'Counted by'))}${sig(L('ຜູ້ກວດ', 'Checked by'))}${sig(L('ຜູ້ຈັດການ', 'Manager'))}</tr></table></div>`;
-            setPage('portrait'); document.body.classList.add('print-doc'); setTimeout(() => window.print(), 80);
+            const sig = t => `<td style="${b}height:38px;vertical-align:bottom;text-align:center;width:33%;font-size:8px">${t}</td>`;
+            const col = w => `<col style="width:${w}%">`;
+            document.getElementById('print-area').innerHTML = `<div style="font-family:'Noto Sans Lao','Inter',sans-serif;color:#000;font-size:8px">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px"><div><div style="font-size:12px;font-weight:700">${esc(brFull())}</div><div style="font-size:10px;font-weight:700">${L('ໃບນັບສະຕ໋ອກ', 'Stock Count Sheet')} - ${wl}${catSel !== 'ALL' && CATEGORY_META[catSel] ? ' - ' + esc(CATEGORY_META[catSel].lao) : ''}</div></div><div style="text-align:right;font-size:8px">${L('ວັນທີພິມ', 'Printed')}: ${today()}<br>${L('ວັນທີນັບ', 'Count date')}: ____ / ____ / ________</div></div>
+              <table style="width:100%;border-collapse:collapse;margin-bottom:4px">${cs}</table>
+              <table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup>${[3, 10, 22, 9, 4.5, 7, 6, 5, 4.5, 6, 7.5, 6, 8].map(col).join('')}</colgroup>
+              <thead><tr><th style="${th}">${L('ລຳດັບ', 'No.')}</th><th style="${th}">${L('ລະຫັດ / ບາໂຄດ', 'Code / Barcode')}</th><th style="${th}">${L('ຊື່ວັດຖຸດິບ', 'Item name')}</th><th style="${th}">${L('ຂະໜາດ', 'Pack')}</th><th style="${th}">${L('ໜ່ວຍ', 'UOM')}</th><th style="${th}">${L('ຕົ້ນທຶນ/ໜ່ວຍ', 'Cost/unit')}</th><th style="${th}">${L('ຕົ້ນງວດ', 'Beginning')}</th><th style="${th}">IN</th><th style="${th}">OUT</th><th style="${th}">${L('ລວມ', 'Total')}</th><th style="${th}">${L('ຄົງເຫຼືອ (ນັບ)', 'Ending (count)')}</th><th style="${th}">${L('ໃຊ້ໄປ', 'Usage')}</th><th style="${th}">${L('ມູນຄ່າ ₭', 'Value ₭')}</th></tr></thead><tbody>${rows}</tbody></table>
+              <table style="width:100%;border-collapse:collapse;margin-top:8px;break-inside:avoid"><tr>${sig(L('ຜູ້ນັບ', 'Counted by'))}${sig(L('ຜູ້ກວດ', 'Checked by'))}${sig(L('ຜູ້ຈັດການ', 'Manager'))}</tr></table></div>`;
+            return true;
         }
+        function printStockDoc() { if (buildStockDoc()) { document.body.classList.add('print-doc'); setPage('portrait'); setTimeout(() => window.print(), 80); } }
+        // Browser's own Print (Cmd/Ctrl+P) produces the same A4 sheets
+        function autoPrintPrep() {
+            if (document.body.classList.contains('print-doc')) return;
+            if (currentTab === 'stock') { if (buildStockDoc()) { setPage('portrait'); document.body.classList.add('print-doc'); } }
+            else if (currentTab === 'pr') { if (buildPRDoc()) { setPage('portrait'); document.body.classList.add('print-doc'); } }
+            else if (!document.body.style.zoom) domPrintPrep();
+        }
+        function afterPrintClean() { document.body.classList.remove('print-doc'); document.body.style.zoom = ''; }
+
+        // ---- BOM / cost master import (menu COGS + ingredient purchase prices) ----
+        let pendingBom = null;
+        const bomTok = s => (String(s || '').toLowerCase().replace(/['’]/g, '').match(/[a-z0-9]+/g) || []);
+        const isSizeTok = t => /^\d/.test(t) || /^(pcs|pc|g|kg|ml|oz|half|max)$/.test(t);
+        const ucOf = (S, pk) => S.costs[pk] != null ? S.costs[pk] : (S.bomMap && S.bomMap[pk] ? S.bomMap[pk].cogs : null);
+        function bomMatch(name, menus) {
+            const a = new Set(bomTok(name)); if (!a.size) return null;
+            let best = null, bs = 0;
+            for (const m of menus) {
+                const b = m.tok; let inter = 0; a.forEach(x => { if (b.has(x)) inter++; });
+                const j = inter / (a.size + b.size - inter); let s = j >= 1 ? 3 : j;
+                if (j < 1) { const xa = [...a].filter(x => !b.has(x)), xb = [...b].filter(x => !a.has(x)); if ((!xa.length && xb.every(isSizeTok)) || (!xb.length && xa.every(isSizeTok))) s = 1.5 + j; }
+                if (s > bs) { bs = s; best = m; }
+            }
+            return bs >= 1.5 || bs >= 0.8 ? best : null;
+        }
+        function bomRemap() {
+            const S = salesState; S.bomMap = {}; if (!S.bomMenus || !S.bomMenus.length) return;
+            const menus = S.bomMenus.map(m => ({ ...m, tok: new Set(bomTok(m.name)) }));
+            for (const pk in S.pos.prod) { const m = bomMatch(S.pos.prod[pk].n, menus); if (m) S.bomMap[pk] = { name: m.name, cogs: m.cogs, price: m.price }; }
+        }
+        async function bomParse(f) {
+            const wb = await readWorkbook(f), cp = await wb.rows('COGS & Price'), pl = await wb.rows('Product List');
+            if (!cp) throw new Error(L('ບໍ່ພົບແຊັດ "COGS & Price"', 'Sheet "COGS & Price" not found'));
+            const num = x => typeof x === 'number' && isFinite(x) ? x : null, str = x => x == null ? '' : String(x).trim(), menus = [], seen = {}, ings = [];
+            cp.forEach((r, i) => { if (!r || i < 2) return; const n = str(r[2]); if (!n || !(num(r[3]) > 0) || str(r[0]) === '' || seen[n]) return; seen[n] = 1; menus.push({ name: n, cat: str(r[1]), cogs: Math.round(num(r[3]) * 100) / 100, price: num(r[4]), tok: new Set(bomTok(n)) }); });
+            (pl || []).forEach((r, i) => { if (!r || i < 3) return; const n = str(r[3]); if (n && num(r[8]) > 0) ings.push({ id: str(r[2]), name: n, pack: str(r[4]), cost: num(r[8]) }); });
+            if (!menus.length) throw new Error(L('ບໍ່ພົບເມນູໃນແຊັດ COGS & Price', 'No menus found in sheet COGS & Price'));
+            return { menus, ings, file: f.name };
+        }
+        function bomPlan(P) {
+            const S = salesState, menuMap = {};
+            for (const pk in S.pos.prod) { const m = bomMatch(S.pos.prod[pk].n, P.menus); if (m) menuMap[pk] = { name: m.name, cogs: m.cogs, price: m.price }; }
+            const byTok = {}, used = {}, inv = [], key = s => [...new Set(bomTok(s))].sort().join(' ');
+            inventory.forEach(it => { (byTok[key(it.nameEn)] = byTok[key(it.nameEn)] || []).push(it); });
+            P.ings.forEach(g => {
+                const its = byTok[key(g.name)]; if (!its || used[its[0].id]) return; const it = its[0]; used[it.id] = 1;
+                const old = it.cost; let nw = null, kind = 'review';
+                if (old > 0) { const r = g.cost / old; if (r >= 0.8 && r <= 1.25) { nw = g.cost; kind = 'price'; } else { const k = Math.round(r); if (k >= 2 && Math.abs(r / k - 1) < 0.04) { nw = g.cost / k; kind = 'pack'; } } }
+                inv.push({ id: it.id, name: it.nameEn, old, nw, kind, apply: nw != null && Math.abs(nw - old) > 0.5 });
+            });
+            return { menus: P.menus, menuMap, inv, file: P.file, ingCount: P.ings.length, posCount: Object.keys(S.pos.prod).length };
+        }
+        async function onBomFile(inp) {
+            const f = inp.files[0]; inp.value = ''; if (!f) return;
+            try { pendingBom = bomPlan(await bomParse(f)); openConfirmModal('bomimport'); }
+            catch (e) { showToast(L('ອ່ານໄຟລ໌ BOM ບໍ່ໄດ້: ', 'Could not read the BOM file: ') + (e.message || e), 'info'); }
+        }
+        function executeBomImport() {
+            const P = pendingBom; if (!P) return; const S = salesState;
+            S.bomMenus = P.menus.map(m => ({ name: m.name, cat: m.cat, cogs: m.cogs, price: m.price })); S.bomMap = P.menuMap; S.bomInfo = { file: P.file, at: today(), menus: P.menus.length };
+            let n = 0; P.inv.forEach(x => { if (!x.apply) return; const it = inventory.find(i => i.id === x.id); if (it) { it.costPrev = it.cost; it.cost = Math.round(x.nw * 100) / 100; n++; } });
+            persistState(); persistSales(); pendingBom = null; closeConfirmModal(); refreshAllViews(); renderSalesShell();
+            showToast(L(`📘 ນຳເຂົ້າ BOM ແລ້ວ: ເມນູ ${P.menus.length}, ອັບເດດລາຄາວັດຖຸດິບ ${n} ລາຍການ`, `📘 BOM imported: ${P.menus.length} menus, ${n} ingredient prices updated`), 'success');
+        }
+
 
         // ---- Minimal XLSX writer (no external library, works offline) ----
         const _crcT = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
