@@ -180,7 +180,7 @@
                 <span>📊</span> ແດຊບອດ & ນັບສະຕ໋ອກ (Stock Count)
             </button>
             <button onclick="switchTab('rollover')" id="tab-btn-rollover" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
-                <span>🔗</span> ເຊື່ອມໂຍງເດືອນນີ້ & ເດືອນໜ້າ (NOV ➔ DEC)
+                <span>🔗</span> <span id="tab-rollover-label">ເຊື່ອມໂຍງເດືອນນີ້ & ເດືອນໜ້າ</span>
             </button>
             <button onclick="switchTab('pr')" id="tab-btn-pr" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
                 <span>📝</span> ໃບສະເໜີຊື້ (PR)
@@ -306,8 +306,8 @@
             <div id="rollover-success-banner" class="hidden bg-emerald-50 border border-emerald-300 rounded-2xl p-4 flex items-center gap-3 text-emerald-900 shadow-sm">
                 <span class="text-2xl">✅</span>
                 <div>
-                    <h4 class="font-bold text-sm sm:text-base">ໂອນຍ້າຍຍອດສະຕ໋ອກໄປເດືອນທັນວາ (DEC 2026) ສຳເລັດແລ້ວ!</h4>
-                    <p class="text-xs sm:text-sm text-emerald-700">ຍອດຄົງເຫຼືອປາຍເດືອນພະຈິກ (Ending Stock) ໄດ້ຖືກຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບຮອບບັນຊີໃໝ່ຮຽບຮ້ອຍແລ້ວ.</p>
+                    <h4 id="rb-title" class="font-bold text-sm sm:text-base">ໂອນຍ້າຍຍອດສະຕ໋ອກສຳເລັດແລ້ວ!</h4>
+                    <p id="rb-desc" class="text-xs sm:text-sm text-emerald-700">ຍອດຄົງເຫຼືອປາຍເດືອນພະຈິກ (Ending Stock) ໄດ້ຖືກຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບຮອບບັນຊີໃໝ່ຮຽບຮ້ອຍແລ້ວ.</p>
                 </div>
             </div>
 
@@ -319,11 +319,11 @@
                         <div class="flex items-center gap-2.5">
                             <span class="bg-slate-100 text-slate-800 p-2 rounded-xl text-lg">📅</span>
                             <div>
-                                <h3 class="font-bold text-slate-900">ສະຫຼຸບຍອດເດືອນນີ້ (November 2026)</h3>
+                                <h3 id="rl-title" class="font-bold text-slate-900">ສະຫຼຸບຍອດເດືອນນີ້</h3>
                                 <p class="text-xs text-slate-500">ສະຖານະ: ກຳລັງປິດຍອດບັນຊີປາຍເດືອນ</p>
                             </div>
                         </div>
-                        <span class="bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-lg">NOV Ending</span>
+                        <span id="rl-badge" class="bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-lg">Ending</span>
                     </div>
 
                     <div class="space-y-2.5 text-sm">
@@ -353,25 +353,23 @@
                             <div class="flex items-center gap-2.5">
                                 <span class="bg-[#B91C1C] text-white p-2 rounded-xl text-lg">🚀</span>
                                 <div>
-                                    <h3 class="font-bold text-red-950">ເຊື່ອມຕໍ່ໄປເດືອນໜ້າ (December 2026)</h3>
+                                    <h3 id="rr-title" class="font-bold text-red-950">ເຊື່ອມຕໍ່ໄປເດືອນໜ້າ</h3>
                                     <p class="text-xs text-red-800">ໂອນຍ້າຍ Ending Stock ➔ Beginning Stock</p>
                                 </div>
                             </div>
-                            <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg">DEC Projected</span>
+                            <span id="rr-badge" class="bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg">Projected</span>
                         </div>
 
-                        <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                            ເມື່ອກວດສອບຍອດນັບສະຕ໋ອກປາຍເດືອນພະຈິກຄົບຖ້ວນແລ້ວ ທ່ານສາມາດກົດປຸ່ມດ້ານລຸ່ມເພື່ອໂອນຍ້າຍຍອດຄົງເຫຼືອທັງໝົດ 100 ລາຍການ ໄປເປັນຍອດຕັ້ງຕົ້ນຂອງເດືອນທັນວາໂດຍອັດຕະໂນມັດ ໂດຍບໍ່ຕ້ອງພິມຂໍ້ມູນໃໝ່.
-                        </p>
+                        <p id="rr-p" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></p>
 
                         <div class="bg-white/80 rounded-xl p-3.5 border border-red-100 flex justify-between items-center">
-                            <span class="text-xs font-semibold text-slate-600">ມູນຄ່າສະຕ໋ອກຕັ້ງຕົ້ນເດືອນທັນວາ (DEC Beginning):</span>
+                            <span id="rr-beglabel" class="text-xs font-semibold text-slate-600">ມູນຄ່າສະຕ໋ອກຕັ້ງຕົ້ນເດືອນໜ້າ:</span>
                             <span id="rollover-dec-beg-val" class="text-base sm:text-lg font-bold text-[#B91C1C]">0 ₭</span>
                         </div>
                     </div>
 
                     <button onclick="openConfirmModal('rollover')" class="w-full bg-[#B91C1C] hover:bg-red-800 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                        <span>🔄</span> ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນໜ້າ (Rollover NOV ➔ DEC)
+                        <span>🔄</span> <span id="rr-btn">ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນໜ້າ</span>
                     </button>
                 </div>
             </div>
@@ -659,6 +657,9 @@
         const STORAGE_KEY_INV = "momstouch_vangxai_inv_v1";
         const STORAGE_KEY_WASTE = "momstouch_vangxai_waste_v1";
         const STORAGE_KEY_ROLLOVER = "momstouch_vangxai_rollover_v1";
+        const STORAGE_KEY_PERIOD = "momstouch_vangxai_period_v1";
+        const DEFAULT_PERIOD = '2026-11';
+        let basePeriod = DEFAULT_PERIOD;   // the month this stock file/count belongs to ("this month"); next month = basePeriod + 1
 
         // Format currency in LAK
         function formatLAK(num) {
@@ -692,9 +693,10 @@
                 }
 
                 isRolledOver = savedRollover === "true";
+                { const sp = localStorage.getItem(STORAGE_KEY_PERIOD); basePeriod = /^\d{4}-\d{2}$/.test(sp || '') ? sp : DEFAULT_PERIOD; }
                 if (isRolledOver) {
                     document.getElementById('rollover-success-banner').classList.remove('hidden');
-                    document.getElementById('header-month-label').textContent = "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)";
+                    updatePeriodUI();
                 }
             } catch (e) {
                 console.error("Storage error:", e);
@@ -712,6 +714,7 @@
                 localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory));
                 localStorage.setItem(STORAGE_KEY_WASTE, JSON.stringify(wasteLogs));
                 localStorage.setItem(STORAGE_KEY_ROLLOVER, isRolledOver.toString());
+                localStorage.setItem(STORAGE_KEY_PERIOD, basePeriod);
             } catch (e) {
                 console.error("Failed to save state:", e);
             }
@@ -742,6 +745,7 @@
 
         // Refresh all UI components
         function refreshAllViews() {
+            updatePeriodUI();
             updateKPIsAndAlerts();
             renderCategoryBreakdown();
             renderStockTable();
@@ -1127,14 +1131,14 @@
                 msgEl.textContent = L(`ສາຂາ ${brName()}: ພົບ ${P.items.length} ລາຍການ, ຂໍ້ມູນຂອງເສຍ ${P.waste.length} ແຖວ. ນັບແລ້ວ ອາທິດ 1-5: ${P.counted.join(' / ')} ລາຍການ. ຂໍ້ມູນສະຕ໋ອກປັດຈຸບັນຈະຖືກແທນທີ່. ດຳເນີນການຕໍ່ບໍ?`, `Branch ${brName()}: found ${P.items.length} items and ${P.waste.length} waste lines. Items counted in weeks 1-5: ${P.counted.join(' / ')}. Current stock data will be replaced. Continue?`);
                 confirmBtn.onclick = () => executeInvImport();
                 {
-                    const det = P.month, tgt = monthLabel(TARGET_MONTH), def = resolveInvMode(P, 'auto') || 'carry';
+                    const det = P.month, cur = det || basePeriod, nxt = det ? addMonths(det, 1) : curMonthKey(), def = resolveInvMode(P, 'auto') || 'carry';
                     const val = P.items.reduce((a, i) => a + (i.ending || 0) * (i.cost || 0), 0);
                     const info = det ? L(`ກວດພົບວ່າໄຟລ໌ນີ້ເປັນຂອງເດືອນ ${monthLabel(det)}`, `This file looks like ${monthLabel(det)}`) : L('ກວດບໍ່ພົບວ່າໄຟລ໌ເປັນຂອງເດືອນໃດ - ກະລຸນາເລືອກ', 'Could not detect the file month - please choose');
                     const ex = document.getElementById('modal-extra');
                     ex.className = 'text-sm text-slate-700 space-y-2 border border-slate-200 rounded-xl p-3 bg-slate-50';
                     ex.innerHTML = `<p class="text-xs font-bold text-slate-800">📅 ${info}</p>
-                      <label class="flex gap-2 items-start cursor-pointer"><input type="radio" name="inv-mode" value="carry" ${def === 'carry' ? 'checked' : ''} class="mt-1"><span><b>${L('ຍົກຍອດມາເປັນ', 'Carry over to')} ${tgt}</b> - ${L('ເອົາຍອດຄົງເຫຼືອປາຍເດືອນຂອງໄຟລ໌ເປັນຍອດຕົ້ນເດືອນ, ເລີ່ມນັບລາຍອາທິດໃໝ່', 'file\'s month-end stock becomes the opening stock; weekly counts start fresh')} (≈ ${formatLAK(val)})</span></label>
-                      <label class="flex gap-2 items-start cursor-pointer"><input type="radio" name="inv-mode" value="asis" ${def === 'asis' ? 'checked' : ''} class="mt-1"><span><b>${L('ໂຫຼດຕາມໄຟລ໌', 'Load as-is')}</b> - ${L(`ໄຟລ໌ເປັນຂອງ ${tgt} ຢູ່ແລ້ວ (ເກັບຂໍ້ມູນລາຍອາທິດ ແລະ ຂອງເສຍ)`, `file is already ${tgt} (keeps weekly data and waste)`)}</span></label>`;
+                      <label class="flex gap-2 items-start cursor-pointer"><input type="radio" name="inv-mode" value="carry" ${def === 'carry' ? 'checked' : ''} class="mt-1"><span><b>${L('ຍົກຍອດເລີຍ → ເຂົ້າສູ່', 'Carry over now → start')} ${monthLabel(nxt)}</b> - ${L('ເອົາຍອດຄົງເຫຼືອປາຍເດືອນຂອງໄຟລ໌ເປັນຍອດຕັ້ງຕົ້ນ ແລະ ເລີ່ມນັບລາຍອາທິດໃໝ່', 'file\'s month-end stock becomes the opening stock; weekly counts start fresh')} (≈ ${formatLAK(val)})</span></label>
+                      <label class="flex gap-2 items-start cursor-pointer"><input type="radio" name="inv-mode" value="asis" ${def === 'asis' ? 'checked' : ''} class="mt-1"><span><b>${L('ໂຫຼດຕາມໄຟລ໌', 'Load as-is')} (${monthLabel(cur)} ➔ ${monthLabel(addMonths(cur, 1))})</b> - ${L('ເບິ່ງ/ແກ້ຂໍ້ມູນເດືອນນັ້ນກ່ອນ ແລ້ວກົດ Rollover ເອງໃນພາຍຫຼັງ (ເກັບຂໍ້ມູນລາຍອາທິດ ແລະ ຂອງເສຍ)', 'view/edit that month first, then press Rollover yourself (keeps weekly data and waste)')}</span></label>`;
                     ex.classList.remove('hidden');
                 }
             } else if (actionType === 'posclear') {
@@ -1152,8 +1156,9 @@
                 msgEl.textContent = "ຂໍ້ມູນທີ່ທ່ານແກ້ໄຂ ແລະ ບັນທຶກຂອງເສຍທັງໝົດຈະຖືກລ้าง ແລະ ກັບຄືນສູ່ຂໍ້ມູນຕັ້ງຕົ້ນຈາກໄຟລ໌ Inventory Mom's Touch NOV.xlsx ທ່ານຕ້ອງການດຳເນີນການຕໍ່ບໍ່?";
                 confirmBtn.onclick = executeReset;
             } else if (actionType === 'rollover') {
-                titleEl.textContent = "ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນທັນວາ (DEC 2026)";
-                msgEl.textContent = "ລະບົບຈະນຳເອົາຍອດຄົງເຫຼືອປາຍເດືອນ (Ending Stock) ຂອງທັງໝົດ 100 ລາຍການ ໄປຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບເດືອນທັນວາ 2026. ຢືນຢັນການໂອນຍ້າຍບໍ່?";
+                const nx = addMonths(basePeriod, 1);
+                titleEl.textContent = L(`ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປ${mLao(nx)} (${monthLabel(nx)})`, `Confirm rollover to ${mFull(nx)}`);
+                msgEl.textContent = L(`ລະບົບຈະນຳເອົາຍອດຄົງເຫຼືອປາຍເດືອນ (Ending Stock) ຂອງທັງໝົດ ${inventory.length} ລາຍການ ໄປຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບ${mLao(nx)} ${nx.slice(0, 4)}. ຢືນຢັນການໂອນຍ້າຍບໍ່?`, `Month-end ending stock of all ${inventory.length} items will become the beginning stock for ${mFull(nx)}. Confirm?`);
                 confirmBtn.onclick = executeRollover;
             }
 
@@ -1175,9 +1180,10 @@
             prState = newPR(); prState.h.no = prNo(1); renderPRShell();
             isRolledOver = false;
             document.getElementById('rollover-success-banner').classList.add('hidden');
-            document.getElementById('header-month-label').textContent = "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
+            updatePeriodUI();
             inventory = JSON.parse(JSON.stringify(INITIAL_INVENTORY_DATA));
             wasteLogs = [];
+            basePeriod = DEFAULT_PERIOD; localStorage.removeItem(STORAGE_KEY_PERIOD);
             closeConfirmModal();
             refreshAllViews();
             showToast('🔄 ຣີເຊັດຂໍ້ມູນກັບຄືນສູ່ໄຟລ໌ Excel ຕົ້ນສະບັບແລ້ວ', 'info');
@@ -1194,9 +1200,9 @@
             persistState();
             closeConfirmModal();
             document.getElementById('rollover-success-banner').classList.remove('hidden');
-            document.getElementById('header-month-label').textContent = "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)";
+            updatePeriodUI();
             refreshAllViews();
-            showToast('🚀 ໂອນຍ້າຍສະຕ໋ອກໄປເດືອນທັນວາ DEC 2026 ສຳເລັດແລ້ວ!', 'success');
+            { const nx = addMonths(basePeriod, 1); showToast(L(`🚀 ໂອນຍ້າຍສະຕ໋ອກໄປ${mLao(nx)} ${monthLabel(nx)} ສຳເລັດແລ້ວ!`, `🚀 Stock rolled over to ${mFull(nx)}!`), 'success'); }
         }
 
         // Export to CSV (UTF-8 with BOM so Excel displays Lao script properly)
@@ -1276,7 +1282,7 @@
 
         /* ================= v2 additions ================= */
         const STORAGE_KEY_PR = "momstouch_vangxai_pr_v1";
-        const APP_VERSION = '1.6', APP_DATE = '20/11', APP_BUILD = 'Build 2026-11-20 · previous-month file carry-over · BOM import · A4 stock print · set-cost v3 · branches · weekly stock count';
+        const APP_VERSION = '1.7', APP_DATE = '20/11', APP_BUILD = 'Build 2026-11-20 · previous-month file carry-over · BOM import · A4 stock print · set-cost v3 · branches · weekly stock count';
         const L = (lo, en) => LANG === 'en' ? en : lo;
         const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
         const nm = o => LANG === 'en' ? o.nameEn : o.nameLao;
@@ -1284,8 +1290,7 @@
         const bc = i => i.barcode || i.id;   // barcode (falls back to item code until real barcodes are loaded)
         const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
         const MODAL_EN = {
-            reset: ['Reset to original data', "All edits and waste records will be cleared and restored to the original Inventory Mom's Touch NOV.xlsx data. Continue?"],
-            rollover: ['Confirm rollover to December (DEC 2026)', 'Month-end ending stock of all items will become the beginning stock for December 2026. Confirm?']
+            reset: ['Reset to original data', "All edits and waste records will be cleared and restored to the original Inventory Mom's Touch NOV.xlsx data. Continue?"]
         };
 
         // ---- i18n (English mode translates Lao UI text on the fly) ----
@@ -1825,7 +1830,7 @@
             it.ending = r2(L2 >= 0 ? c[L2].end + c.slice(L2 + 1).reduce((a, x) => a + x.rec - x.out, 0) : it.beg + it.rec - it.out);
         }
         function stockMondays() {
-            const y = 2026, m = isRolledOver ? 12 : 11, out = [], d = new Date(y, m - 1, 1);
+            const dp = dispPeriod(), y = +dp.slice(0, 4), m = +dp.slice(5, 7), out = [], d = new Date(y, m - 1, 1);
             while (d.getDay() !== 1) d.setDate(d.getDate() + 1);
             while (d.getMonth() === m - 1) { out.push(new Date(d)); d.setDate(d.getDate() + 7); }
             return out;
@@ -1985,9 +1990,29 @@
 
         // ---- Import the Inventory workbook (Master Item List + Week 1-5 + Waste) ----
         // ---- Previous-month files: detect the file's month and carry its ending stock into the current month ----
-        const TARGET_MONTH = '2026-11';
         const MON3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MON_LO = ['ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 'ມິຖຸນາ', 'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'];
         const monthLabel = k => k ? MON3[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4) : '';
+        const mFull = k => MON_EN[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4);
+        const mLao = k => 'ເດືອນ' + MON_LO[+k.slice(5, 7) - 1];
+        const addMonths = (k, n) => { let y = +k.slice(0, 4), m = +k.slice(5, 7) - 1 + n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + String(m + 1).padStart(2, '0'); };
+        const curMonthKey = () => today().slice(0, 7);
+        const dispPeriod = () => isRolledOver ? addMonths(basePeriod, 1) : basePeriod;   // the month being worked on right now
+        function updatePeriodUI() {
+            const b = basePeriod, n = addMonths(b, 1), set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+            set('header-month-label', isRolledOver ? L(`${mLao(n)} ${monthLabel(n)} (ໂອນຍ້າຍຍອດແລ້ວ ✓)`, `${mFull(n)} (rolled over ✓)`) : L(`${mLao(b)} ${monthLabel(b)} ➔ ${mLao(n)} ${monthLabel(n)}`, `${mFull(b)} ➔ ${mFull(n)}`));
+            set('rb-title', L(`ໂອນຍ້າຍຍອດສະຕ໋ອກໄປ${mLao(n)} (${monthLabel(n)}) ສຳເລັດແລ້ວ!`, `Stock rolled over to ${mFull(n)} successfully!`));
+            set('rb-desc', L(`ຍອດຄົງເຫຼືອປາຍ${mLao(b)} (Ending Stock) ໄດ້ຖືກຕັ້ງເປັນຍອດຍົກມາຕົ້ນເດືອນ (Beginning Stock) ສຳລັບຮອບບັນຊີໃໝ່ຮຽບຮ້ອຍແລ້ວ.`, `${mFull(b)} ending stock has been set as the beginning stock for the new period.`));
+            set('rl-title', L(`ສະຫຼຸບຍອດເດືອນນີ້ (${mFull(b)})`, `This month summary (${mFull(b)})`));
+            set('rl-badge', MON3[+b.slice(5, 7) - 1] + ' Ending');
+            set('rr-title', L(`ເຊື່ອມຕໍ່ໄປເດືອນໜ້າ (${mFull(n)})`, `Roll over to next month (${mFull(n)})`));
+            set('rr-badge', MON3[+n.slice(5, 7) - 1] + ' Projected');
+            set('rr-p', L(`ເມື່ອກວດສອບຍອດນັບສະຕ໋ອກປາຍ${mLao(b)}ຄົບຖ້ວນແລ້ວ ທ່ານສາມາດກົດປຸ່ມດ້ານລຸ່ມເພື່ອໂອນຍ້າຍຍອດຄົງເຫຼືອທັງໝົດ ${inventory.length} ລາຍການ ໄປເປັນຍອດຕັ້ງຕົ້ນຂອງ${mLao(n)}ໂດຍອັດຕະໂນມັດ ໂດຍບໍ່ຕ້ອງພິມຂໍ້ມູນໃໝ່.`, `Once the ${mFull(b)} month-end count is complete, press the button below to carry the ending stock of all ${inventory.length} items over as the ${mFull(n)} beginning stock automatically.`));
+            set('rr-beglabel', L(`ມູນຄ່າສະຕ໋ອກຕັ້ງຕົ້ນ${mLao(n)} (${MON3[+n.slice(5, 7) - 1]} Beginning):`, `${mFull(n)} beginning stock value (${MON3[+n.slice(5, 7) - 1]} Beginning):`));
+            set('rr-btn', L(`ຢືນຢັນໂອນຍ້າຍສະຕ໋ອກໄປເດືອນໜ້າ (Rollover ${MON3[+b.slice(5, 7) - 1]} ➔ ${MON3[+n.slice(5, 7) - 1]})`, `Confirm rollover to next month (${MON3[+b.slice(5, 7) - 1]} ➔ ${MON3[+n.slice(5, 7) - 1]})`));
+            set('tab-rollover-label', L(`ເຊື່ອມໂຍງເດືອນນີ້ & ເດືອນໜ້າ (${MON3[+b.slice(5, 7) - 1]} ➔ ${MON3[+n.slice(5, 7) - 1]})`, `This month & next month (${MON3[+b.slice(5, 7) - 1]} ➔ ${MON3[+n.slice(5, 7) - 1]})`));
+        }
         function monthFromName(n) {
             const s = String(n || '').toLowerCase(), mm = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
             for (let i = 0; i < 12; i++) if (new RegExp('(^|[^a-z])' + mm[i]).test(s)) return (s.match(/20\d\d/) || ['2026'])[0] + '-' + p2(i + 1);
@@ -1996,9 +2021,9 @@
         // sel: 'carry' | 'asis' | 'auto'. Returns 'carry' | 'asis', or null when 'auto' cannot tell the month.
         function resolveInvMode(P, sel) {
             if (sel === 'carry' || sel === 'asis') return sel;
-            return P.month ? (P.month < TARGET_MONTH ? 'carry' : 'asis') : null;
+            return P.month ? (P.month < curMonthKey() ? 'carry' : 'asis') : null;
         }
-        function carryInv(items) { return items.map(it => ensureWk({ ...it, beg: it.ending, rec: 0, out: 0, ending: it.ending, wk: null })); }
+        function carryInv(items) { return items.map(it => ensureWk({ ...it, beg: it.ending, rec: 0, out: 0, ending: it.ending, wk: null })); }   // same as the Rollover button
         async function readWorkbook(f) {
             const z = readZip(await f.arrayBuffer()), wbx = await zipText(z, 'xl/workbook.xml'), relx = await zipText(z, 'xl/_rels/workbook.xml.rels');
             if (!wbx || !relx) throw new Error('not an Excel workbook');
@@ -2049,15 +2074,16 @@
             const P = pendingInv; if (!P) return;
             if (typeof mode !== 'string') { const r = document.querySelector('input[name="inv-mode"]:checked'); mode = r ? r.value : (resolveInvMode(P, 'auto') || 'asis'); }
             const carry = mode === 'carry';
+            basePeriod = P.month || (carry ? addMonths(curMonthKey(), -1) : basePeriod);   // the file's month is "this month"
             inventory = carry ? carryInv(P.items) : P.items;
+            isRolledOver = carry;                                                          // carry = import + press Rollover
             wasteLogs = wasteLogs.filter(w => !w.imp).concat(carry ? [] : P.waste).sort((a, b) => b.logId - a.logId);
-            isRolledOver = false; document.getElementById('rollover-success-banner').classList.add('hidden');
-            document.getElementById('header-month-label').textContent = "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
-            stockWeek = carry ? 0 : currentStockWeek(); persistState(); pendingInv = null; closeConfirmModal();
+            document.getElementById('rollover-success-banner').classList.toggle('hidden', !carry);
+            stockWeek = currentStockWeek(); persistState(); pendingInv = null; closeConfirmModal();
             populateDropdowns(); refreshAllViews(); renderStockWeekChips();
-            const from = monthLabel(P.month) || L('ເດືອນກ່ອນ', 'previous month'), to = monthLabel(TARGET_MONTH);
+            const from = monthLabel(basePeriod), to = monthLabel(addMonths(basePeriod, 1));
             showToast(carry ? L(`📤 ຍົກຍອດຈາກ ${from} ມາເປັນ ${to} ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Carried ${from} ending stock over to ${to}: ${P.items.length} items`)
-                : L(`📤 ນຳເຂົ້າ Inventory ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Inventory imported: ${P.items.length} items`), 'success');
+                : L(`📤 ນຳເຂົ້າ Inventory ${from} ແລ້ວ: ${P.items.length} ລາຍການ`, `📤 Inventory (${from}) imported: ${P.items.length} items`), 'success');
         }
 
         // ---- Branches (each branch keeps its own inventory, waste, PR, sales/POS) ----
@@ -2067,18 +2093,18 @@
         function saveBranches() { try { localStorage.setItem(BR_KEY, JSON.stringify(branches)); } catch (e) { } }
         const curBranch = () => branches.list.find(b => b.id === branches.cur) || branches.list[0];
         const brName = () => curBranch().name, brFull = () => "Mom's Touch " + brName(), brSlug = () => brName().replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || 'branch';
-        const snapshot = () => ({ inventory, wasteLogs, isRolledOver, pr: prState, sales: salesState });
+        const snapshot = () => ({ inventory, wasteLogs, isRolledOver, basePeriod, pr: prState, sales: salesState });
         function saveSnapshot() { try { localStorage.setItem('mt_branch_' + branches.cur, JSON.stringify(snapshot())); } catch (e) { } }
         function loadSnapshot(d) {
             inventory = d.inventory.map(i => ({ ...i, cost: +i.cost || 0, beg: +i.beg || 0, rec: +i.rec || 0, ending: +i.ending || 0 }));
-            wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : []; isRolledOver = !!d.isRolledOver;
+            wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : []; isRolledOver = !!d.isRolledOver; basePeriod = /^\d{4}-\d{2}$/.test(d.basePeriod || '') ? d.basePeriod : DEFAULT_PERIOD;
             prState = normalizePR(d.pr); salesState = normalizeSales(d.sales);
             document.getElementById('rollover-success-banner').classList.toggle('hidden', !isRolledOver);
-            document.getElementById('header-month-label').textContent = isRolledOver ? "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)" : "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
+            updatePeriodUI();
             persistState(); persistPR(); persistSales(); stockWeek = currentStockWeek();
             populateDropdowns(); renderPRShell(); renderSalesShell(); refreshAllViews(); renderStockWeekChips(); updateBranchUi();
         }
-        function blankBranchData() { const inv = inventory.map(i => ({ ...i, beg: 0, rec: 0, out: 0, ending: 0, wk: null })); inv.forEach(ensureWk); return { inventory: inv, wasteLogs: [], isRolledOver: false, pr: null, sales: null }; }
+        function blankBranchData() { const inv = inventory.map(i => ({ ...i, beg: 0, rec: 0, out: 0, ending: 0, wk: null })); inv.forEach(ensureWk); return { inventory: inv, wasteLogs: [], isRolledOver: false, basePeriod, pr: null, sales: null }; }
         function updateBranchUi() {
             const t = document.getElementById('branch-title'); if (t) t.textContent = brFull();
             const b = document.getElementById('branch-btn-name'); if (b) b.textContent = brName();
@@ -2124,7 +2150,7 @@
               <div class="border-t border-slate-200 pt-3 space-y-2"><p class="text-xs font-bold text-slate-700">➕ ${L('ເພີ່ມສາຂາໃໝ່', 'Add a new branch')}</p>
                 <input id="br-new" placeholder="${L('ຊື່ສາຂາ ເຊັ່ນ Vientiane Center', 'Branch name, e.g. Vientiane Center')}" class="${inp}">
                 <label class="block text-xs text-slate-600">${L('ໄຟລ໌ Inventory ຂອງສາຂານີ້ (.xlsx) - ບໍ່ບັງຄັບ', 'This branch\'s Inventory file (.xlsx) - optional')}<input type="file" id="br-file" accept=".xlsx" class="block mt-1 text-xs"></label>
-                <label class="block text-xs text-slate-600">${L('ໄຟລ໌ນີ້ເປັນຂອງເດືອນໃດ?', 'Which month is this file?')}<select id="br-mode" class="${inp} mt-1"><option value="auto">${L('ກວດອັດຕະໂນມັດ (ແນະນຳ)', 'Auto-detect (recommended)')}</option><option value="carry">${L('ເດືອນກ່ອນ → ຍົກຍອດມາເປັນ NOV 2026', 'Previous month → carry over to NOV 2026')}</option><option value="asis">${L('ເປັນ NOV 2026 ຢູ່ແລ້ວ → ໂຫຼດຕາມໄຟລ໌', 'Already NOV 2026 → load as-is')}</option></select></label>
+                <label class="block text-xs text-slate-600">${L('ໄຟລ໌ນີ້ເປັນຂອງເດືອນໃດ?', 'Which month is this file?')}<select id="br-mode" class="${inp} mt-1"><option value="auto">${L('ກວດອັດຕະໂນມັດ (ແນະນຳ)', 'Auto-detect (recommended)')}</option><option value="carry">${L('ເດືອນກ່ອນ → ຍົກຍອດມາເປັນເດືອນໃໝ່ເລີຍ', 'Previous month → carry over to the new month')}</option><option value="asis">${L('ໂຫຼດຕາມໄຟລ໌ (ຢູ່ເດືອນຂອງໄຟລ໌, ກົດ Rollover ເອງ)', 'Load as-is (stay on the file\'s month, press Rollover yourself)')}</option></select></label>
                 <button onclick="createBranch()" class="${bt} w-full bg-[#B91C1C] text-white hover:bg-red-800">${L('ສ້າງສາຂາ', 'Create branch')}</button></div>
               ${branches.list.length > 1 ? `<button onclick="closeBranchPanel(); openConfirmModal('branchdel')" class="text-xs text-red-600 underline cursor-pointer">${L('ລຶບສາຂາປັດຈຸບັນ', 'Delete current branch')}</button>` : ''}</div>`;
             document.body.appendChild(el);
@@ -2326,7 +2352,7 @@
 
         // ---- JSON backup / restore (move data between devices) ----
         function backupJSON() {
-            const d = { app: 'momstouch-vangxai', version: 2, exportedAt: new Date().toISOString(), inventory, wasteLogs, isRolledOver, pr: prState, sales: salesState, branches, branchData: (saveSnapshot(), Object.fromEntries(branches.list.map(b => { let x = null; try { x = JSON.parse(localStorage.getItem('mt_branch_' + b.id)); } catch (e) { } return [b.id, x]; }))) };
+            const d = { app: 'momstouch-vangxai', version: 2, exportedAt: new Date().toISOString(), inventory, wasteLogs, isRolledOver, basePeriod, pr: prState, sales: salesState, branches, branchData: (saveSnapshot(), Object.fromEntries(branches.list.map(b => { let x = null; try { x = JSON.parse(localStorage.getItem('mt_branch_' + b.id)); } catch (e) { } return [b.id, x]; }))) };
             dl(new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' }), `MomsTouch_Backup_${today()}.json`);
             showToast(L('💾 ສຳຮອງຂໍ້ມູນ JSON ແລ້ວ', '💾 JSON backup saved'), 'success');
         }
@@ -2347,11 +2373,11 @@
             const d = pendingImport; if (!d) return;
             inventory = d.inventory.map(i => ({ ...i, cost: +i.cost || 0, beg: +i.beg || 0, rec: +i.rec || 0, ending: +i.ending || 0 }));
             wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : [];
-            isRolledOver = !!d.isRolledOver;
+            isRolledOver = !!d.isRolledOver; basePeriod = /^\d{4}-\d{2}$/.test(d.basePeriod || '') ? d.basePeriod : DEFAULT_PERIOD;
             prState = normalizePR(d.pr); salesState = normalizeSales(d.sales);
             if (d.branches && d.branches.list && d.branchData) { branches = d.branches; saveBranches(); branches.list.forEach(b => { if (b.id !== branches.cur && d.branchData[b.id]) localStorage.setItem('mt_branch_' + b.id, JSON.stringify(d.branchData[b.id])); }); }
             document.getElementById('rollover-success-banner').classList.toggle('hidden', !isRolledOver);
-            document.getElementById('header-month-label').textContent = isRolledOver ? "ເດືອນທັນວາ DEC 2026 (ໂອນຍ້າຍຍອດແລ້ວ ✓)" : "ເດືອນພະຈິກ NOV 2026 ➔ ເດືອນທັນວາ DEC 2026";
+            updatePeriodUI();
             persistState(); persistPR(); persistSales(); pendingImport = null; closeConfirmModal();
             populateDropdowns(); renderPRShell(); renderSalesShell(); refreshAllViews(); updateBranchUi();
             showToast(L('📂 ກູ້ຄືນຂໍ້ມູນສຳເລັດ', '📂 Data restored successfully'), 'success');
