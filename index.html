@@ -2419,6 +2419,10 @@ window.addEventListener('DOMContentLoaded', () => {
         const pmNormal = p => pmN(p.normal) || pmListSum(p);
         const pmRound = (v, r) => r > 0 ? Math.round(v / r) * r : Math.round(v);
         function pmApplyDisc(p) { if (p.mode === 'disc' && pmN(p.disc) >= 0 && p.disc !== '' && pmNormal(p) > 0) p.price = String(pmRound(pmNormal(p) * (1 - pmN(p.disc) / 100), +p.rnd || 0)); }
+        function pmChipsHtml(p) {
+            const nm = pmNormal(p), rn = +p.rnd || 0;
+            return [10, 15, 20, 25, 30, 35, 40, 50].map(d => { const on = p.mode === 'disc' && pmN(p.disc) === d; return `<button onclick="pmDisc('${p.id}',${d})" class="px-3 py-1.5 rounded-xl text-xs font-bold border cursor-pointer text-center leading-tight ${on ? 'bg-[#B91C1C] text-white border-[#B91C1C]' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">-${d}%<div class="font-extrabold text-sm">${nm > 0 ? pmF(pmRound(nm * (1 - d / 100), rn)) : '—'}</div></button>`; }).join('');
+        }
         function pmDisc(id, d) { const p = pmLoad().sets.find(x => x.id === id); if (!p) return; p.disc = String(d); p.mode = 'disc'; pmApplyDisc(p); pmSave(); renderPromo(); }
         function pmCalc(p) {
             const vat = 1 + (+(salesState && salesState.vat) || 0) / 100, tgt = +(salesState && salesState.costPct) || 35;
@@ -2458,6 +2462,7 @@ window.addEventListener('DOMContentLoaded', () => {
         function pmUpd(id) {
             const p = PM.sets.find(x => x.id === id), el = document.getElementById('pm-res-' + id); if (!p || !el) return;
             if (p.mode === 'disc') { pmApplyDisc(p); const e = document.getElementById('pm-price-' + id); if (e) e.value = p.price; pmSave(); }
+            { const n = document.getElementById('pm-norm-' + id); if (n && !pmN(p.normal) && document.activeElement !== n) n.value = pmListSum(p) ? Math.round(pmListSum(p)) : ''; const ch = document.getElementById('pm-chips-' + id); if (ch) ch.innerHTML = pmChipsHtml(p); }
             p.lines.forEach((l, i) => { const c = document.getElementById(`pm-lc-${id}-${i}`); if (c) c.textContent = pmF(pmLineCost(l)); });
             el.innerHTML = pmResHtml(p);
         }
@@ -2483,7 +2488,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 h += `<div class="mt-3 rounded-xl border border-slate-200 p-3"><div class="text-xs font-bold text-slate-700 mb-1">${L('ຈຳລອງສ່ວນຫຼຸດ ຈາກລາຄາປົກກະຕິ ' + pmF(c.normal) + ' ₭', 'Discount scenarios from normal price ' + pmF(c.normal) + ' ₭')}</div>
                   <div class="text-xs text-slate-600 mb-2">${L('ຫຼຸດໄດ້ສູງສຸດ ', 'Max discount ')}<b>${maxT > 0 ? maxT.toFixed(1) + '%' : L('ບໍ່ໄດ້', 'none')}</b> ${L('ຖ້າຢາກໃຫ້ Food cost ບໍ່ເກີນເປົ້າ ' + c.tgt + '%', 'to stay within the ' + c.tgt + '% food-cost target')} · ${L('ຫຼຸດໄດ້ສູງສຸດ ', 'max ')}<b>${maxB > 0 ? maxB.toFixed(1) + '%' : L('ບໍ່ໄດ້', 'none')}</b> ${L('ກ່ອນຂາດທຶນ', 'before a loss')}</div>
                   <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-left"><th class="py-1">${L('ຫຼຸດ', 'Disc.')}</th><th class="text-right">${L('ລາຄາຂາຍ', 'Price')}</th><th class="text-right">${L('ກຳໄລ/ເຊັດ', 'Profit/set')}</th><th class="text-right">Food cost</th><th></th><th></th></tr></thead><tbody>` +
-                  [0, 10, 20, 30, 40, 50].map(d => { const pr = pmRound(c.normal * (1 - d / 100), rn), q = pmCalc(Object.assign({}, p, { price: String(pr) })); const st = q.profit < 0 ? '⛔' : q.costPct > c.tgt ? '⚠️' : '✅'; return `<tr class="border-t border-slate-100"><td class="py-1.5 font-bold">${d ? '-' + d + '%' : L('ລາຄາເຕັມ', 'Full')}</td><td class="text-right">${pmF(pr)}</td><td class="text-right ${q.profit < 0 ? 'text-red-700' : ''}">${pmF(q.profit)}</td><td class="text-right">${pmP(q.costPct)}</td><td class="text-center">${st}</td><td class="text-right"><button onclick="pmDisc('${p.id}',${d})" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-bold cursor-pointer">${L('ໃຊ້', 'Use')}</button></td></tr>`; }).join('') + `</tbody></table></div></div>`;
+                  [0, 10, 15, 20, 25, 30, 40, 50].map(d => { const pr = pmRound(c.normal * (1 - d / 100), rn), q = pmCalc(Object.assign({}, p, { price: String(pr) })); const st = q.profit < 0 ? '⛔' : q.costPct > c.tgt ? '⚠️' : '✅'; return `<tr class="border-t border-slate-100"><td class="py-1.5 font-bold">${d ? '-' + d + '%' : L('ລາຄາເຕັມ', 'Full')}</td><td class="text-right">${pmF(pr)}</td><td class="text-right ${q.profit < 0 ? 'text-red-700' : ''}">${pmF(q.profit)}</td><td class="text-right">${pmP(q.costPct)}</td><td class="text-center">${st}</td><td class="text-right"><button onclick="pmDisc('${p.id}',${d})" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-bold cursor-pointer">${L('ໃຊ້', 'Use')}</button></td></tr>`; }).join('') + `</tbody></table></div></div>`;
             }
             if (c.qty > 0 && has) h += `<div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><div class="text-xs font-bold text-slate-700 mb-2">${L('ຖ້າຂາຍ ' + pmF(c.qty) + ' ເຊັດ', 'If you sell ' + pmF(c.qty) + ' sets')}</div><div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">` +
                 `<div><div class="text-[11px] text-slate-500">${L('ຍອດຂາຍ (ມີ VAT)', 'Sales (incl. VAT)')}</div><b>${pmF(c.price * c.qty)} ₭</b></div><div><div class="text-[11px] text-slate-500">${L('ຕົ້ນທຶນລວມ', 'Total cost')}</div><b>${pmF(c.cost * c.qty)} ₭</b></div>` +
@@ -2528,13 +2533,12 @@ window.addEventListener('DOMContentLoaded', () => {
                   <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-[11px] text-slate-500 text-left"><th>${L('ວັດຖຸດິບ', 'Ingredient')}</th><th class="text-right pr-2">${L('ປະລິມານ', 'Qty')}</th><th>${L('ໜ່ວຍ', 'Unit')}</th><th class="text-right pr-2">${L('ລາຄາ/ໜ່ວຍ', 'Unit cost')}</th><th class="text-right pr-2">${L('ຕົ້ນທຶນ (₭)', 'Cost (₭)')}</th><th></th></tr></thead><tbody>${lines || `<tr><td colspan="6" class="py-3 text-xs text-slate-400">${L('ຍັງບໍ່ມີລາຍການ - ກົດເພີ່ມດ້ານລຸ່ມ', 'No items yet - add below')}</td></tr>`}</tbody></table></div>
                   <div class="flex flex-wrap gap-2"><button onclick="pmAddLine('${id}','m')" class="${btn} bg-[#B91C1C] text-white hover:bg-red-800">🍔 ${L('ເພີ່ມເມນູ (ຕົ້ນທຶນຈາກ BOM)', 'Add menu (cost from BOM)')}</button><button onclick="pmAddLine('${id}','item')" class="${btn} bg-slate-100 text-slate-700 hover:bg-slate-200">➕ ${L('ເພີ່ມວັດຖຸດິບຈາກສະຕ໋ອກ (ທາງເລືອກ)', 'Add stock ingredient (optional)')}</button><button onclick="pmAddLine('${id}','x')" class="${btn} bg-slate-100 text-slate-700 hover:bg-slate-200">➕ ${L('ເພີ່ມຄ່າໃຊ້ຈ່າຍອື່ນ', 'Add other cost')}</button></div>
                   <div class="space-y-3 bg-amber-50/60 border border-amber-200 rounded-xl p-3">
-                    <div class="flex flex-wrap items-end gap-4">
-                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ລາຄາປົກກະຕິ (₭) - ຕັ້ງໃຫ້ອັດຕະໂນມັດຈາກເມນູ', 'Normal price (₭) - auto from menus')}</label><input type="number" min="0" class="${inp} w-40 text-right" placeholder="${pmListSum(p) ? Math.round(pmListSum(p)) : '0'}" value="${esc(p.normal)}" oninput="pmSet('${id}','normal',this.value)"></div>
-                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ສ່ວນຫຼຸດ %', 'Discount %')}</label><input id="pm-disc-${id}" type="number" min="0" max="100" step="any" class="${inp} w-24 text-right" placeholder="0" value="${esc(p.disc)}" oninput="pmSet('${id}','disc',this.value)"></div>
-                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ປັດລາຄາເປັນ', 'Round price to')}</label><select class="${inp}" onchange="pmSet('${id}','rnd',this.value)">${[0, 500, 1000, 5000].map(r => `<option value="${r}" ${(+p.rnd || 0) === r ? 'selected' : ''}>${r ? pmF(r) + ' ₭' : L('ບໍ່ປັດ', 'No rounding')}</option>`).join('')}</select></div>
-                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ລາຄາຂາຍຂອງເຊັດ (₭) - ໃສ່ເອງ ຫຼື ໃຫ້ຄິດຈາກສ່ວນຫຼຸດ', 'Selling price (₭) - type it or let discount set it')}</label><input id="pm-price-${id}" type="number" min="0" class="${inp} w-44 text-right font-bold" placeholder="0" value="${esc(p.price)}" oninput="pmSet('${id}','price',this.value)"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                      <div class="rounded-xl bg-white border border-slate-200 p-3"><label class="block text-[11px] font-bold text-slate-600 mb-1">① ${L('ລາຄາຂາຍປົກກະຕິ (ບວກຈາກເມນູທີ່ເລືອກ)', 'Normal price (sum of selected menus)')}</label><input id="pm-norm-${id}" type="number" min="0" class="${inp} w-full text-right text-lg font-extrabold" placeholder="0" value="${p.normal !== '' ? esc(p.normal) : (pmListSum(p) ? Math.round(pmListSum(p)) : '')}" oninput="pmSet('${id}','normal',this.value)"><div class="text-[10px] text-slate-400 mt-1">${L('ດຶງລາຄາ (PRICE_VAT) ຈາກ BOM ອັດຕະໂນມັດ ແກ້ເອງໄດ້', 'Auto from BOM price; editable')}</div></div>
+                      <div class="rounded-xl bg-white border border-slate-200 p-3"><label class="block text-[11px] font-bold text-slate-600 mb-1">② ${L('ສ່ວນຫຼຸດ %', 'Discount %')}</label><input id="pm-disc-${id}" type="number" min="0" max="100" step="any" class="${inp} w-full text-right text-lg font-extrabold" placeholder="0" value="${esc(p.disc)}" oninput="pmSet('${id}','disc',this.value)"><div class="text-[10px] text-slate-400 mt-1">${L('ພິມ % ຫຼື ກົດປຸ່ມດ້ານລຸ່ມ', 'Type % or tap a button below')}</div></div>
+                      <div class="rounded-xl bg-white border-2 border-[#B91C1C] p-3"><label class="block text-[11px] font-bold text-slate-600 mb-1">③ ${L('ລາຄາຂາຍຫຼັງຫຼຸດ (ລາຄາຈິງ)', 'Final selling price')}</label><input id="pm-price-${id}" type="number" min="0" class="${inp} w-full text-right text-lg font-extrabold text-[#B91C1C]" placeholder="0" value="${esc(p.price)}" oninput="pmSet('${id}','price',this.value)"><div class="text-[10px] text-slate-400 mt-1">${L('ໃສ່ລາຄາເອງກໍໄດ້', 'Or type your own price')} · ${L('ປັດເປັນ', 'round to')} <select class="border border-slate-300 rounded" onchange="pmSet('${id}','rnd',this.value)">${[0, 500, 1000, 5000].map(r => `<option value="${r}" ${(+p.rnd || 0) === r ? 'selected' : ''}>${r ? pmF(r) : L('ບໍ່ປັດ', 'none')}</option>`).join('')}</select></div></div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2"><span class="text-[11px] font-bold text-slate-600">${L('ລຸດດ່ວນ:', 'Quick discount:')}</span>${[10, 15, 20, 25, 30, 35, 40, 50].map(d => `<button onclick="pmDisc('${id}',${d})" class="px-3 py-1 rounded-full text-xs font-bold border cursor-pointer ${p.mode === 'disc' && pmN(p.disc) === d ? 'bg-[#B91C1C] text-white border-[#B91C1C]' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">-${d}%</button>`).join('')}</div>
+                    <div><div class="text-[11px] font-bold text-slate-600 mb-1">${L('ກົດເພື່ອເບິ່ງລາຄາຫຼັງຫຼຸດ:', 'Tap to apply a discount:')}</div><div id="pm-chips-${id}" class="flex flex-wrap gap-2">${pmChipsHtml(p)}</div></div>
                     <div class="flex flex-wrap items-end gap-4">
                       <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ຄ່າທຳນຽມ Delivery/ສ່ວນແບ່ງ %', 'Platform fee %')}</label><input type="number" min="0" step="any" class="${inp} w-28 text-right" placeholder="0" value="${esc(p.fee)}" oninput="pmSet('${id}','fee',this.value)"></div>
                       <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ຄາດວ່າຂາຍໄດ້ (ເຊັດ)', 'Expected sets sold')}</label><input type="number" min="0" class="${inp} w-28 text-right" value="${esc(p.qty)}" oninput="pmSet('${id}','qty',this.value)"></div>
@@ -2590,6 +2594,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 return { v: 1, conf: 'low' };
             }
             if (/box/.test(uom) && ing.conv > 0) return { v: ing.conv, conf: 'low' };
+            if ((m = pack.match(/(\d+(?:\.\d+)?)\s*(kg|l)\b/i)) && /^(bag|can|pack)$/.test(uom)) return { v: num(m[1]) * 1000, conf: 'high' };
             if ((m = name.match(/(\d+)\s*ml/i)) && /^(pet|can|btl|bottle)$/.test(uom)) return use >= 50 ? { v: num(m[1]), conf: 'med' } : { v: 1, conf: 'high' };
             if (/^(pet|can|btl|bottle)$/.test(uom)) return { v: 1, conf: 'high' };
             if (uom === 'kg' || uom === 'l' || uom === 'lt') { if (use > 0 && use < 10) { const e = String(ing.pack || '').match(/(\d+)\s*ea/i); return { v: e ? num(e[1]) : 1000, conf: 'low' }; } return { v: 1000, conf: 'high' }; }
@@ -2634,17 +2639,30 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         function bmSetConv(name, v) { bmLoad(); BM.conv[name] = pmN(v); bmSave(); bmCalcRender(); }
         function bmSet(k, v) { bmRange[k] = v; renderUsage(); }
-        function bmMenuMatch(posName) {
-            const R = bmLoad().recipes, names = Object.keys(R), n = bmNorm(posName); let hit = names.find(x => bmNorm(x) === n); if (hit) return hit;
-            const a = bmTok(posName); let best = null, bs = 0;
-            names.forEach(x => { const b = bmTok(x); let c = 0; a.forEach(t => { if (b.has(t)) c++; }); const j = c / (a.size + b.size - c || 1); if (j > bs) { bs = j; best = x; } });
-            return bs >= 0.8 ? best : null;
+        const BM_STOP = new Set(['fried', 'sauce', 'chicken', 'original', 'soft', 'drink', 'drinking', 'flavour', 'lemon', 'lime', 'the', 'new']);
+        const BM_SYN = { zero: 'nosuger', nosugar: 'nosuger', yangnyeom: 'yang nyeom', pcs: '', pc: '', max: 'max', jr: 'jr' };
+        function bmMTok(x) {
+            let t = String(x == null ? '' : x).toLowerCase().replace(/\[.*?\]/g, ' ').replace(/(\d)\s*(ml|g)\b/g, '$1 $2').replace(/[^a-z0-9 ]/g, ' ').replace(/\b(\d+)pcs?\b/g, '$1');
+            const out = []; t.split(/\s+/).filter(Boolean).forEach(w => { if (BM_STOP.has(w)) return; const r = w in BM_SYN ? BM_SYN[w] : w; r.split(' ').filter(Boolean).forEach(z => out.push(z)); }); return new Set(out);
         }
+        function bmGuessMenu(posName) {
+            const names = Object.keys(bmLoad().recipes), a = bmMTok(posName); let best = null, bs = 0;
+            names.forEach(x => { const b = bmMTok(x); let c = 0; a.forEach(t => { if (b.has(t)) c++; }); const u = a.size + b.size - c; let j = u ? c / u : 0;
+                if (c === a.size && c < b.size) { const extra = [...b].filter(t => !a.has(t)); if (extra.every(t => /^(2|ml|g|80)$/.test(t))) j = Math.max(j, 0.9); }
+                if (j > bs) { bs = j; best = x; } });
+            return bs >= 0.75 ? best : null;
+        }
+        function bmMenuMatch(posName) {
+            bmLoad(); const mm = BM.menuMap || {}; if (posName in mm) return mm[posName] || null;
+            const names = Object.keys(BM.recipes), n = bmNorm(posName), hit = names.find(x => bmNorm(x) === n); return hit || bmGuessMenu(posName);
+        }
+        function bmSetMenu(posName, bom) { bmLoad(); BM.menuMap = BM.menuMap || {}; BM.menuMap[posName] = bom; bmSave(); renderUsage(); }
         function bmCalc() {
             bmLoad(); const S = salesState, prod = S.pos.prod || {}, used = {}, sold = {}, noBom = [], from = bmRange.from, to = bmRange.to;
+            const all = [];
             Object.keys(prod).forEach(pk => {
                 const P = prod[pk]; let q = 0; Object.entries(P.d).forEach(([d, e]) => { if ((!from || d >= from) && (!to || d <= to)) q += (e[0] || 0) - (e[2] || 0); });
-                if (q <= 0) return; const m = bmMenuMatch(P.n);
+                if (q <= 0) return; const m = bmMenuMatch(P.n); all.push({ n: P.n.trim(), q, m });
                 if (!m) { noBom.push({ n: P.n.trim(), q }); return; }
                 sold[m] = (sold[m] || 0) + q;
             });
@@ -2655,7 +2673,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (!id || !(conv > 0)) { unmapped.push({ ing, base }); return; }
                 const o = byItem[id] || (byItem[id] = { id, exp: 0, ings: [] }); o.exp += base / conv; o.ings.push(ing);
             });
-            return { sold, noBom, byItem, unmapped };
+            return { sold, noBom, byItem, unmapped, all };
         }
         function bmDates() { const ds = Object.keys(salesState.pos.days || {}).sort(); return [ds[0] || '', ds[ds.length - 1] || '']; }
         function bmCalcRender() { const el = document.getElementById('bm-result'); if (el) el.innerHTML = bmResultHtml(); }
@@ -2663,16 +2681,20 @@ window.addEventListener('DOMContentLoaded', () => {
             const C = bmCalc(), rows = []; const fm = v => (Math.round(v * 10) / 10).toLocaleString('en-US');
             Object.values(C.byItem).forEach(o => {
                 const it = inventory.find(i => i.id === o.id); if (!it) return; const isPk = /^pk|package/i.test(it.category || ''); if (bmRange.pkgOnly && !isPk) return;
-                const act = (it.beg || 0) + (it.rec || 0) - (it.ending || 0), diff = act - o.exp, pct = o.exp > 0 ? diff / o.exp * 100 : null;
+                const act = (it.beg || 0) + (it.rec || 0) - (it.out || 0) - (it.ending || 0), diff = act - o.exp, pct = o.exp > 0 ? diff / o.exp * 100 : null;
                 rows.push({ it, exp: o.exp, act, diff, pct, ings: o.ings });
             });
             rows.sort((a, b) => String(a.it.category).localeCompare(String(b.it.category)) || Math.abs(b.diff) - Math.abs(a.diff));
             const sold = Object.values(C.sold).reduce((a, b) => a + b, 0), flag = r => r.pct == null ? '' : Math.abs(r.pct) <= 10 ? '✅' : Math.abs(r.pct) <= 25 ? '⚠️' : '⛔';
-            let h = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">` + [[L('ເມນູທີ່ຂາຍ (ມີສູດ)', 'Menus sold (with recipe)'), fm(sold)], [L('ເມນູທີ່ບໍ່ມີສູດ', 'Menus without recipe'), fm(C.noBom.reduce((a, x) => a + x.q, 0))], [L('ລາຍການທີ່ສະແດງ', 'Items shown'), rows.length], [L('ວັດຖຸດິບທີ່ຍັງບໍ່ຈັບຄູ່', 'Unmapped ingredients'), C.unmapped.length]].map(x => `<div class="rounded-xl border border-slate-200 bg-white p-3"><div class="text-[11px] font-bold text-slate-500">${x[0]}</div><div class="text-xl font-extrabold">${x[1]}</div></div>`).join('') + `</div>`;
+            const nw = rows.filter(r => r.pct != null), w10 = nw.filter(r => Math.abs(r.pct) <= 10).length, w25 = nw.filter(r => Math.abs(r.pct) <= 25).length, tq = C.all.reduce((a, x) => a + x.q, 0), cq = C.all.filter(x => x.m).reduce((a, x) => a + x.q, 0);
+            let h = `<div class="rounded-2xl p-4 border ${nw.length && w25 / nw.length >= .7 ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}"><div class="text-sm font-extrabold">🎯 ${L('ຄວາມໃກ້ຄຽງລະຫວ່າງຍອດຕາມສູດ ແລະ ຍອດນັບຈິງ', 'How close recipe-expected and counted usage are')}</div><div class="text-sm mt-1">${nw.length ? L('ລາຍການທີ່ຢູ່ໃນ ±10%: <b>' + w10 + '/' + nw.length + '</b> (' + Math.round(w10 / nw.length * 100) + '%) · ໃນ ±25%: <b>' + w25 + '/' + nw.length + '</b> (' + Math.round(w25 / nw.length * 100) + '%)', 'Items within ±10%: <b>' + w10 + '/' + nw.length + '</b> · within ±25%: <b>' + w25 + '/' + nw.length + '</b>') : '—'}</div><div class="text-xs text-slate-600 mt-1">${L('ຍອດຂາຍທີ່ມີສູດຈັບຄູ່ໄດ້ ' + (tq ? Math.round(cq / tq * 100) : 0) + '% ຂອງຈຳນວນທີ່ຂາຍທັງໝົດ - ຖ້າຕ່ຳ ຍອດ "ຄວນໃຊ້" ຈະຕ່ຳກວ່າຄວາມຈິງ ຄວນຈັບຄູ່ເມນູໃຫ້ຄົບກ່ອນຕັດສິນ.', 'Recipe coverage: ' + (tq ? Math.round(cq / tq * 100) : 0) + '% of items sold - if low, expected usage is understated; map the menus first.')}</div></div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">` + [[L('ເມນູທີ່ຂາຍ (ມີສູດ)', 'Menus sold (with recipe)'), fm(sold)], [L('ເມນູທີ່ບໍ່ມີສູດ', 'Menus without recipe'), fm(C.noBom.reduce((a, x) => a + x.q, 0))], [L('ລາຍການທີ່ສະແດງ', 'Items shown'), rows.length], [L('ວັດຖຸດິບທີ່ຍັງບໍ່ຈັບຄູ່', 'Unmapped ingredients'), C.unmapped.length]].map(x => `<div class="rounded-xl border border-slate-200 bg-white p-3"><div class="text-[11px] font-bold text-slate-500">${x[0]}</div><div class="text-xl font-extrabold">${x[1]}</div></div>`).join('') + `</div>`;
             h += `<div class="overflow-x-auto bg-white rounded-2xl border border-slate-200 mt-3"><table class="w-full text-sm"><thead><tr class="text-[11px] text-slate-500 text-left border-b"><th class="p-2">${L('ລາຍການ', 'Item')}</th><th class="p-2">${L('ໝວດ', 'Category')}</th><th class="p-2 text-right">${L('ຄວນໃຊ້ (ຕາມສູດ)', 'Expected (recipe)')}</th><th class="p-2 text-right">${L('ໃຊ້ຈິງ (ນັບສະຕ໋ອກ)', 'Actual (count)')}</th><th class="p-2 text-right">${L('ຕ່າງ', 'Diff')}</th><th class="p-2 text-right">%</th><th></th></tr></thead><tbody>` +
                 (rows.length ? rows.map(r => `<tr class="border-b border-slate-100"><td class="p-2"><b>${esc(r.it.nameEn)}</b><div class="text-[11px] text-slate-500">${esc(r.it.id)} · ${L('ຫົວໜ່ວຍ', 'unit')} ${esc(r.it.uom)}</div></td><td class="p-2 text-xs text-slate-500">${esc(r.it.category)}</td><td class="p-2 text-right">${fm(r.exp)}</td><td class="p-2 text-right">${fm(r.act)}</td><td class="p-2 text-right font-bold ${r.diff > 0 ? 'text-red-700' : 'text-emerald-700'}">${r.diff > 0 ? '+' : ''}${fm(r.diff)}</td><td class="p-2 text-right">${r.pct == null ? '—' : (r.pct > 0 ? '+' : '') + r.pct.toFixed(0) + '%'}</td><td class="p-2">${flag(r)}</td></tr>`).join('') : `<tr><td colspan="7" class="p-4 text-slate-500 text-sm">${L('ຍັງບໍ່ມີຂໍ້ມູນ - ກວດວ່ານຳເຂົ້າ POS ແລ້ວ ແລະ ຊ່ວງວັນທີ່ຖືກຕ້ອງ', 'No data - check POS is imported and the date range')}</td></tr>`) + `</tbody></table></div>
-                <p class="text-xs text-slate-500 mt-2">${L('ຕ່າງ = ໃຊ້ຈິງ − ຄວນໃຊ້. ຄ່າບວກ (ແດງ) = ໃຊ້ຫຼາຍກວ່າສູດ (ເສຍ/ແຈກ/ນັບຜິດ/ຍັງບໍ່ໄດ້ຂາຍເຂົ້າ POS). ✅ ≤10% ⚠️ ≤25% ⛔ >25%. ຍອດໃຊ້ຈິງ = ຍົກມາ + ຮັບເຂົ້າ − ເຫຼືອ ຕາມການນັບສະຕ໋ອກລ່າສຸດ ຈຶ່ງຄວນໃຫ້ຊ່ວງວັນທີ່ POS ກົງກັບຊ່ວງທີ່ນັບ.', 'Diff = actual − expected. Positive (red) = used more than recipe. Actual = begin + received − ending from the latest count, so match the POS range to the counted period.')}</p>`;
-            if (C.noBom.length) h += `<details class="mt-3 bg-white rounded-xl border border-slate-200 p-3 text-sm"><summary class="cursor-pointer font-bold">${L('ເມນູທີ່ຂາຍແຕ່ບໍ່ມີສູດໃນ BOM (' + C.noBom.length + ')', 'Sold menus with no BOM recipe (' + C.noBom.length + ')')}</summary><ul class="mt-2 text-xs text-slate-600 columns-1 sm:columns-2">${C.noBom.sort((a, b) => b.q - a.q).map(x => `<li>${esc(x.n)} × ${fm(x.q)}</li>`).join('')}</ul></details>`;
+                <p class="text-xs text-slate-500 mt-2">${L('ຕ່າງ = ໃຊ້ຈິງ − ຄວນໃຊ້. ຄ່າບວກ (ແດງ) = ໃຊ້ຫຼາຍກວ່າສູດ (ເສຍ/ແຈກ/ນັບຜິດ/ຍັງບໍ່ໄດ້ຂາຍເຂົ້າ POS). ✅ ≤10% ⚠️ ≤25% ⛔ >25%. ຍອດໃຊ້ຈິງ = ຍົກມາ + ຮັບເຂົ້າ − ອອກ(ເສຍ/ໂອນ) − ເຫຼືອ (ເທົ່າກັບຄໍລຳ Usage ຂອງຊີດ Month) ຈຶ່ງຄວນໃຫ້ຊ່ວງວັນທີ່ POS ກົງກັບຊ່ວງທີ່ນັບ.', 'Diff = actual − expected. Positive (red) = used more than recipe. Actual = begin + received − out − ending (same as the Month sheet Usage), so match the POS range to the counted period.')}</p>`;
+            { const bn = Object.keys(BM.recipes).sort(), opts = cur => `<option value="">${L('— ບໍ່ມີສູດ / ຂ້າມ —', '— none / skip —')}</option>` + bn.map(x => `<option ${x === cur ? 'selected' : ''}>${esc(x)}</option>`).join('');
+              const lst = C.all.slice().sort((a, b) => (a.m ? 1 : 0) - (b.m ? 1 : 0) || b.q - a.q);
+              h += `<details class="mt-3 ${C.noBom.length ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'} rounded-xl border p-3 text-sm" ${C.noBom.length ? 'open' : ''}><summary class="cursor-pointer font-bold">🍔 ${L('ຈັບຄູ່ເມນູ POS ↔ ສູດ BOM (ຍັງບໍ່ມີສູດ ' + C.noBom.length + ' ເມນູ)', 'POS menu ↔ BOM recipe mapping (' + C.noBom.length + ' without recipe)')}</summary><p class="text-xs text-slate-600 my-2">${L('ເມນູຊຸດ Mom\'s Set ບໍ່ມີສູດຕົງໃນຊີດ BOM (ຢູ່ຊີດ Set Menu) ຈຶ່ງຍັງບໍ່ລວມ - ຈະເຮັດໃຫ້ຍອດ "ຄວນໃຊ້" ຕ່ຳກວ່າຈິງ ສຳລັບໄກ່ ເບີເກີ ເຟຣນຟຣາຍ ແລະ ນ້ຳ.', 'Mom\'s Set menus have no direct recipe in the BOM sheet (they are in Set Menu) so they are not counted yet.')}</p><div class="overflow-x-auto"><table class="w-full text-xs"><tbody>${lst.map(x => `<tr class="border-b border-slate-100 ${x.m ? '' : 'bg-amber-100/50'}"><td class="p-1">${esc(x.n)}</td><td class="p-1 text-right">${fm(x.q)}</td><td class="p-1"><select class="px-2 py-1 border border-slate-300 rounded-lg max-w-[320px]" onchange="bmSetMenu('${esc(x.n).replace(/'/g, "\\'")}',this.value)">${opts(x.m)}</select></td></tr>`).join('')}</tbody></table></div></details>`; }
             if (C.unmapped.length) h += `<details class="mt-3 bg-amber-50 rounded-xl border border-amber-200 p-3 text-sm"><summary class="cursor-pointer font-bold">${L('ວັດຖຸດິບໃນສູດທີ່ຍັງບໍ່ໄດ້ຈັບຄູ່ກັບສະຕ໋ອກ (' + C.unmapped.length + ')', 'Recipe ingredients not mapped to stock (' + C.unmapped.length + ')')}</summary><ul class="mt-2 text-xs text-amber-900 columns-1 sm:columns-2">${C.unmapped.map(x => `<li>${esc(x.ing)}</li>`).join('')}</ul><p class="text-xs mt-2">${L('ເປີດ "ຈັບຄູ່ວັດຖຸດິບ" ດ້ານລຸ່ມເພື່ອເລືອກລາຍການສະຕ໋ອກ', 'Open "Ingredient mapping" below to pick the stock item')}</p></details>`;
             return h;
         }
