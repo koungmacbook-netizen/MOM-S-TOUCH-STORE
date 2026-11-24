@@ -188,6 +188,15 @@
             <button onclick="switchTab('sales')" id="tab-btn-sales" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
                 <span>🎯</span> ເປົ້າໝາຍຍອດຂາຍ (Target Sales)
             </button>
+            <button onclick="switchTab('promo')" id="tab-btn-promo" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
+                <span>🏷️</span> ຄິດຕົ້ນທຶນໂປຣໂມຊັນ (Promo)
+            </button>
+            <button onclick="switchTab('report')" id="tab-btn-report" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
+                <span>📊</span> ລາຍງານພຣີເຊັນ (Report)
+            </button>
+            <button onclick="switchTab('usage')" id="tab-btn-usage" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
+                <span>📦</span> ການໃຊ້ວັດຖຸດິບ/ແພັກເກດ (Usage)
+            </button>
             <button onclick="switchTab('waste')" id="tab-btn-waste" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
                 <span>🗑️</span> ບັນທຶກຂອງເສຍ (Waste Log)
             </button>
@@ -412,6 +421,1312 @@
 
         <section id="tab-content-pr" class="hidden space-y-6"></section>
         <section id="tab-content-sales" class="hidden space-y-6"></section>
+        <section id="tab-content-promo" class="hidden space-y-6"></section>
+        <section id="tab-content-usage" class="hidden space-y-6"></section>
+        <section id="tab-content-report" class="hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2 no-print"><p class="text-xs text-slate-500">📊 ດຶງຂໍ້ມູນສະຕ໋ອກ + ຍອດຂາຍຂອງທຸກສາຂາໃນແອັບນີ້ມາໃຫ້ອັດຕະໂນມັດ. ເພື່ອປຽບທຽບຫຼາຍເດືອນ ໃຫ້ນຳເຂົ້າໄຟລ໌ JSON ຂອງເດືອນກ່ອນໃນແຖບ "ຂໍ້ມູນ & ການນຳເຂົ້າ" ຂອງລາຍງານ.</p><button onclick="reportReload()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">🔄 ດຶງຂໍ້ມູນລ່າສຸດ</button></div>
+            <iframe id="report-frame" allow="fullscreen" class="w-full rounded-2xl border border-slate-200 bg-white" style="height:calc(100vh - 170px);min-height:600px"></iframe>
+        </section>
+        <script type="text/plain" id="report-src"><!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mom's Touch - ລາຍງານປຽບທຽບ (Executive Report)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Lao:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f4f3f0; --surface-1: #fcfcfb; --surface-2: #f0efec; --line: #e3e2dd; --grid: #ebeae6;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #76756f;
+  --brand: #B91C1C; --brand-ink: #ffffff;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #6250d6;
+  --prev: #b9b8b2;                      /* de-emphasis: the comparison period */
+  --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+  --good-wash: #0ca30c1a; --warning-wash: #fab2192b; --critical-wash: #d03b3b1a; --neutral-wash: #76756f1a;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 14px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #121211; --surface-1: #1a1a19; --surface-2: #242423; --line: #34342f; --grid: #2b2b28;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #96958c;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #9085e9;
+    --prev: #5a5954;
+    --good-wash: #0ca30c33; --warning-wash: #fab21933; --critical-wash: #d03b3b40; --neutral-wash: #96958c26;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #121211; --surface-1: #1a1a19; --surface-2: #242423; --line: #34342f; --grid: #2b2b28;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #96958c;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #9085e9;
+  --prev: #5a5954;
+  --good-wash: #0ca30c33; --warning-wash: #fab21933; --critical-wash: #d03b3b40; --neutral-wash: #96958c26;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--text-primary); font: 15px/1.55 'Noto Sans Lao', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+button, select, input { font: inherit; color: inherit; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+
+/* ---------- top bar ---------- */
+.top { background: var(--brand); color: var(--brand-ink); }
+.top .wrap { display: flex; align-items: center; gap: 12px; padding-top: 14px; padding-bottom: 14px; flex-wrap: wrap; }
+.top h1 { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.25; }
+.top p { margin: 0; font-size: 12px; opacity: .85; }
+.top .sp { flex: 1; }
+.btn { border: 1px solid var(--line); background: var(--surface-1); color: var(--text-primary); border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn:hover { background: var(--surface-2); }
+.btn.solid { background: #fff; color: #7f1d1d; border-color: #fff; }
+.btn.solid:hover { background: #fee2e2; }
+.top .btn { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.35); }
+.top .btn:hover { background: rgba(255,255,255,.25); }
+.top .btn.solid { background: #fff; color: #7f1d1d; }
+
+/* ---------- filters + tabs ---------- */
+.filters { background: var(--surface-1); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+.filters .wrap { display: flex; gap: 14px 18px; flex-wrap: wrap; align-items: flex-end; padding-top: 10px; padding-bottom: 10px; }
+.fld { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+.fld select, .fld input { background: var(--surface-1); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: 14px; font-weight: 500; color: var(--text-primary); min-width: 120px; }
+.fld input[type=number] { min-width: 0; width: 76px; }
+.tabs { background: var(--surface-1); border-bottom: 1px solid var(--line); }
+.tabs .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 8px; padding-bottom: 8px; }
+.tab { border: 1px solid var(--line); background: var(--surface-1); color: var(--text-secondary); border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.tab:hover { background: var(--surface-2); }
+.tab.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+/* ---------- slides & cards ---------- */
+main { padding: 18px 0 70px; }
+.slide { display: none; }
+.slide.on { display: block; }
+.slide > h2 { margin: 0 0 2px; font-size: 22px; line-height: 1.3; }
+.slide > .sub { margin: 0 0 14px; color: var(--text-secondary); font-size: 13.5px; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g12 { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.card { background: var(--surface-1); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); min-width: 0; }
+.card h3 { margin: 0 0 2px; font-size: 15px; font-weight: 700; }
+.card .cap { margin: 0 0 10px; font-size: 12.5px; color: var(--text-secondary); }
+.how { margin: 10px 0 0; padding: 9px 11px; border-radius: 10px; background: var(--surface-2); font-size: 12.5px; color: var(--text-secondary); }
+.how b { color: var(--text-primary); }
+.banner { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; border: 1px solid var(--line); background: var(--surface-1); }
+.banner.demo { background: var(--warning-wash); border-color: var(--warning); }
+.banner.info { background: var(--surface-2); }
+.hidden { display: none !important; }
+
+/* ---------- figures ---------- */
+.tile .lab { font-size: 12.5px; color: var(--text-secondary); font-weight: 600; }
+.tile .val { font-size: 28px; font-weight: 700; line-height: 1.2; margin-top: 2px; }
+.tile .val small { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+.tile .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.tile .note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.hero { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.hero .big { font-size: 58px; font-weight: 700; line-height: 1.05; }
+.hero .big small { font-size: 24px; color: var(--text-secondary); font-weight: 600; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; background: var(--neutral-wash); }
+.chip i { font-style: normal; font-size: 10px; }
+.chip.good { background: var(--good-wash); } .chip.good i { color: var(--good); }
+.chip.bad { background: var(--critical-wash); } .chip.bad i { color: var(--critical); }
+.chip.warn { background: var(--warning-wash); } .chip.warn i { color: #b87d00; }
+.chip.neu i { color: var(--text-muted); }
+.sev { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 6px; }
+.sev.crit { background: var(--critical-wash); } .sev.warn { background: var(--warning-wash); } .sev.good { background: var(--good-wash); } .sev.info { background: var(--neutral-wash); }
+
+/* ---------- insights ---------- */
+.ins { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ins li { display: grid; grid-template-columns: 78px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-1); }
+.ins li .tx { font-size: 14.5px; }
+.ins li .act { margin-top: 3px; font-size: 12.5px; color: var(--text-secondary); }
+
+/* ---------- html bars ---------- */
+.hb { display: grid; gap: 7px; }
+.hb.wr { padding-top: 26px; }
+.seg { display: flex; gap: 2px; height: 28px; }
+.seg > div { border-radius: 4px; min-width: 2px; display: flex; align-items: center; padding-left: 8px; font-size: 12.5px; font-weight: 700; overflow: hidden; white-space: nowrap; }
+.segrow { display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: center; margin-bottom: 10px; font-size: 13px; }
+.verd { display: grid; gap: 2px; }
+.verd .k { font-size: 12px; color: var(--text-secondary); font-weight: 700; }
+.verd .b { font-size: 18px; font-weight: 700; }
+.verd .v { font-size: 13px; color: var(--text-secondary); }
+.chin input { background: var(--surface-1); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; font-size: 13px; width: 112px; text-align: right; }
+.chin input.nm { width: 96px; text-align: left; }
+.hb .r { display: grid; grid-template-columns: minmax(70px, 150px) 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+.hb .r .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+.hb .r .nm .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+.hb .trk { position: relative; height: 20px; }
+.hb .bar { position: absolute; left: 0; top: 2px; height: 16px; max-width: 100%; border-radius: 0 4px 4px 0; min-width: 2px; transition: opacity .15s; }
+.hb .bar.prev { top: 2px; }
+.hb .r:hover .bar, .hb .r:focus .bar { opacity: .82; }
+.hb .r .v { font-weight: 600; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hb .ref { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 2px solid var(--critical); }
+.hb .ref span { position: absolute; top: calc(-14px - var(--ro, 0px)); left: 3px; font-size: 10.5px; color: var(--text-secondary); white-space: nowrap; }
+.hb .ref.avg { border-left: 2px solid var(--text-muted); }
+.pair { display: grid; gap: 2px; }
+.pair .trk { height: 12px; }
+.pair .bar { height: 9px; top: 1.5px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-secondary); margin: 0 0 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 8px; border-radius: 2px; display: inline-block; }
+.legend i.ln { height: 3px; border-radius: 2px; width: 16px; }
+
+/* ---------- meter ---------- */
+.meter { display: grid; grid-template-columns: minmax(80px, 140px) 1fr auto; gap: 10px; align-items: center; font-size: 13px; padding: 5px 0; }
+.meter .trk { position: relative; height: 10px; border-radius: 6px; background: color-mix(in srgb, var(--series-1) 14%, var(--surface-1)); overflow: visible; }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+.meter .tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text-primary); }
+
+/* ---------- tables ---------- */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th, .tbl td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.tbl th:first-child, .tbl td:first-child { text-align: left; white-space: normal; }
+.tbl th { font-size: 11.5px; color: var(--text-secondary); font-weight: 700; }
+.tbl td { font-variant-numeric: tabular-nums; }
+.tbl tr.best td:first-child::after { content: ' ★'; color: var(--text-muted); }
+.scroll { overflow-x: auto; }
+details.tv { margin-top: 10px; font-size: 12.5px; }
+details.tv summary { cursor: pointer; color: var(--text-secondary); font-weight: 600; }
+
+/* ---------- chips for selecting ---------- */
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.chips button { border: 1px solid var(--line); background: var(--surface-1); color: var(--text-secondary); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.chips button.on { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+
+/* ---------- svg charts ---------- */
+svg.ch { width: 100%; height: auto; display: block; overflow: visible; }
+svg.ch text { fill: var(--text-secondary); font-size: 11.5px; font-family: inherit; }
+svg.ch text.strong { fill: var(--text-primary); font-weight: 700; }
+svg.ch .gl { stroke: var(--grid); stroke-width: 1; }
+svg.ch .ax { stroke: var(--line); stroke-width: 1; }
+svg.ch .mk { transition: opacity .12s; }
+svg.ch .mk:hover, svg.ch .mk:focus { opacity: .8; outline: none; }
+svg.ch .xh { stroke: var(--text-muted); stroke-width: 1; pointer-events: none; }
+
+/* ---------- tooltip ---------- */
+#tip { position: fixed; z-index: 100; pointer-events: none; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 22px rgba(0,0,0,.18); opacity: 0; transition: opacity .08s; max-width: 280px; }
+#tip.on { opacity: 1; }
+#tip .t { color: var(--text-secondary); font-size: 11.5px; margin-bottom: 3px; }
+#tip .l { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+#tip .l b { font-size: 13px; font-variant-numeric: tabular-nums; }
+#tip .l span { color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px; }
+#tip .l i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+
+/* ---------- data tab ---------- */
+.drop { border: 2px dashed var(--line); border-radius: 14px; padding: 18px; text-align: center; background: var(--surface-2); }
+.drop.over { border-color: var(--brand); background: var(--critical-wash); }
+.rec-t input { background: var(--surface-1); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; font-size: 13px; width: 130px; }
+.muted { color: var(--text-muted); }
+code { background: var(--surface-2); padding: 1px 5px; border-radius: 5px; font-size: 12px; }
+.meth { font-size: 13px; color: var(--text-secondary); }
+.meth li { margin-bottom: 4px; }
+.meth b { color: var(--text-primary); }
+
+/* ---------- present mode ---------- */
+#pbar { display: none; }
+body.present { overflow: hidden; background: var(--surface-1); }
+body.present .top, body.present .filters, body.present .tabs, body.present .banner.info { display: none; }
+body.present main { position: fixed; inset: 0; padding: 4vh 5vw 9vh; overflow: auto; background: var(--page); }
+body.present .wrap { max-width: none; padding: 0; }
+body.present .slide > h2 { font-size: clamp(26px, 3.2vw, 44px); }
+body.present .slide > .sub { font-size: clamp(14px, 1.5vw, 20px); }
+body.present .card { padding: 22px; }
+body.present .tile .val { font-size: clamp(28px, 3.4vw, 46px); }
+body.present .hero .big { font-size: clamp(64px, 9vw, 120px); }
+body.present .ins li .tx { font-size: clamp(15px, 1.7vw, 22px); }
+body.present .ins li .act, body.present .how, body.present .card .cap { font-size: clamp(12.5px, 1.2vw, 16px); }
+body.present .tbl { font-size: clamp(13px, 1.3vw, 17px); }
+body.present .hb .r { font-size: clamp(13px, 1.3vw, 17px); }
+body.present svg.ch text { font-size: 12.5px; }
+body.present #pbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; gap: 10px; align-items: center; justify-content: center; padding: 10px; background: var(--surface-1); border-top: 1px solid var(--line); }
+#pbar .pg { font-size: 13px; color: var(--text-secondary); min-width: 90px; text-align: center; }
+
+@media (max-width: 900px) {
+  .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3, .g2, .g12 { grid-template-columns: minmax(0, 1fr); }
+  .hero .big { font-size: 46px; }
+}
+@media (max-width: 520px) { .g4 { grid-template-columns: minmax(0, 1fr); } .ins li { grid-template-columns: 1fr; } }
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  body { background: #fff; }
+  .top .btn, .filters, .tabs, #pbar, #tip, details.tv > summary { display: none !important; }
+  .top { background: #fff; color: #000; } .top p { color: #444; }
+  .slide { display: block !important; page-break-after: always; break-after: page; }
+  .slide[data-print="no"] { display: none !important; }
+  .card { box-shadow: none; break-inside: avoid; }
+  details.tv:not([open]) > *:not(summary) { display: block; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>Mom's Touch · ລາຍງານປຽບທຽບສາຂາ / ເດືອນ / ອາທິດ</h1>
+      <p id="subtitle">Executive comparison report</p>
+    </div>
+    <div class="sp"></div>
+    <button class="btn" id="btnTheme" title="Light / Dark">◐ ໂໝດສີ</button>
+    <button class="btn" id="btnPrint">🖨️ ພິມ / PDF</button>
+    <button class="btn solid" id="btnPresent">▶ ໂໝດພຣີເຊັນ</button>
+  </div>
+</header>
+<div class="filters" id="filters"><div class="wrap">
+  <label class="fld">ເດືອນທີ່ລາຍງານ<select id="fMonth"></select></label>
+  <label class="fld">ປຽບທຽບກັບ<select id="fCmp"></select></label>
+  <label class="fld">ຂອບເຂດ<select id="fScope"></select></label>
+  <label class="fld">ຊ່ວງເວລາທີ່ປຽບທຽບ<select id="fBasis"><option value="like">ອາທິດທຽບເທົ່າກັນ (ແນະນຳ)</option><option value="full">ທັງເດືອນ</option></select></label>
+  <label class="fld">ເປົ້າ Food cost %<input type="number" id="fTarget" min="1" max="100" step="0.5"></label>
+</div></div>
+<nav class="tabs" id="tabs"><div class="wrap" id="tabsIn"></div></nav>
+<main><div class="wrap">
+  <div id="banners"></div>
+  <section class="slide" id="s-summary" data-title="ພາບລວມ"></section>
+  <section class="slide" id="s-trend" data-title="ການເຕີບໂຕ"></section>
+  <section class="slide" id="s-month" data-title="ເດືອນ vs ເດືອນ"></section>
+  <section class="slide" id="s-week" data-title="ອາທິດ vs ອາທິດ"></section>
+  <section class="slide" id="s-branch" data-title="ສາຂາ vs ສາຂາ"></section>
+  <section class="slide" id="s-channel" data-title="ຊ່ອງທາງຂາຍ"></section>
+  <section class="slide" id="s-cost" data-title="Food cost & ຂອງເສຍ"></section>
+  <section class="slide" id="s-items" data-title="ລາຍການສິນຄ້າ"></section>
+  <section class="slide" id="s-actions" data-title="ສະຫຼຸບ & ສິ່ງທີ່ຄວນເຮັດ"></section>
+  <section class="slide" id="s-data" data-title="ຂໍ້ມູນ & ການນຳເຂົ້າ" data-print="no"></section>
+</div></main>
+<div id="pbar">
+  <button class="btn" id="pPrev">◀ ກັບຄືນ</button><span class="pg" id="pPg"></span><button class="btn" id="pNext">ຕໍ່ໄປ ▶</button><button class="btn" id="pExit">✕ ອອກ</button>
+</div>
+<div id="tip" role="tooltip"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Mom's Touch - Executive comparison report
+   Data in: JSON backups from the stock app (all branches) and Inventory .xlsx files.
+   Everything runs in the browser; nothing is uploaded anywhere.
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = x => String(x == null ? '' : x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const p2 = n => String(n).padStart(2, '0');
+const r2 = x => Math.round(x * 100) / 100, r3 = x => Math.round(x * 1000) / 1000;
+const ymd = d => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+const addM = (k, n) => { let y = +k.slice(0, 4), m = +k.slice(5, 7) - 1 + n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + p2(m + 1); };
+const curMonthKey = () => ymd(new Date()).slice(0, 7);
+const MON3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+const MON_LO = ['ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 'ມິຖຸນາ', 'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'];
+const mLab = k => k ? MON3[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4) : '';
+const mLo = k => k ? 'ເດືອນ' + MON_LO[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4) : '';
+const CAT_LO = { 'Meat & Protein': 'ຊີ້ນສັດ & ໂປຣຕີນ', 'Raw Material': 'ວັດຖຸດິບຫຼັກ', 'Side': 'ອາຫານທານຫຼິ້ນ', 'Cleaning': 'ທຳຄວາມສະອາດ', 'Packaging': 'ບັນຈຸພັນ', 'Beverage': 'ເຄື່ອງດື່ມ' };
+const catName = c => CAT_LO[c] || c || '-';
+
+/* ---------- number formats ---------- */
+const nf = new Intl.NumberFormat('en-US');
+const fN = n => n == null || isNaN(n) ? '—' : nf.format(Math.round(n));
+function fK(n) {                      // compact Lao-style money: ລ້ານ = million, ພັນລ້ານ = billion
+  if (n == null || isNaN(n)) return '—'; const a = Math.abs(n);
+  if (a >= 1e9) return (n / 1e9).toFixed(2) + ' ພັນລ້ານ';
+  if (a >= 1e6) return (n / 1e6).toFixed(a >= 1e8 ? 0 : 1) + ' ລ້ານ';
+  if (a >= 1e3) return (n / 1e3).toFixed(0) + ' ພັນ';
+  return String(Math.round(n));
+}
+const fKk = n => n == null || isNaN(n) ? '—' : fK(n) + ' ₭';
+const fP = (n, d = 1) => n == null || isNaN(n) ? '—' : n.toFixed(d) + '%';
+const fD = n => n == null || isNaN(n) ? '—' : n.toFixed(1) + ' ວັນ';
+
+/* ---------- state ---------- */
+const LS_KEY = 'mt_present_v1';
+let DB = { records: [], fcTarget: 35, colors: {} };
+const S = { tab: 'summary', month: '', cmp: '', scope: 'ALL', basis: 'like', bMetric: 'fc', wMetric: 'use' };
+function loadDB() { try { const d = JSON.parse(localStorage.getItem(LS_KEY)); if (d && Array.isArray(d.records)) DB = Object.assign(DB, d); } catch (e) { } }
+function saveDB() { try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); } catch (e) { toast('ບັນທຶກໃນເບຣາວ໌ເຊີບໍ່ໄດ້ (ເກັບຂໍ້ມູນເກີນ) - ຂໍ້ມູນຈະຢູ່ເມື່ອເປີດໜ້ານີ້ເທົ່ານັ້ນ'); } }
+const SERIES = ['--series-1', '--series-2', '--series-3', '--series-4', '--series-5', '--series-6'];
+function colorOf(branch) {            // colour follows the branch (entity), never its rank
+  if (!(branch in DB.colors)) DB.colors[branch] = Object.keys(DB.colors).length % SERIES.length;
+  return 'var(' + SERIES[DB.colors[branch]] + ')';
+}
+function toast(msg) { const b = $('#banners'); const d = document.createElement('div'); d.className = 'banner info'; d.textContent = msg; b.prepend(d); setTimeout(() => d.remove(), 7000); }
+
+/* ---------- xlsx reading (same approach as the stock app) ---------- */
+const colIx = ref => { let n = 0; for (const ch of ref.replace(/\d+/g, '')) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+function readZip(buf) {
+  const dv = new DataView(buf), u8 = new Uint8Array(buf); let e = u8.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('not an xlsx file');
+  const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true); const files = {};
+  for (let i = 0; i < n && dv.getUint32(p, true) === 0x02014b50; i++) {
+    const nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+    files[new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nl))] = { method: dv.getUint16(p + 10, true), csz: dv.getUint32(p + 20, true), off: dv.getUint32(p + 42, true) };
+    p += 46 + nl + el + cl;
+  }
+  return { u8, dv, files };
+}
+async function zipText(z, name) {
+  const f = z.files[name]; if (!f) return null;
+  const nl = z.dv.getUint16(f.off + 26, true), el = z.dv.getUint16(f.off + 28, true), st = f.off + 30 + nl + el, data = z.u8.subarray(st, st + f.csz);
+  if (f.method === 0) return new TextDecoder().decode(data);
+  if (typeof DecompressionStream === 'undefined') throw new Error('ເບຣາວ໌ເຊີເກົ່າເກີນໄປ - ກະລຸນາໃຊ້ Chrome / Edge / Safari ລຸ້ນໃໝ່');
+  const out = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+  return new TextDecoder().decode(out);
+}
+function parseSheetXml(xml, sst) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml'), rows = [];
+  Array.from(doc.getElementsByTagName('row')).forEach(r => {
+    const row = [];
+    Array.from(r.getElementsByTagName('c')).forEach(c => {
+      const t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0], ix = colIx(c.getAttribute('r') || 'A1'); let val = null;
+      if (t === 'inlineStr') val = Array.from(c.getElementsByTagName('t')).map(x => x.textContent).join('');
+      else if (v) val = t === 's' ? sst[+v.textContent] : (t === 'str' || t === 'b' || t === 'e') ? v.textContent : parseFloat(v.textContent);
+      row[ix] = val;
+    });
+    rows[(+r.getAttribute('r') || rows.length + 1) - 1] = row;
+  });
+  return rows;
+}
+async function readWorkbook(f) {
+  const z = readZip(await f.arrayBuffer()), wbx = await zipText(z, 'xl/workbook.xml'), relx = await zipText(z, 'xl/_rels/workbook.xml.rels');
+  if (!wbx || !relx) throw new Error('not an Excel workbook');
+  const rel = {}; Array.from(new DOMParser().parseFromString(relx, 'application/xml').getElementsByTagName('Relationship')).forEach(r => { let t = r.getAttribute('Target').replace(/^\//, ''); if (!t.startsWith('xl/')) t = 'xl/' + t; rel[r.getAttribute('Id')] = t; });
+  const sheets = {}; Array.from(new DOMParser().parseFromString(wbx, 'application/xml').getElementsByTagName('sheet')).forEach(s => { sheets[s.getAttribute('name')] = rel[s.getAttribute('r:id')]; });
+  let sst = []; const sx = await zipText(z, 'xl/sharedStrings.xml');
+  if (sx) sst = Array.from(new DOMParser().parseFromString(sx, 'application/xml').getElementsByTagName('si')).map(si => Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join(''));
+  return { async rows(name) { const p = sheets[name]; return p ? parseSheetXml(await zipText(z, p), sst) : null; } };
+}
+function dateKey(v) {
+  if (typeof v === 'number') { const d = new Date(Math.round((v - 25569) * 86400) * 1000); return d.getUTCFullYear() + '-' + p2(d.getUTCMonth() + 1) + '-' + p2(d.getUTCDate()); }
+  return null;
+}
+function monthFromName(n) {
+  const s = String(n || '').toLowerCase(), mm = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  for (let i = 0; i < 12; i++) if (new RegExp('(^|[^a-z])' + mm[i]).test(s)) return (s.match(/20\d\d/) || ['2026'])[0] + '-' + p2(i + 1);
+  return null;
+}
+
+/* ---------- stock arithmetic (identical to the stock app) ---------- */
+function hasWk(it) { return !!(it.wk && it.wk.some(x => x && (x.rec != null || x.out != null || x.end != null))); }
+function calcWk(it) {
+  const out = []; let beg = it.beg;
+  for (let w = 0; w < 5; w++) {
+    const W = (it.wk && it.wk[w]) || {}, rec = W.rec || 0, o = W.out || 0, counted = W.end != null, total = r3(beg + rec - o);
+    out.push({ beg: r3(beg), rec, out: o, total, end: counted ? W.end : null, counted, used: counted ? r3(total - W.end) : null, endEff: counted ? W.end : total });
+    beg = counted ? W.end : total;     // an uncounted week is assumed to have no usage
+  }
+  return out;
+}
+function endingOf(it) {
+  if (!hasWk(it)) return it.ending;
+  const c = calcWk(it); let L = -1; c.forEach((x, i) => { if (x.counted) L = i; });
+  return r2(L >= 0 ? c[L].end + c.slice(L + 1).reduce((a, x) => a + x.rec - x.out, 0) : it.beg + c.reduce((a, x) => a + x.rec - x.out, 0));
+}
+
+/* ---------- importers -> records ---------- */
+// record = { id, branch, month, src, demo, items:[{id,cat,name,uom,cost,beg,rec,out,ending,wk:[{rec,out,end}]}], waste:[{d,q,cost,id,name}], sales:{salesMonth,target,vat,costPct,days:{date:{net,orders}}}|null }
+const monthOfSnap = sn => /^\d{4}-\d{2}$/.test(sn.basePeriod || '') ? sn.basePeriod : (sn.isRolledOver ? '2026-12' : '2026-11');
+function snapToRec(branch, sn, src) {
+  const items = sn.inventory.map(i => ({ id: String(i.id), cat: i.category || '', name: i.nameLao || i.nameEn || String(i.id), uom: i.uom || '', cost: +i.cost || 0, beg: +i.beg || 0, rec: +i.rec || 0, out: +i.out || 0, ending: +i.ending || 0, wk: Array.isArray(i.wk) ? i.wk.map(w => ({ rec: w && w.rec != null ? +w.rec : null, out: w && w.out != null ? +w.out : null, end: w && w.end != null ? +w.end : null })) : null }));
+  const waste = (Array.isArray(sn.wasteLogs) ? sn.wasteLogs : []).map(w => ({ d: ymd(new Date(w.logId)), q: +w.qty || 0, cost: +w.cost || 0, id: String(w.id || ''), name: w.nameLao || w.nameEn || '' })).filter(w => w.q > 0);
+  let sales = null; const s = sn.sales;
+  if (s && typeof s === 'object') {
+    const days = {};
+    if (s.pos && s.pos.days) for (const k in s.pos.days) days[k] = { net: +s.pos.days[k].net || 0, orders: +s.pos.days[k].orders || 0 };
+    if (s.manual) for (const k in s.manual) { const o = days[k] ? days[k].orders : 0; days[k] = { net: +s.manual[k] || 0, orders: o }; }
+    if (Object.keys(days).length) sales = { salesMonth: s.month || '', target: +s.target || 0, vat: +s.vat || 0, costPct: +s.costPct || 35, days, other: (s.other && typeof s.other === 'object') ? s.other : {} };
+  }
+  return { id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), branch, month: monthOfSnap(sn), src, items, waste, sales };
+}
+function recsFromBackup(d, fname) {
+  const snaps = [];
+  if (d.branches && d.branches.list && d.branchData) {
+    d.branches.list.forEach(b => { const sn = d.branchData[b.id] || (b.id === d.branches.cur ? d : null); if (sn && Array.isArray(sn.inventory)) snaps.push([b.name, sn]); });
+  } else if (Array.isArray(d.inventory)) snaps.push([(d.branches && d.branches.list && d.branches.list[0] && d.branches.list[0].name) || 'Vangxai', d]);
+  if (!snaps.length) throw new Error('ບໍ່ພົບຂໍ້ມູນສະຕ໋ອກໃນໄຟລ໌ JSON');
+  return snaps.map(([n, sn]) => snapToRec(n, sn, fname));
+}
+async function recFromXlsx(f, branch, monthHint) {
+  const wb = await readWorkbook(f), num = x => typeof x === 'number' && isFinite(x) ? x : null, str = x => x == null ? '' : String(x).trim();
+  const ml = await wb.rows('Master Item List'); if (!ml) throw new Error('ບໍ່ພົບແຊັດ "Master Item List" - ນີ້ບໍ່ແມ່ນໄຟລ໌ Inventory');
+  const master = {}; ml.forEach((r, i) => { if (r && i >= 3 && typeof r[2] === 'string' && r[2].trim()) master[r[2].trim()] = r; });
+  const wk = [], cnt = {};
+  const scan = rs => rs.forEach(r => r && r.forEach(v => { if (typeof v === 'number' && v > 40000 && v < 60000) { const k = dateKey(v).slice(0, 7); cnt[k] = (cnt[k] || 0) + 1; } }));
+  for (let w = 1; w <= 5; w++) {
+    const rows = await wb.rows('Week ' + w); if (!rows) throw new Error('ບໍ່ພົບແຊັດ "Week ' + w + '"');
+    scan(rows.slice(0, 7));
+    const m = {}, order = []; rows.forEach((r, i) => { if (!r || i < 7) return; const c = str(r[2]); if (c && c !== 'Code' && master[c] && !m[c]) { m[c] = r; order.push(c); } });
+    wk.push({ m, order });
+  }
+  if (!wk[0].order.length) throw new Error('ບໍ່ພົບລາຍການໃນແຊັດ Week 1');
+  const items = wk[0].order.map(c => {
+    const M = master[c], w1 = wk[0].m[c];
+    const it = { id: c, cat: str(M[4]), name: str(M[6]) || str(M[5]) || c, uom: str(M[8]), cost: num(M[13]) != null ? num(M[13]) : (num(M[12]) || 0) / (num(M[9]) || 1), beg: num(w1[7]) || 0, rec: 0, out: 0, ending: 0, wk: [] };
+    for (let w = 0; w < 5; w++) {
+      const r = wk[w].m[c]; let rec = null;
+      if (r) { const p = [8, 9, 10, 11, 12, 13, 14, 15].map(k => num(r[k])).filter(x => x != null); rec = p.length ? r3(p.reduce((a, b) => a + b, 0)) : null; }
+      it.wk.push({ rec, out: r ? num(r[16]) : null, end: r && num(r[18]) != null ? r3(num(r[18])) : null });
+    }
+    const cw = calcWk(it); it.rec = r2(cw.reduce((a, x) => a + x.rec, 0)); it.out = r2(cw.reduce((a, x) => a + x.out, 0)); it.ending = endingOf({ ...it, ending: it.beg });
+    return it;
+  });
+  const waste = []; const wr = await wb.rows('Waste');
+  if (wr && wr[0]) {
+    scan([wr[0]]); const cols = []; wr[0].forEach((v, ci) => { if (typeof v === 'number' && v > 40000 && v < 60000) cols.push([ci, dateKey(v)]); });
+    const byId = {}; items.forEach(i => byId[i.id] = i);
+    wr.forEach((r, i) => { if (!r || i < 3) return; const it = byId[str(r[2])]; if (!it) return; cols.forEach(([ci, dk]) => { const q = num(r[ci]); if (q > 0) waste.push({ d: dk, q, cost: it.cost, id: it.id, name: it.name }); }); });
+  }
+  const ks = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+  const month = ks[0] || monthFromName(f.name) || monthHint || '';
+  return { id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), branch, month, src: f.name, items, waste, sales: null };
+}
+function addRecords(list) {
+  let replaced = 0;
+  list.forEach(r => {
+    const i = DB.records.findIndex(x => x.branch === r.branch && x.month === r.month);
+    if (i >= 0) { if (!r.ch && DB.records[i].ch) r.ch = DB.records[i].ch; DB.records.splice(i, 1, r); replaced++; } else DB.records.push(r);
+  });
+  invalidate(); saveDB();
+  return replaced;
+}
+
+/* ---------- analysis ---------- */
+const BC_CACHE = new Map(); const invalidate = () => BC_CACHE.clear();
+const BC = rec => { let b = BC_CACHE.get(rec.id); if (!b) { b = base(rec); BC_CACHE.set(rec.id, b); } return b; };
+function base(rec) {
+  const [y, m] = rec.month.split('-').map(Number), dim = new Date(y, m, 0).getDate(), nW = Math.ceil(dim / 7);
+  const B = { rec, branch: rec.branch, month: rec.month, dim, nW, vat: rec.sales ? rec.sales.vat : 0, wk: [], items: {}, daily: Array(dim + 2).fill(0), dord: Array(dim + 2).fill(0), begV: 0, endV_m: 0, useV_m: 0, recV_m: 0, low_m: 0, anyWk: false, kCounted: 0, target: 0, hasSales: false, lastSalesDay: 0 };
+  for (let w = 0; w < nW; w++) B.wk.push({ w, from: w * 7 + 1, to: Math.min(w * 7 + 7, dim), sales: 0, rev: 0, orders: 0, rec: 0, use: 0, counted: 0, endV: 0, low: 0, waste: 0, other: 0 });
+  rec.items.forEach(it => {
+    const c = it.cost || 0, X = { id: it.id, name: it.name, cat: it.cat, uom: it.uom, cost: c, ending: it.ending, useM: (it.beg + it.rec - it.out - it.ending) * c, recM: it.rec * c, useW: Array(5).fill(0), recW: Array(5).fill(0), endW: Array(5).fill(0), waste: 0, wasteQ: 0 };
+    B.begV += it.beg * c; B.endV_m += it.ending * c; B.useV_m += X.useM; B.recV_m += it.rec * c; if (it.ending <= 2) B.low_m++;
+    if (hasWk(it)) {
+      B.anyWk = true; const cw = calcWk(it);
+      for (let w = 0; w < nW; w++) {
+        const W = B.wk[w], x = cw[w]; W.rec += x.rec * c; W.endV += x.endEff * c; if (x.endEff <= 2) W.low++;
+        X.recW[w] = x.rec * c; X.endW[w] = x.endEff * c;
+        if (x.counted) { W.use += x.used * c; W.counted++; X.useW[w] = x.used * c; }
+      }
+    }
+    B.items[it.id] = X;
+  });
+  B.wk.forEach((W, w) => { if (W.counted > 0) B.kCounted = w + 1; });
+  (rec.waste || []).forEach(w => {
+    if (!w.d.startsWith(rec.month)) return; const dd = +w.d.slice(8), wi = Math.min(B.nW - 1, Math.floor((dd - 1) / 7)), v = w.q * w.cost;
+    B.wk[wi].waste += v; const X = B.items[w.id]; if (X) { X.waste += v; X.wasteQ += w.q; }
+  });
+  if (rec.sales) {
+    B.hasSales = true;
+    for (const k in rec.sales.days) {
+      if (!k.startsWith(rec.month)) continue; const dd = +k.slice(8), D = rec.sales.days[k]; if (dd < 1 || dd > dim) continue;
+      B.daily[dd] += D.net; B.dord[dd] += D.orders; if (D.net > 0) B.lastSalesDay = Math.max(B.lastSalesDay, dd);
+    }
+    if (rec.sales.salesMonth === rec.month) B.target = rec.sales.target || 0;
+  }
+  if (rec.sales && rec.sales.other) for (const k in rec.sales.other) { if (!k.startsWith(rec.month + '-')) continue; const w = +k.slice(rec.month.length + 1); if (w >= 0 && w < nW) B.wk[w].other += +rec.sales.other[k] || 0; }
+  for (let w = 0; w < nW; w++) { const W = B.wk[w]; for (let d = W.from; d <= W.to; d++) { W.sales += B.daily[d]; W.orders += B.dord[d]; } W.rev = W.sales / (1 + B.vat / 100); }
+  return B;
+}
+const isPartial = B => B.month >= curMonthKey() && B.anyWk && B.kCounted < B.nW;
+
+// V = the numbers of one record for the first k weeks (k = null: the whole month)
+function view(B, k) {
+  const nW = B.nW, full = (k == null || k >= nW || !B.anyWk), kk = full ? nW : k, lim = full ? B.dim : Math.min(7 * kk, B.dim);
+  const V = { branch: B.branch, k: full ? null : kk, lim, dim: B.dim, sales: 0, orders: 0, wasteV: 0, useV: 0, recV: 0, begV: B.begV, endV: 0, low: 0, target: B.target ? B.target * lim / B.dim : 0, vat: B.vat, items: {}, cat: {}, nItems: Object.keys(B.items).length, hasSales: B.hasSales, counted: B.anyWk };
+  for (let d = 1; d <= lim; d++) { V.sales += B.daily[d]; V.orders += B.dord[d]; }
+  V.other = 0; for (let w = 0; w < kk && w < nW; w++) { V.wasteV += B.wk[w].waste; V.other += B.wk[w].other; }
+  if (full) { V.useV = B.useV_m; V.recV = B.recV_m; V.endV = B.endV_m; V.low = B.low_m; }
+  else { for (let w = 0; w < kk; w++) { V.useV += B.wk[w].use; V.recV += B.wk[w].rec; } V.endV = B.wk[kk - 1].endV; V.low = B.wk[kk - 1].low; }
+  Object.values(B.items).forEach(X => {
+    let use, rec, end;
+    if (full) { use = X.useM; rec = X.recM; end = X.ending * X.cost; }
+    else { use = 0; rec = 0; for (let w = 0; w < kk; w++) { use += X.useW[w]; rec += X.recW[w]; } end = X.endW[kk - 1]; }
+    V.items[X.id] = { id: X.id, name: X.name, cat: X.cat, uom: X.uom, use, rec, end, waste: X.waste, endQ: full ? X.ending : (X.cost ? X.endW[kk - 1] / X.cost : 0), cost: X.cost, branch: B.branch };
+  });
+  return fin(V);
+}
+function fin(V) {
+  V.rev = V.sales / (1 + (V.vat || 0) / 100);
+  V.fc = V.rev > 0 && V.useV > 0 ? V.useV / V.rev * 100 : null;
+  V.wastePct = V.useV > 0 ? V.wasteV / V.useV * 100 : null;
+  V.days = V.useV > 0 ? V.endV / (V.useV / V.lim) : null;
+  V.ticket = V.orders > 0 ? V.sales / V.orders : null;
+  V.tgtPct = V.target > 0 ? V.sales / V.target * 100 : null;
+  V.gp = V.hasSales && V.counted && V.useV > 0 ? V.rev - V.useV : null;
+  V.gpPct = V.gp != null && V.rev > 0 ? V.gp / V.rev * 100 : null;
+  V.np = V.gp != null && V.other > 0 ? V.gp - V.other : null;
+  V.cat = {}; Object.values(V.items).forEach(i => { const c = V.cat[i.cat || '-'] || (V.cat[i.cat || '-'] = { use: 0, rec: 0, end: 0, waste: 0 }); c.use += i.use; c.rec += i.rec; c.end += i.end; c.waste += i.waste; });
+  return V;
+}
+function sumV(list, label) {
+  const T = { branch: label || 'ALL', k: null, lim: 0, dim: 0, sales: 0, orders: 0, wasteV: 0, useV: 0, recV: 0, begV: 0, endV: 0, low: 0, target: 0, vat: 0, items: {}, cat: {}, nItems: 0, hasSales: false, counted: false };
+  let revSum = 0;
+  list.forEach(V => {
+    T.k = V.k == null ? T.k : V.k; T.lim = Math.max(T.lim, V.lim); T.dim = Math.max(T.dim, V.dim);
+    ['sales', 'orders', 'wasteV', 'useV', 'recV', 'begV', 'endV', 'low', 'target', 'nItems', 'other'].forEach(f => T[f] += V[f] || 0);
+    revSum += V.sales / (1 + (V.vat || 0) / 100); T.hasSales = T.hasSales || V.hasSales; T.counted = T.counted || V.counted;
+    Object.values(V.items).forEach(i => {
+      const key = i.id, t = T.items[key] || (T.items[key] = { id: i.id, name: i.name, cat: i.cat, uom: i.uom, use: 0, rec: 0, end: 0, waste: 0, endQ: 0, cost: i.cost, branch: V.branch });
+      t.use += i.use; t.rec += i.rec; t.end += i.end; t.waste += i.waste; t.endQ += i.endQ || 0;
+    });
+  });
+  T.vat = T.sales > 0 ? (T.sales / revSum - 1) * 100 : 0;
+  return fin(T);
+}
+
+/* ---------- context for the current filters ---------- */
+function ctx() {
+  const months = [...new Set(DB.records.map(r => r.month))].sort();
+  if (!months.includes(S.month)) S.month = months[months.length - 1] || '';
+  if (S.cmp && (!months.includes(S.cmp) || S.cmp === S.month)) S.cmp = '';
+  if (!S.cmp && S.month) { const pm = addM(S.month, -1); S.cmp = months.includes(pm) ? pm : (months.filter(m => m < S.month).pop() || ''); }
+  const cur = DB.records.filter(r => r.month === S.month), prv = S.cmp ? DB.records.filter(r => r.month === S.cmp) : [];
+  const brAll = [...new Set(cur.map(r => r.branch))].sort();
+  if (S.scope !== 'ALL' && !brAll.includes(S.scope)) S.scope = 'ALL';
+  const bs = S.scope === 'ALL' ? brAll : [S.scope];
+  const both = bs.filter(b => prv.some(r => r.branch === b));
+  const C = { months, cur, prv, brAll, bs, both, k: null, partialNote: '', excluded: bs.filter(b => S.cmp && !both.includes(b)) };
+  if (S.basis === 'like') {
+    const ks = []; bs.forEach(b => { const r = cur.find(x => x.branch === b); if (r) { const B = BC(r); if (isPartial(B)) ks.push(B.kCounted); } });
+    if (ks.length) { const k = Math.min(...ks); if (k > 0) C.k = k; }
+  }
+  C.rows = bs.map(b => {
+    const rc = cur.find(x => x.branch === b), rp = prv.find(x => x.branch === b);
+    return { b, Vc: view(BC(rc), C.k), Vp: rp ? view(BC(rp), C.k) : null, Bc: BC(rc), Bp: rp ? BC(rp) : null };
+  });
+  const useRows = S.cmp ? C.rows.filter(r => r.Vp) : C.rows;
+  C.tc = sumV(useRows.map(r => r.Vc), 'ALL'); C.tp = S.cmp && useRows.length ? sumV(useRows.map(r => r.Vp), 'ALL') : null;
+  C.tcAll = sumV(C.rows.map(r => r.Vc), 'ALL');
+  if (C.k) { const kk = C.k; const lastDay = Math.min(7 * kk, C.tc.dim); C.partialNote = 'ເດືອນນີ້ຍັງບໍ່ຄົບ - ປຽບທຽບອາທິດ 1-' + kk + ' (ວັນທີ 1-' + lastDay + ') ຂອງທັງສອງເດືອນ ເພື່ອໃຫ້ຍຸຕິທຳ'; }
+  return C;
+}
+
+/* ---------- sales channels (typed in by hand: POS export has no channel column) ---------- */
+// rec.ch = { dine: n, take: n, d: [{n:'Grab', v:123}, ...] }  (amounts in kip, whole month)
+const hasCh = r => !!(r.ch && ((+r.ch.dine || 0) + (+r.ch.take || 0) + (r.ch.d || []).reduce((a, x) => a + (+x.v || 0), 0)) > 0);
+function chanAgg(recs) {
+  const A = { dine: 0, take: 0, deliv: 0, plat: {}, n: 0 };
+  recs.forEach(r => { if (!hasCh(r)) return; A.n++; A.dine += +r.ch.dine || 0; A.take += +r.ch.take || 0; (r.ch.d || []).forEach((x, i) => { const v = +x.v || 0; if (v > 0) { A.deliv += v; const nm = (x.n || '').trim() || ('Delivery ' + (i + 1)); A.plat[nm] = (A.plat[nm] || 0) + v; } }); });
+  A.total = A.dine + A.take + A.deliv; return A;
+}
+const salesUpTo = (B, lim) => { let s = 0; const n = lim == null ? B.dim : Math.min(lim, B.dim); for (let d = 1; d <= n; d++) s += B.daily[d]; return s; };
+const salesPartial = B => B.month >= curMonthKey() && B.lastSalesDay > 0 && B.lastSalesDay < B.dim;
+/* =====================================================================
+   Chart helpers: hand-written SVG / HTML (no external library)
+   ===================================================================== */
+const TIPS = {};                                   // chart registry for crosshair tooltips
+let tipSeq = 0;
+const tipAttr = (title, lines) => ' data-tip="' + esc(JSON.stringify({ t: title, l: lines })) + '"';   // lines: [[label, value, colorVar?]]
+
+function showTip(obj, x, y) {
+  const el = $('#tip'); el.textContent = '';
+  if (obj.t) { const t = document.createElement('div'); t.className = 't'; t.textContent = obj.t; el.appendChild(t); }
+  (obj.l || []).forEach(([name, val, col]) => {
+    const row = document.createElement('div'); row.className = 'l';
+    const a = document.createElement('span'); if (col) { const k = document.createElement('i'); k.style.background = col; a.appendChild(k); } a.appendChild(document.createTextNode(name));
+    const b = document.createElement('b'); b.textContent = val; row.appendChild(a); row.appendChild(b); el.appendChild(row);
+  });
+  el.classList.add('on');
+  const w = el.offsetWidth, h = el.offsetHeight; let L = x + 14, T = y + 14;
+  if (L + w > innerWidth - 8) L = x - w - 14; if (T + h > innerHeight - 8) T = y - h - 14;
+  el.style.left = Math.max(6, L) + 'px'; el.style.top = Math.max(6, T) + 'px';
+}
+const hideTip = () => $('#tip').classList.remove('on');
+function bindTips() {
+  document.addEventListener('pointermove', e => {
+    const lc = e.target.closest && e.target.closest('svg[data-chart]');
+    if (lc && TIPS[lc.dataset.chart]) { lineHover(lc, e); return; }
+    const t = e.target.closest && e.target.closest('[data-tip]');
+    if (!t) { hideTip(); return; }
+    try { showTip(JSON.parse(t.getAttribute('data-tip')), e.clientX, e.clientY); } catch (x) { }
+  });
+  document.addEventListener('pointerleave', hideTip, true);
+  document.addEventListener('focusin', e => {
+    const t = e.target.closest && e.target.closest('[data-tip]'); if (!t) return;
+    const r = t.getBoundingClientRect(); try { showTip(JSON.parse(t.getAttribute('data-tip')), r.left + r.width / 2, r.top); } catch (x) { }
+  });
+  document.addEventListener('focusout', hideTip);
+  addEventListener('scroll', hideTip, true);
+}
+
+/* ---------- delta chip: icon + sign + colour (never colour alone) ---------- */
+function dChip(cur, prev, dir, o = {}) {
+  if (cur == null || prev == null || isNaN(cur) || isNaN(prev)) return '<span class="chip neu"><i>–</i> ບໍ່ມີຂໍ້ມູນທຽບ</span>';
+  let diff, txt;
+  if (o.pt) { diff = cur - prev; txt = (diff > 0 ? '+' : diff < 0 ? '−' : '') + Math.abs(diff).toFixed(1) + ' pt'; }
+  else if (Math.abs(prev) < 1e-9) { return Math.abs(cur) < 1e-9 ? '<span class="chip neu"><i>■</i> 0%</span>' : '<span class="chip neu"><i>▲</i> ໃໝ່</span>'; }
+  else { diff = (cur - prev) / Math.abs(prev) * 100; txt = (diff > 0 ? '+' : diff < 0 ? '−' : '') + Math.abs(diff).toFixed(1) + '%'; }
+  const flat = Math.abs(diff) < 0.05, up = diff > 0;
+  let cls = 'neu', icon = flat ? '■' : up ? '▲' : '▼', word = '';
+  if (!flat && dir) { const good = (dir > 0) === up; cls = good ? 'good' : 'bad'; icon = good ? '✔' : '✖'; word = good ? 'ດີຂຶ້ນ' : 'ຄວນລະວັງ'; }
+  return '<span class="chip ' + cls + '" title="' + esc(word) + '"><i>' + icon + '</i> ' + esc(txt) + '</span>';
+}
+const goodness = (cur, prev, dir) => (cur == null || prev == null || !dir || Math.abs(cur - prev) < 1e-9) ? 0 : ((cur - prev) * dir > 0 ? 1 : -1);
+
+/* ---------- nice axis ---------- */
+function niceMax(max) {
+  if (!(max > 0)) return { max: 1, step: .25 };
+  const e = Math.pow(10, Math.floor(Math.log10(max))), f = max / e; let n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+  const m = n * e; return { max: m, step: m / 4 };
+}
+
+/* ---------- horizontal bars (HTML) ---------- */
+// rows: [{label, val, color, valText, tip:{t,l}, dot}], opts: {max, refs:[{v,label}], sort}
+function hbar(rows, o = {}) {
+  const max = o.max || Math.max(...rows.map(r => r.val || 0), ...(o.refs || []).map(r => r.v), 1) * 1.08;
+  return '<div class="hb' + ((o.refs || []).length ? ' wr' : '') + '">' + rows.map((r, i) => {
+    const w = Math.max(0, (r.val || 0) / max * 100), refs = (o.refs || []).map((f, fi) => '<div class="ref ' + (f.cls || '') + '" style="left:' + Math.min(100, f.v / max * 100) + '%">' + (i === 0 ? '<span style="--ro:' + (fi * 12) + 'px">' + esc(f.label) + '</span>' : '') + '</div>').join('');
+    return '<div class="r" tabindex="0"' + (r.tip ? tipAttr(r.tip.t, r.tip.l) : '') + '><div class="nm" title="' + esc(r.label) + '">' + (r.dot ? '<span class="dot" style="background:' + r.dot + '"></span>' : '') + esc(r.label) + '</div><div class="trk">' + refs + '<div class="bar" style="width:' + w + '%;background:' + (r.color || 'var(--series-1)') + '"></div></div><div class="v">' + (r.valText || '') + '</div></div>';
+  }).join('') + '</div>';
+}
+// two bars per row: previous (grey) and current (colour)
+function pairBars(rows, o = {}) {
+  const max = Math.max(...rows.map(r => Math.max(r.cur || 0, r.prev || 0)), 1) * 1.05;
+  return '<div class="hb">' + rows.map(r => {
+    const wc = (r.cur || 0) / max * 100, wp = (r.prev || 0) / max * 100;
+    return '<div class="r" tabindex="0"' + tipAttr(r.label, [[(o.curName || 'ເດືອນນີ້'), r.curText, 'var(--series-1)'], [(o.prevName || 'ເດືອນກ່ອນ'), r.prevText, 'var(--prev)']]) + '><div class="nm" title="' + esc(r.label) + '">' + esc(r.label) + '</div><div class="trk pair" style="height:26px"><div class="bar" style="top:2px;height:10px;width:' + wc + '%;background:var(--series-1)"></div><div class="bar" style="top:14px;height:10px;width:' + wp + '%;background:var(--prev)"></div></div><div class="v">' + r.curText + ' ' + (r.chip || '') + '</div></div>';
+  }).join('') + '</div>';
+}
+function legend(items) { return '<div class="legend">' + items.map(i => '<span><i class="' + (i.line ? 'ln' : '') + '" style="background:' + i.color + '"></i>' + esc(i.name) + '</span>').join('') + '</div>'; }
+
+/* ---------- SVG helpers ---------- */
+const barPath = (x, y, w, h, r) => { if (h <= 0) return ''; r = Math.min(r, h, w / 2); return 'M' + x + ' ' + (y + h) + 'V' + (y + r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + (-r) + 'h' + (w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r + 'V' + (y + h) + 'Z'; };
+const svgOpen = (W, H, label, extra = '') => '<svg class="ch" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(label) + '" ' + extra + '>';
+
+/* ---------- grouped columns: categories x up to 3 series ---------- */
+// o: {cats, series:[{name,color,vals}], fmt(v)->str, axis(v)->str, label:index of series to print on the cap, title}
+function cols(o) {
+  const W = o.w || 720, H = o.h || 250, ml = 56, mr = 10, mt = 24, mb = 28, n = o.cats.length, iw = W - ml - mr, ih = H - mt - mb;
+  const mx = niceMax(Math.max(...o.series.flatMap(s => s.vals.filter(v => v != null)), 0)), slot = iw / n, bw = Math.min(22, slot * .26), gap = 2, ns = o.series.length;
+  let g = svgOpen(W, H, o.title || 'chart');
+  for (let i = 0; i <= 4; i++) { const v = mx.step * i, y = mt + ih - v / mx.max * ih; g += '<line class="gl" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (ml - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + esc(o.axis(v)) + '</text>'; }
+  o.cats.forEach((c, i) => {
+    const cx = ml + slot * i + slot / 2, tot = ns * bw + (ns - 1) * gap;
+    o.series.forEach((s, j) => {
+      const v = s.vals[i]; if (v == null) return; const h = v / mx.max * ih, x = cx - tot / 2 + j * (bw + gap), y = mt + ih - h;
+      g += '<path class="mk" d="' + barPath(x, y, bw, h, 4) + '" fill="' + s.color + '"/>';
+      if (j === o.label && v > 0) g += '<text class="strong" x="' + (x + bw / 2) + '" y="' + (y - 6) + '" text-anchor="middle">' + esc(o.axis(v, true)) + '</text>';
+    });
+    const lines = o.series.map(s => [s.name, s.vals[i] == null ? 'ຍັງບໍ່ມີຂໍ້ມູນ' : o.fmt(s.vals[i]), s.color]);
+    g += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(c) + '</text>';
+    g += '<rect class="mk" tabindex="0" x="' + (cx - slot / 2) + '" y="' + mt + '" width="' + slot + '" height="' + ih + '" fill="transparent"' + tipAttr(c, lines) + '/>';
+  });
+  g += '<line class="ax" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + (mt + ih) + '" y2="' + (mt + ih) + '"/></svg>';
+  return g;
+}
+
+/* ---------- lines with crosshair ---------- */
+// o: {xs:[labels], series:[{name,color,vals}], fmt, axis, ref:{v,label}, xEvery, h, title, zeroBase}
+function lineChart(o) {
+  const W = o.w || 720, H = o.h || 260, ml = 56, mr = 56, mt = 16, mb = 28, n = o.xs.length, iw = W - ml - mr, ih = H - mt - mb;
+  const all = o.series.flatMap(s => s.vals.filter(v => v != null)).concat(o.ref ? [o.ref.v] : []);
+  let lo = o.zeroBase ? 0 : Math.min(...all), hi = Math.max(...all);
+  if (!isFinite(lo)) { lo = 0; hi = 1; }
+  if (!o.zeroBase) { const pad = (hi - lo) * .15 || Math.abs(hi) * .1 || 1; lo = Math.max(0, lo - pad); hi += pad; }
+  const mx = o.zeroBase ? niceMax(hi) : { max: hi, step: (hi - lo) / 4 }, vmin = o.zeroBase ? 0 : lo, rng = (o.zeroBase ? mx.max : hi) - vmin;
+  const X = i => ml + (n === 1 ? iw / 2 : i * iw / (n - 1)), Y = v => mt + ih - (v - vmin) / rng * ih, id = 'L' + (++tipSeq);
+  let g = svgOpen(W, H, o.title || 'chart', 'data-chart="' + id + '"');
+  for (let i = 0; i <= 4; i++) { const v = vmin + rng * i / 4, y = Y(v); g += '<line class="gl" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (ml - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + esc(o.axis(v)) + '</text>'; }
+  const ev = o.xEvery || 1; o.xs.forEach((x, i) => { if (i % ev === 0 || i === n - 1) g += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(x) + '</text>'; });
+  if (o.ref) { const y = Y(o.ref.v); g += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '" stroke="var(--critical)" stroke-width="1.5"/><text x="' + (ml + 6) + '" y="' + (y - 6) + '" class="strong">' + esc(o.ref.label) + '</text>'; }
+  o.series.forEach(s => {
+    let d = '', pen = false, last = -1; s.vals.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1); pen = true; last = i; });
+    g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"' + (s.dash ? ' stroke-dasharray="5 4"' : '') + '/>';
+    if (last >= 0) { const cx = X(last), cy = Y(s.vals[last]); g += '<circle cx="' + cx + '" cy="' + cy + '" r="4.5" fill="' + s.color + '" stroke="var(--surface-1)" stroke-width="2"/>'; if (o.endLabels !== false && o.series.length <= 4) g += '<text class="strong" x="' + (cx + 8) + '" y="' + (cy + 4) + '">' + esc(o.axis(s.vals[last], true)) + '</text>'; }
+  });
+  g += '<line class="ax" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + (mt + ih) + '" y2="' + (mt + ih) + '"/><line class="xh" x1="0" x2="0" y1="' + mt + '" y2="' + (mt + ih) + '" visibility="hidden"/><rect x="' + ml + '" y="' + mt + '" width="' + iw + '" height="' + ih + '" fill="transparent"/></svg>';
+  TIPS[id] = { o, W, ml, iw, n, X };
+  return g;
+}
+function lineHover(svg, e) {
+  const C = TIPS[svg.dataset.chart]; if (!C) return; const r = svg.getBoundingClientRect(), vx = (e.clientX - r.left) / r.width * C.W;
+  if (vx < C.ml - 10 || vx > C.ml + C.iw + 10) { hideTip(); svg.querySelector('.xh').setAttribute('visibility', 'hidden'); return; }
+  let i = C.n === 1 ? 0 : Math.round((vx - C.ml) / C.iw * (C.n - 1)); i = Math.max(0, Math.min(C.n - 1, i));
+  const xh = svg.querySelector('.xh'); xh.setAttribute('x1', C.X(i)); xh.setAttribute('x2', C.X(i)); xh.setAttribute('visibility', 'visible');
+  showTip({ t: C.o.xs[i], l: C.o.series.map(s => [s.name, s.vals[i] == null ? '—' : C.o.fmt(s.vals[i]), s.color]) }, e.clientX, e.clientY);
+}
+document.addEventListener('pointerout', e => { const s = e.target.closest && e.target.closest('svg[data-chart]'); if (s && !s.contains(e.relatedTarget)) { const x = s.querySelector('.xh'); if (x) x.setAttribute('visibility', 'hidden'); hideTip(); } });
+
+/* ---------- waterfall (stock bridge) ---------- */
+function waterfall(steps, o) {
+  const W = o.w || 720, H = 270, ml = 56, mr = 10, mt = 28, mb = 38, iw = W - ml - mr, ih = H - mt - mb, n = steps.length;
+  let run = 0; const bars = steps.map(s => { let a, b; if (s.kind === 'total') { a = 0; b = s.val; run = s.val; } else if (s.kind === 'up') { a = run; b = run + s.val; run = b; } else { b = run; a = run - s.val; run = a; } return { s, lo: Math.min(a, b), hi: Math.max(a, b) }; });
+  const mx = niceMax(Math.max(...bars.map(b => b.hi), 0)), slot = iw / n, bw = Math.min(30, slot * .4), Y = v => mt + ih - v / mx.max * ih;
+  let g = svgOpen(W, H, o.title);
+  for (let i = 0; i <= 4; i++) { const v = mx.step * i, y = Y(v); g += '<line class="gl" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (ml - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + esc(fK(v)) + '</text>'; }
+  const col = { total: 'var(--series-1)', up: 'var(--series-3)', down: 'var(--series-2)' };
+  bars.forEach((b, i) => {
+    const cx = ml + slot * i + slot / 2, x = cx - bw / 2, y = Y(b.hi), h = Math.max(2, Y(b.lo) - Y(b.hi));
+    g += '<path class="mk" d="' + barPath(x, y, bw, h, 4) + '" fill="' + col[b.s.kind] + '"' + tipAttr(b.s.label, [[b.s.kind === 'down' ? 'ຫຼຸດລົງ' : b.s.kind === 'up' ? 'ເພີ່ມຂຶ້ນ' : 'ມູນຄ່າ', fN(b.s.val) + ' ₭', col[b.s.kind]]]) + ' tabindex="0"/>';
+    g += '<text class="strong" x="' + cx + '" y="' + (y - 7) + '" text-anchor="middle">' + (b.s.kind === 'down' ? '−' : b.s.kind === 'up' ? '+' : '') + esc(fK(b.s.val)) + '</text><text x="' + cx + '" y="' + (H - 18) + '" text-anchor="middle">' + esc(b.s.label) + '</text>';
+    if (b.s.sub) g += '<text x="' + cx + '" y="' + (H - 5) + '" text-anchor="middle" style="font-size:10.5px">' + esc(b.s.sub) + '</text>';
+  });
+  return g + '<line class="ax" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + (mt + ih) + '" y2="' + (mt + ih) + '"/></svg>';
+}
+
+/* ---------- misc blocks ---------- */
+function tableHtml(heads, rows, cls = '') {
+  return '<div class="scroll"><table class="tbl ' + cls + '"><thead><tr>' + heads.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>' + rows.map(r => '<tr' + (r.cls ? ' class="' + r.cls + '"' : '') + '>' + r.cells.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+}
+const detailsTable = (html, title = 'ເບິ່ງເປັນຕາຕະລາງ (Table view)') => '<details class="tv"><summary>' + title + '</summary>' + html + '</details>';
+function tile(label, value, chip, note) { return '<div class="card tile"><div class="lab">' + esc(label) + '</div><div class="val">' + value + '</div><div class="row">' + (chip || '') + '</div>' + (note ? '<div class="note">' + note + '</div>' : '') + '</div>'; }
+function meter(label, val, target, color, extra) {
+  const top = Math.max(target * 1.6, val * 1.1, 1), w = Math.min(100, val / top * 100), t = target / top * 100;
+  const st = val <= target ? ['good', '✔ ຕາມເປົ້າ'] : val <= target + 3 ? ['warn', '⚠ ເກີນເລັກນ້ອຍ'] : ['bad', '✖ ເກີນເປົ້າ'];
+  const fillC = st[0] === 'good' ? 'var(--good)' : st[0] === 'warn' ? 'var(--warning)' : 'var(--critical)';
+  return '<div class="meter" tabindex="0"' + tipAttr(label, [['Food cost', fP(val), fillC], ['ເປົ້າໝາຍ', fP(target)]]) + '><div class="nm">' + (color ? '<span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:' + color + '"></span>' : '') + esc(label) + '</div><div class="trk"><div class="fill" style="width:' + w + '%;background:' + fillC + '"></div><div class="tick" style="left:' + t + '%" title="ເປົ້າ"></div></div><div><b>' + fP(val) + '</b> <span class="sev ' + (st[0] === 'good' ? 'good' : st[0] === 'warn' ? 'warn' : 'crit') + '">' + st[1] + '</span> ' + (extra || '') + '</div></div>';
+}
+
+/* ---------- chart width that matches the container (so text stays readable) ---------- */
+const CW = half => { const cw = document.documentElement.clientWidth, avail = document.body.classList.contains('present') ? cw * .9 : Math.min(1240, cw) - 32; const full = avail - 34; return Math.max(300, Math.round(half && cw > 900 ? (avail - 14) / 2 - 34 : full)); };
+
+/* ---------- segmented bar: one whole split into parts (HTML) ---------- */
+const CH_COL = { dine: ['var(--series-1)', '#fff'], take: ['var(--series-3)', '#0b0b0b'], d0: ['var(--series-2)', '#fff'], d1: ['var(--series-5)', '#0b0b0b'], d2: ['var(--series-6)', '#fff'], d3: ['var(--series-4)', '#0b0b0b'] };
+function segBar(parts) {      // parts: [{name, val, col:[bg,fg]}]
+  const tot = parts.reduce((a, p) => a + p.val, 0) || 1;
+  return '<div class="seg" role="img" aria-label="' + esc(parts.map(p => p.name + ' ' + (p.val / tot * 100).toFixed(1) + '%').join(', ')) + '">' + parts.filter(p => p.val > 0).map(p => { const s = p.val / tot * 100; return '<div tabindex="0" style="width:' + s + '%;background:' + p.col[0] + ';color:' + p.col[1] + '"' + tipAttr(p.name, [['ສັດສ່ວນ', s.toFixed(1) + '%', p.col[0]], ['ຍອດ', fN(p.val) + ' ₭']]) + '>' + (s >= 9 ? s.toFixed(0) + '%' : '') + '</div>'; }).join('') + '</div>';
+}
+
+/* ---------- quadrant scatter: x = food cost %, y = sales ---------- */
+function quad(o) {      // o: {pts:[{name,x,y,color}], xRef, yRef, xFmt, yFmt, w}
+  const W = o.w || 720, H = 320, ml = 64, mr = 20, mt = 20, mb = 40, iw = W - ml - mr, ih = H - mt - mb;
+  const xs = o.pts.map(p => p.x).concat([o.xRef]), x0 = Math.floor(Math.min(...xs) - 2), x1 = Math.ceil(Math.max(...xs) + 2), ym = niceMax(Math.max(...o.pts.map(p => p.y)) * 1.1);
+  const X = v => ml + (v - x0) / (x1 - x0) * iw, Y = v => mt + ih - v / ym.max * ih;
+  let g = svgOpen(W, H, 'Sales vs food cost');
+  for (let i = 0; i <= 4; i++) { const v = ym.step * i, y = Y(v); g += '<line class="gl" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (ml - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + esc(o.yFmt(v)) + '</text>'; }
+  for (let v = x0; v <= x1; v += Math.max(1, Math.round((x1 - x0) / 6))) g += '<text x="' + X(v) + '" y="' + (H - 18) + '" text-anchor="middle">' + v + '%</text>';
+  g += '<text x="' + (ml + iw / 2) + '" y="' + (H - 3) + '" text-anchor="middle">Food cost % (ຕ່ຳ = ດີ ◀ ▶ ສູງ = ຕ້ອງແກ້)</text>';
+  g += '<line x1="' + X(o.xRef) + '" x2="' + X(o.xRef) + '" y1="' + mt + '" y2="' + (mt + ih) + '" stroke="var(--critical)" stroke-width="1.5"/><line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(o.yRef) + '" y2="' + Y(o.yRef) + '" stroke="var(--text-muted)" stroke-width="1.5"/>';
+  g += '<text x="' + (ml + 8) + '" y="' + (mt + 14) + '">✔ ຂາຍດີ · ຕົ້ນທຶນຕ່ຳ</text><text x="' + (W - mr - 8) + '" y="' + (mt + 14) + '" text-anchor="end">ຂາຍດີ · ຕົ້ນທຶນສູງ</text><text x="' + (ml + 8) + '" y="' + (mt + ih - 8) + '">ຂາຍຕ່ຳ · ຕົ້ນທຶນຕ່ຳ</text><text x="' + (W - mr - 8) + '" y="' + (mt + ih - 8) + '" text-anchor="end">✖ ຂາຍຕ່ຳ · ຕົ້ນທຶນສູງ</text>';
+  o.pts.forEach(p => { const cx = X(p.x), cy = Y(p.y); g += '<circle class="mk" tabindex="0" cx="' + cx + '" cy="' + cy + '" r="9" fill="' + p.color + '" stroke="var(--surface-1)" stroke-width="2"' + tipAttr(p.name, [['Food cost', p.x.toFixed(1) + '%', p.color], ['ຍອດຂາຍ', o.yFmt(p.y) + ' ₭']]) + '/><text class="strong" x="' + (cx + 14) + '" y="' + (cy + 4) + '">' + esc(p.name) + '</text>'; });
+  return g + '</svg>';
+}
+/* =====================================================================
+   Metrics, insights and the slides
+   ===================================================================== */
+const hs = V => V && V.hasSales;
+const MET = {
+  sales:   { lo: 'ຍອດຂາຍສຸດທິ', en: 'Net sales', f: V => hs(V) ? V.sales : null, fmt: fKk, full: v => fN(v) + ' ₭', dir: 1 },
+  fc:      { lo: 'Food cost %', en: 'Food cost %', f: V => V.fc, fmt: v => fP(v), full: v => fP(v, 2), dir: -1, pt: true, ratio: true },
+  use:     { lo: 'ຕົ້ນທຶນວັດຖຸດິບທີ່ໃຊ້', en: 'Cost of stock used', f: V => V.counted ? V.useV : null, fmt: fKk, full: v => fN(v) + ' ₭', dir: 0 },
+  waste:   { lo: 'ມູນຄ່າຂອງເສຍ', en: 'Waste value', f: V => V.wasteV, fmt: fKk, full: v => fN(v) + ' ₭', dir: -1 },
+  wastePct:{ lo: 'ຂອງເສຍ % ຂອງຕົ້ນທຶນ', en: 'Waste % of cost used', f: V => V.wastePct, fmt: v => fP(v), full: v => fP(v, 2), dir: -1, pt: true, ratio: true },
+  rec:     { lo: 'ມູນຄ່າຮັບເຂົ້າ (ຊື້)', en: 'Purchases received', f: V => V.counted ? V.recV : null, fmt: fKk, full: v => fN(v) + ' ₭', dir: 0 },
+  endV:    { lo: 'ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອ', en: 'Ending stock value', f: V => V.counted ? V.endV : null, fmt: fKk, full: v => fN(v) + ' ₭', dir: 0 },
+  days:    { lo: 'ສະຕ໋ອກພໍໃຊ້ (ວັນ)', en: 'Days of stock', f: V => V.days, fmt: fD, full: v => v.toFixed(1) + ' ວັນ', dir: 0, ratio: true },
+  low:     { lo: 'ລາຍການໃກ້ໝົດ (≤ 2)', en: 'Low-stock items', f: V => V.counted ? V.low : null, fmt: v => fN(v) + ' ລາຍການ', full: v => fN(v) + ' ລາຍການ', dir: -1 },
+  orders:  { lo: 'ຈຳນວນບິນ', en: 'Orders', f: V => hs(V) ? V.orders : null, fmt: fN, full: fN, dir: 1 },
+  ticket:  { lo: 'ຍອດຕໍ່ບິນ', en: 'Avg ticket', f: V => V.ticket, fmt: fKk, full: v => fN(v) + ' ₭', dir: 1, ratio: true },
+  tgt:     { lo: 'ບັນລຸເປົ້າຍອດຂາຍ', en: 'Sales target reached', f: V => V.tgtPct, fmt: v => fP(v), full: v => fP(v, 1), dir: 1, pt: true, ratio: true },
+  gp:      { lo: 'ກຳໄລຂັ້ນຕົ້ນ', en: 'Gross profit', f: V => V.gp, fmt: fKk, full: v => fN(v) + ' ₭', dir: 1 },
+  gpPct:   { lo: 'ກຳໄລຂັ້ນຕົ້ນ %', en: 'Gross margin %', f: V => V.gpPct, fmt: v => fP(v), full: v => fP(v, 2), dir: 1, pt: true, ratio: true },
+  np:      { lo: 'ກຳໄລສຸດທິ (ຫຼັງຄ່າໃຊ້ຈ່າຍອື່ນ)', en: 'Net profit', f: V => V.np, fmt: fKk, full: v => fN(v) + ' ₭', dir: 1 }
+};
+const mv = (k, V) => V ? MET[k].f(V) : null;
+const mfmt = (k, v) => v == null || isNaN(v) ? '—' : MET[k].fmt(v);
+const mchip = (k, Vc, Vp) => dChip(mv(k, Vc), mv(k, Vp), MET[k].dir, { pt: MET[k].pt });
+const T = () => +DB.fcTarget || 35;
+const scopeName = () => S.scope === 'ALL' ? 'ທຸກສາຂາລວມກັນ' : 'ສາຂາ ' + S.scope;
+const cmpName = () => S.cmp ? mLab(S.cmp) : '';
+const brDot = b => '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:' + colorOf(b) + '"></span>';
+const noData = (msg) => '<div class="banner info">' + esc(msg || 'ຍັງບໍ່ມີຂໍ້ມູນພຽງພໍສຳລັບພາບນີ້') + '</div>';
+const head = (t, sub) => '<h2>' + esc(t) + '</h2><p class="sub">' + sub + '</p>';
+
+/* ---------- insights ---------- */
+function insights(C) {
+  const L = [], tc = C.tc, tp = C.tp, t = T(), rows = C.rows;
+  const add = (sev, text, act) => L.push({ sev, text, act });
+  const cmpTxt = tp ? ' ເມື່ອທຽບກັບ ' + mLab(S.cmp) : '';
+  if (tc.fc != null) {
+    const d = tp && tp.fc != null ? tc.fc - tp.fc : null, dTxt = d != null ? ' (' + (d >= 0 ? 'ເພີ່ມຂຶ້ນ ' : 'ຫຼຸດລົງ ') + Math.abs(d).toFixed(1) + ' pt' + cmpTxt + ')' : '';
+    if (tc.fc > t) add(tc.fc > t + 3 ? 'crit' : 'warn', 'Food cost ' + (S.scope === 'ALL' ? 'ລວມ' : S.scope) + ' ຢູ່ທີ່ ' + fP(tc.fc) + ' ສູງກວ່າເປົ້າ ' + t + '% ຢູ່ ' + (tc.fc - t).toFixed(1) + ' ຈຸດ' + dTxt + ' - ເທົ່າກັບຕົ້ນທຶນເກີນເປົ້າປະມານ ' + fKk((tc.fc - t) / 100 * tc.rev), 'ກວດ portion / ສູດ, ລາຄາຊື້ ແລະ ຂອງເສຍ ໃນສາຂາ ແລະ ລາຍການທີ່ຕົ້ນທຶນສູງ (ເບິ່ງໜ້າ "ລາຍການສິນຄ້າ")');
+    else add('good', 'Food cost ' + (S.scope === 'ALL' ? 'ລວມ' : S.scope) + ' ຢູ່ທີ່ ' + fP(tc.fc) + ' ຢູ່ໃນເປົ້າ ' + t + '%' + dTxt, 'ຮັກສາມາດຕະຖານນີ້ ແລະ ແບ່ງປັນວິທີເຮັດຂອງສາຂາທີ່ດີ');
+  } else add('info', 'ຍັງຄິດ Food cost % ບໍ່ໄດ້ ເພາະຍັງບໍ່ມີຍອດຂາຍ POS ຫຼື ຍັງບໍ່ໄດ້ນັບສະຕ໋ອກ ໃນເດືອນນີ້', 'ນຳເຂົ້າໄຟລ໌ JSON ທີ່ມີຍອດຂາຍ POS ແລະ ນັບສະຕ໋ອກໃຫ້ຄົບ');
+  if (rows.length > 1) {
+    const w = rows.filter(r => r.Vc.fc != null).sort((a, b) => b.Vc.fc - a.Vc.fc), over = w.filter(r => r.Vc.fc > t);
+    if (over.length) add(over[0].Vc.fc > t + 3 ? 'crit' : 'warn', 'ສາຂາທີ່ເກີນເປົ້າ Food cost: ' + over.map(r => r.b + ' ' + fP(r.Vc.fc)).join(', '), 'ໃຫ້ຜູ້ຈັດການສາຂາເຫຼົ່ານີ້ສົ່ງແຜນແກ້ໄຂ ແລະ ຕິດຕາມລາຍອາທິດ');
+    if (w.length > 1) { const hi = w[0], lo = w[w.length - 1], gap = hi.Vc.fc - lo.Vc.fc; if (gap >= 1) add('info', 'ສາຂາທີ່ດີສຸດຄື ' + lo.b + ' (' + fP(lo.Vc.fc) + ') ຕ່າງຈາກ ' + hi.b + ' (' + fP(hi.Vc.fc) + ') ຢູ່ ' + gap.toFixed(1) + ' pt - ຖ້າ ' + hi.b + ' ລົງມາເທົ່າ ' + lo.b + ' ຈະປະຢັດໄດ້ປະມານ ' + fKk(gap / 100 * hi.Vc.rev) + ' ຕໍ່ຊ່ວງນີ້', 'ເອົາວິທີເຮັດ (ສູດ, ການສັ່ງຊື້, ການຄວບຄຸມຂອງເສຍ) ຂອງ ' + lo.b + ' ໄປປັບໃຊ້'); }
+  }
+  if (tp && tc.hasSales && tp.sales > 0) {
+    const p = (tc.sales - tp.sales) / tp.sales * 100, mov = rows.filter(r => r.Vp && r.Vp.sales > 0 && r.Vc.hasSales).map(r => ({ b: r.b, p: (r.Vc.sales - r.Vp.sales) / r.Vp.sales * 100 })).sort((a, b) => b.p - a.p);
+    add(p >= 0 ? 'good' : (p < -5 ? 'warn' : 'info'), 'ຍອດຂາຍ' + (S.scope === 'ALL' ? 'ລວມ' : ' ' + S.scope) + ' ' + (p >= 0 ? 'ເພີ່ມຂຶ້ນ ' : 'ຫຼຸດລົງ ') + Math.abs(p).toFixed(1) + '% (' + fKk(tc.sales) + ' ທຽບ ' + fKk(tp.sales) + ')' + (C.k ? ' ໃນຊ່ວງອາທິດ 1-' + C.k : '') + (mov.length > 1 ? ' · ເພີ່ມສູງສຸດ: ' + mov[0].b + ' (' + (mov[0].p >= 0 ? '+' : '') + mov[0].p.toFixed(1) + '%), ຫຼຸດຫຼາຍສຸດ: ' + mov[mov.length - 1].b + ' (' + (mov[mov.length - 1].p >= 0 ? '+' : '') + mov[mov.length - 1].p.toFixed(1) + '%)' : ''), p < -5 ? 'ກວດໂປຣໂມຊັນ, ຈຳນວນບິນ ແລະ ຍອດຕໍ່ບິນ ຂອງສາຂາທີ່ຫຼຸດ' : '');
+  }
+  if (tc.tgtPct != null) add(tc.tgtPct >= 100 ? 'good' : tc.tgtPct >= 90 ? 'info' : 'warn', 'ຍອດຂາຍບັນລຸ ' + fP(tc.tgtPct) + ' ຂອງເປົ້າໝາຍໃນຊ່ວງທີ່ຜ່ານມາ (' + fKk(tc.sales) + ' ຈາກເປົ້າ ' + fKk(tc.target) + ')', tc.tgtPct < 90 ? 'ວາງແຜນກິດຈະກຳເພີ່ມຍອດໃນອາທິດທີ່ເຫຼືອ' : '');
+  if (tc.wastePct != null) {
+    const worst = rows.filter(r => r.Vc.wastePct != null).sort((a, b) => b.Vc.wastePct - a.Vc.wastePct)[0], d = tp && tp.wasteV > 0 ? (tc.wasteV - tp.wasteV) / tp.wasteV * 100 : null;
+    add(tc.wastePct > 3 ? 'warn' : 'good', 'ຂອງເສຍຄິດເປັນ ' + fP(tc.wastePct) + ' ຂອງຕົ້ນທຶນທີ່ໃຊ້ (' + fKk(tc.wasteV) + ')' + (d != null ? ' · ' + (d >= 0 ? 'ເພີ່ມຂຶ້ນ ' : 'ຫຼຸດລົງ ') + Math.abs(d).toFixed(0) + '%' + cmpTxt : '') + (worst && rows.length > 1 ? ' · ສູງສຸດ: ' + worst.b + ' ' + fP(worst.Vc.wastePct) : ''), tc.wastePct > 3 ? 'ທົບທວນ FIFO, ປະລິມານການຕຽມ ແລະ ອາຍຸສິນຄ້າ ໃນລາຍການທີ່ເສຍຫຼາຍ' : '');
+  }
+  if (tc.days != null) {
+    if (tc.days > 21) add('warn', 'ສະຕ໋ອກຄົງເຫຼືອພໍໃຊ້ປະມານ ' + tc.days.toFixed(0) + ' ວັນ (' + fKk(tc.endV) + ') - ເງິນຈົມໃນສະຕ໋ອກຫຼາຍ', 'ຫຼຸດການສັ່ງຊື້ລາຍການທີ່ໝູນຊ້າ');
+    else if (tc.days < 5) add('warn', 'ສະຕ໋ອກຄົງເຫຼືອພໍໃຊ້ພຽງ ' + tc.days.toFixed(1) + ' ວັນ - ມີຄວາມສ່ຽງຂາດສະຕ໋ອກ', 'ສັ່ງຊື້ລາຍການໃກ້ໝົດກ່ອນ');
+    else add('info', 'ສະຕ໋ອກຄົງເຫຼືອພໍໃຊ້ປະມານ ' + tc.days.toFixed(1) + ' ວັນ (' + fKk(tc.endV) + ') ຢູ່ໃນລະດັບປົກກະຕິ', '');
+  }
+  if (tc.counted && tc.low > 0) add(tp && tc.low > tp.low ? 'warn' : 'info', 'ມີ ' + tc.low + ' ລາຍການໃກ້ໝົດ (≤ 2 ໜ່ວຍ)' + (tp ? ' ທຽບກັບ ' + tp.low + ' ໃນ ' + mLab(S.cmp) : ''), 'ເບິ່ງລາຍຊື່ໃນໜ້າ "ລາຍການສິນຄ້າ" ແລ້ວສ້າງໃບສັ່ງຊື້');
+  if (tp) {
+    const mv2 = Object.values(tc.items).map(i => ({ i, d: i.use - ((tp.items[i.id] || {}).use || 0), p: tp.items[i.id] && tp.items[i.id].use > 0 ? (i.use - tp.items[i.id].use) / tp.items[i.id].use * 100 : null })).sort((a, b) => b.d - a.d)[0];
+    if (mv2 && mv2.d > 0) add('info', 'ລາຍການທີ່ຕົ້ນທຶນເພີ່ມຂຶ້ນຫຼາຍສຸດ: ' + mv2.i.name + ' +' + fKk(mv2.d) + (mv2.p != null ? ' (' + mv2.p.toFixed(0) + '%)' : ''), 'ກວດວ່າເປັນຍອດຂາຍເພີ່ມ ຫຼື ການໃຊ້ເກີນມາດຕະຖານ');
+  }
+  if (rows.length > 1) {
+    const g = rows.filter(r => r.Vc.gpPct != null).sort((a, b) => a.Vc.gpPct - b.Vc.gpPct);
+    if (g.length > 1) { const lo = g[0], hi = g[g.length - 1], hf = lo.Vc.fc != null && lo.Vc.fc > t; add(hf ? 'warn' : 'info', 'ສາຂາທີ່ກຳໄລຂັ້ນຕົ້ນຕ່ຳສຸດ: ' + lo.b + ' (' + fP(lo.Vc.gpPct) + ' ຂອງຍອດຂາຍ' + (hf ? ' · Food cost ສູງ ' + fP(lo.Vc.fc) : '') + ') ທຽບກັບສູງສຸດ ' + hi.b + ' (' + fP(hi.Vc.gpPct) + ')', hf ? 'ແກ້ Food cost ຂອງສາຂານີ້ກ່ອນ - ເຫັນຜົນຕໍ່ກຳໄລໄວສຸດ' : ''); }
+    const s = rows.filter(r => r.Vc.hasSales).sort((a, b) => b.Vc.sales - a.Vc.sales);
+    if (s.length > 1) add('info', 'ຂາຍດີສຸດ: ' + s[0].b + ' (' + fKk(s[0].Vc.sales) + ') · ຂາຍຕ່ຳສຸດ: ' + s[s.length - 1].b + ' (' + fKk(s[s.length - 1].Vc.sales) + ')', '');
+  }
+  { const ca = chanAgg(C.cur.filter(r => C.bs.includes(r.branch))), cp = chanAgg(C.prv.filter(r => C.bs.includes(r.branch)));
+    if (ca.total > 0) { const ds = ca.deliv / ca.total * 100, dn = ca.dine / ca.total * 100;
+      if (cp.total > 0) { const dp = cp.deliv / cp.total * 100; add('info', 'ຍອດຜ່ານ Delivery ຄິດເປັນ ' + fP(ds) + ' ຂອງຍອດຂາຍ (' + (ds >= dp ? 'ເພີ່ມຂຶ້ນ ' : 'ຫຼຸດລົງ ') + Math.abs(ds - dp).toFixed(1) + ' pt ເມື່ອທຽບ ' + mLab(S.cmp) + ') · ກິນໃນຮ້ານ ' + fP(dn), 'Delivery ມີຄ່າທຳນຽມແພລດຟອມ - ກວດກຳໄລຕໍ່ບິນຂອງຊ່ອງທາງນີ້'); }
+      else add('info', 'ຍອດຜ່ານ Delivery ຄິດເປັນ ' + fP(ds) + ' · ກິນໃນຮ້ານ ' + fP(dn), ''); } }
+  const ord = { crit: 0, warn: 1, info: 2, good: 3 }; return L.map((x, i) => ({ ...x, i })).sort((a, b) => ord[a.sev] - ord[b.sev] || a.i - b.i);
+}
+const SEV = { crit: ['✖ ວິກິດ', 'crit'], warn: ['⚠ ຕິດຕາມ', 'warn'], good: ['✔ ດີ', 'good'], info: ['● ຂໍ້ມູນ', 'info'] };
+const insList = (L, withAct) => '<ul class="ins">' + L.map(x => '<li><span class="sev ' + SEV[x.sev][1] + '">' + SEV[x.sev][0] + '</span><div><div class="tx">' + esc(x.text) + '</div>' + (withAct && x.act ? '<div class="act">➜ ' + esc(x.act) + '</div>' : '') + '</div></li>').join('') + '</ul>';
+
+/* ---------- slide 1: summary ---------- */
+function vSummary(C) {
+  const tc = C.tc, tp = C.tp, t = T();
+  let h = head('ພາບລວມຜູ້ບໍລິຫານ', esc(mLo(S.month)) + (S.cmp ? ' ທຽບກັບ ' + esc(mLo(S.cmp)) : '') + ' · ' + esc(scopeName()));
+  if (C.partialNote) h += '<div class="banner info">ℹ️ ' + esc(C.partialNote) + '</div>';
+  if (C.excluded.length) h += '<div class="banner info">ℹ️ ສາຂາທີ່ບໍ່ມີຂໍ້ມູນ ' + esc(mLab(S.cmp)) + ' ຖືກຕັດອອກຈາກຍອດລວມທຽບເດືອນ: ' + esc(C.excluded.join(', ')) + '</div>';
+  const fcOk = tc.fc == null ? null : tc.fc <= t;
+  h += '<div class="grid g12"><div class="card"><div class="hero"><div><div class="tile"><div class="lab">Food cost % ' + (S.scope === 'ALL' ? 'ລວມທຸກສາຂາ' : S.scope) + '</div></div><div class="big">' + (tc.fc == null ? '—' : tc.fc.toFixed(1) + '<small>%</small>') + '</div><div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">' + (tc.fc == null ? '' : '<span class="sev ' + (fcOk ? 'good' : tc.fc > t + 3 ? 'crit' : 'warn') + '">' + (fcOk ? '✔ ຕາມເປົ້າ ' : '✖ ເກີນເປົ້າ ') + t + '%</span>') + (tp ? mchip('fc', tc, tp) + '<span class="muted" style="font-size:12.5px">ທຽບ ' + esc(mLab(S.cmp)) + ' (' + fP(tp.fc) + ')</span>' : '') + '</div></div></div>' +
+    '<p class="how"><b>Food cost %</b> = ມູນຄ່າວັດຖຸດິບທີ່ໃຊ້ໄປ ÷ ຍອດຂາຍ (ບໍ່ລວມ VAT) · ວັດຖຸດິບທີ່ໃຊ້ໄປ = ສະຕ໋ອກຕົ້ນເດືອນ + ຮັບເຂົ້າ − ໂອນອອກ − ສະຕ໋ອກທີ່ນັບໄດ້ ຕາມລາຄາຕົ້ນທຶນ. ຕົວເລກຕ່ຳ = ດີ.</p></div>';
+  h += '<div class="card"><h3>Food cost % ແຕ່ລະສາຂາ ທຽບເປົ້າ</h3><p class="cap">ເສັ້ນຂີດຕັ້ງ = ເປົ້າ ' + t + '%</p>' + (C.rows.some(r => r.Vc.fc != null) ? C.rows.filter(r => r.Vc.fc != null).sort((a, b) => b.Vc.fc - a.Vc.fc).map(r => meter(r.b, r.Vc.fc, t, colorOf(r.b), r.Vp && r.Vp.fc != null ? mchip('fc', r.Vc, r.Vp) : '')).join('') : '<p class="muted">ຍັງບໍ່ມີຂໍ້ມູນ</p>') + '</div></div>';
+  const tl = (k, note) => tile(MET[k].lo + ' (' + MET[k].en + ')', mfmt(k, mv(k, tc)), tp ? mchip(k, tc, tp) : '', note || '');
+  h += '<div class="grid g4" style="margin-top:14px">' +
+    tl('sales', tc.target ? 'ເປົ້າຊ່ວງນີ້ ' + fKk(tc.target) + (tc.tgtPct != null ? ' · ບັນລຸ ' + fP(tc.tgtPct) : '') : '') +
+    tl('use', tp ? 'ເດືອນກ່ອນ ' + fKk(tp.useV) : '') +
+    tile('ມູນຄ່າຂອງເສຍ (Waste)', fKk(tc.wasteV), tp ? mchip('waste', tc, tp) : '', tc.wastePct != null ? fP(tc.wastePct) + ' ຂອງຕົ້ນທຶນທີ່ໃຊ້' : '') +
+    tl('rec', 'ການຊື້ເຂົ້າສະຕ໋ອກ') +
+    tl('endV', tc.days != null ? 'ພໍໃຊ້ປະມານ ' + tc.days.toFixed(1) + ' ວັນ' : '') +
+    tl('orders', tc.ticket != null ? 'ຍອດຕໍ່ບິນ ' + fKk(tc.ticket) : '') +
+    tl('low') +
+    tile('ກຳໄລຂັ້ນຕົ້ນ (Gross profit)', fKk(tc.gp), tp ? mchip('gp', tc, tp) : '', tc.gpPct != null ? 'ອັດຕາ ' + fP(tc.gpPct) + ' ຂອງຍອດຂາຍບໍ່ລວມ VAT' + (tc.np != null ? ' · ຫຼັງຄ່າໃຊ້ຈ່າຍອື່ນ ' + fKk(tc.np) : '') : '') + '</div>';
+  h += '<div class="card" style="margin-top:14px"><h3>ຂໍ້ສັງເກດຫຼັກ (Key takeaways)</h3><p class="cap">ສ້າງຈາກຂໍ້ມູນອັດຕະໂນມັດ ລຽງຕາມຄວາມສຳຄັນ</p>' + insList(insights(C).slice(0, 5), false) + '</div>';
+  return h;
+}
+
+/* ---------- slide 2: branch vs branch ---------- */
+function vBranch(C) {
+  const rows = C.brAll.map(b => { const rc = C.cur.find(r => r.branch === b), rp = C.prv.find(r => r.branch === b); return { b, Vc: view(BC(rc), C.k), Vp: rp ? view(BC(rp), C.k) : null }; });
+  let h = head('ສາຂາ vs ສາຂາ', esc(mLo(S.month)) + ' · ປຽບທຽບທຸກສາຂາ' + (S.cmp ? ' (ລູກສອນ = ທຽບກັບ ' + esc(mLab(S.cmp)) + ')' : ''));
+  if (C.partialNote) h += '<div class="banner info">ℹ️ ' + esc(C.partialNote) + '</div>';
+  if (rows.length < 2) return h + noData('ຕ້ອງມີຢ່າງໜ້ອຍ 2 ສາຂາ ຈຶ່ງຈະປຽບທຽບໄດ້ - ນຳເຂົ້າໄຟລ໌ JSON ທີ່ມີຫຼາຍສາຂາ ຫຼື ເພີ່ມໄຟລ໌ Inventory ຂອງສາຂາອື່ນ');
+  const withS = rows.filter(r => r.Vc.hasSales), withF = rows.filter(r => r.Vc.fc != null), withG = rows.filter(r => r.Vc.gpPct != null);
+  const pick = (arr, f, hi) => arr.slice().sort((a, b) => hi ? f(b) - f(a) : f(a) - f(b))[0], vd = [];
+  if (withS.length > 1) { const a = pick(withS, r => r.Vc.sales, true), b = pick(withS, r => r.Vc.sales, false); vd.push(['🏆 ຂາຍດີສຸດ', a.b, fKk(a.Vc.sales)], ['⬇ ຂາຍຕ່ຳສຸດ', b.b, fKk(b.Vc.sales)]); }
+  if (withF.length > 1) { const a = pick(withF, r => r.Vc.fc, false), b = pick(withF, r => r.Vc.fc, true); vd.push(['✔ Food cost ຕ່ຳສຸດ (ດີສຸດ)', a.b, fP(a.Vc.fc)], ['✖ Food cost ສູງສຸດ', b.b, fP(b.Vc.fc) + (b.Vc.fc > T() ? ' · ເກີນເປົ້າ ' + T() + '%' : '')]); }
+  if (withG.length > 1) { const a = pick(withG, r => r.Vc.gpPct, true), b = pick(withG, r => r.Vc.gpPct, false); vd.push(['💰 ກຳໄລຂັ້ນຕົ້ນ % ສູງສຸດ', a.b, fP(a.Vc.gpPct) + ' · ' + fKk(a.Vc.gp)], ['⚠ ກຳໄລຂັ້ນຕົ້ນ % ຕ່ຳສຸດ', b.b, fP(b.Vc.gpPct) + ' · ' + fKk(b.Vc.gp)]); }
+  if (vd.length) h += '<div class="grid g3" style="margin-bottom:14px">' + vd.map(x => '<div class="card verd"><div class="k">' + x[0] + '</div><div class="b">' + brDot(x[1]) + esc(x[1]) + '</div><div class="v">' + esc(x[2]) + '</div></div>').join('') + '</div>';
+  const qp = rows.filter(r => r.Vc.fc != null && r.Vc.hasSales);
+  if (qp.length > 1) h += '<div class="card" style="margin-bottom:14px"><h3>ແຜນທີ່ສາຂາ: ຍອດຂາຍ × Food cost</h3><p class="cap">ແຕ່ລະຈຸດ = 1 ສາຂາ · ເສັ້ນແດງຕັ້ງ = ເປົ້າ Food cost · ເສັ້ນເທົາຂວາງ = ຍອດຂາຍສະເລ່ຍ</p>' + quad({ pts: qp.map(r => ({ name: r.b, x: r.Vc.fc, y: r.Vc.sales, color: colorOf(r.b) })), xRef: T(), yRef: qp.reduce((a, r) => a + r.Vc.sales, 0) / qp.length, yFmt: v => fK(v), w: CW() }) + '<p class="how"><b>ອ່ານແນວໃດ:</b> ຈຸດຢູ່ມຸມຊ້າຍເທິງ = ຂາຍດີ ແລະ ຕົ້ນທຶນຕ່ຳ (ດີທີ່ສຸດ). ມຸມຂວາລຸ່ມ = ຂາຍຕ່ຳ ແລະ ຕົ້ນທຶນສູງ → ກຳໄລນ້ອຍທີ່ສຸດ ຕ້ອງແກ້ກ່ອນ.</p></div>';
+  const keys = ['fc', 'sales', 'gpPct', 'gp', 'use', 'waste', 'wastePct', 'rec', 'endV', 'days', 'low', 'orders', 'ticket', 'tgt'].filter(k => rows.some(r => mv(k, r.Vc) != null));
+  if (!keys.includes(S.bMetric)) S.bMetric = keys[0] || 'fc';
+  const m = MET[S.bMetric], vals = rows.map(r => ({ ...r, v: mv(S.bMetric, r.Vc) }));
+  vals.sort((a, b) => (a.v == null) - (b.v == null) || (m.dir < 0 ? a.v - b.v : b.v - a.v));
+  const nums = vals.filter(r => r.v != null).map(r => r.v), avg = m.ratio ? mv(S.bMetric, sumV(rows.map(r => r.Vc))) : (nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null);
+  const refs = []; if (S.bMetric === 'fc') refs.push({ v: T(), label: 'ເປົ້າ ' + T() + '%' }); if (avg != null) refs.push({ v: avg, label: 'ສະເລ່ຍກຸ່ມ', cls: 'avg' });
+  h += '<div class="card"><h3>ຈັດອັນດັບສາຂາຕາມຕົວຊີ້ວັດ</h3><p class="cap">ເລືອກຕົວຊີ້ວັດ · ແຖບເທິງ = ດີສຸດ (' + (m.dir < 0 ? 'ຄ່າຕ່ຳດີກວ່າ' : m.dir > 0 ? 'ຄ່າສູງດີກວ່າ' : 'ບໍ່ຕັດສິນດີ/ບໍ່ດີ ເພາະຂຶ້ນກັບຂະໜາດສາຂາ') + ')</p>' +
+    '<div class="chips">' + keys.map(k => '<button class="' + (k === S.bMetric ? 'on' : '') + '" data-bm="' + k + '">' + esc(MET[k].lo) + '</button>').join('') + '</div>' +
+    hbar(vals.map(r => ({ label: r.b, dot: colorOf(r.b), val: r.v || 0, color: colorOf(r.b), valText: mfmt(S.bMetric, r.v) + ' ' + (r.Vp ? mchip(S.bMetric, r.Vc, r.Vp) : ''), tip: { t: r.b + ' · ' + m.lo, l: [[mLab(S.month), r.v == null ? '—' : m.full(r.v), colorOf(r.b)], [mLab(S.cmp) || 'ເດືອນກ່ອນ', r.Vp && mv(S.bMetric, r.Vp) != null ? m.full(mv(S.bMetric, r.Vp)) : '—'], ['ສະເລ່ຍກຸ່ມ', avg == null ? '—' : m.full(avg)]] } })), { refs }) +
+    '<p class="how"><b>ອ່ານແນວໃດ:</b> ຄວາມຍາວແຖບ = ຄ່າຂອງສາຂາ. ເສັ້ນສີເທົາ = ສະເລ່ຍຂອງກຸ່ມ' + (S.bMetric === 'fc' ? ', ເສັ້ນສີແດງ = ເປົ້າ Food cost' : '') + '. ປ້າຍ ✔ / ✖ ຂ້າງຕົວເລກ = ດີຂຶ້ນ / ຄວນລະວັງ ເມື່ອທຽບກັບເດືອນທີ່ເລືອກປຽບທຽບ.</p></div>';
+  const cols = [['sales', 'ຍອດຂາຍ'], ['fc', 'Food cost'], ['gpPct', 'ກຳໄລຂັ້ນຕົ້ນ %'], ['wastePct', 'ຂອງເສຍ %'], ['days', 'ສະຕ໋ອກ (ວັນ)'], ['low', 'ໃກ້ໝົດ'], ['orders', 'ບິນ'], ['ticket', 'ຕໍ່ບິນ']];
+  const fcs = rows.filter(r => r.Vc.fc != null).sort((a, b) => a.Vc.fc - b.Vc.fc), best = fcs[0] && fcs[0].b;
+  const tr = rows.map(r => ({ cls: r.b === best ? 'best' : '', cells: [brDot(r.b) + esc(r.b)].concat(cols.map(([k]) => mfmt(k, mv(k, r.Vc)) + (r.Vp ? '<br>' + mchip(k, r.Vc, r.Vp) : ''))) }));
+  const all = sumV(rows.map(r => r.Vc)), allP = S.cmp && rows.every(r => r.Vp) ? sumV(rows.map(r => r.Vp)) : null;
+  tr.push({ cls: '', cells: ['<b>ລວມ</b>'].concat(cols.map(([k]) => '<b>' + mfmt(k, mv(k, all)) + '</b>' + (allP ? '<br>' + mchip(k, all, allP) : ''))) });
+  h += '<div class="card" style="margin-top:14px"><h3>ຕາຕະລາງຄະແນນສາຂາ (Scorecard)</h3><p class="cap">★ = Food cost % ຕ່ຳສຸດ</p>' + tableHtml(['ສາຂາ'].concat(cols.map(c => c[1])), tr) + '</div>';
+  return h;
+}
+
+/* ---------- slide 3: month vs month ---------- */
+function vMonth(C) {
+  const tc = C.tc, tp = C.tp;
+  let h = head('ເດືອນ vs ເດືອນ', esc(mLo(S.month)) + (S.cmp ? ' ທຽບກັບ ' + esc(mLo(S.cmp)) : '') + ' · ' + esc(scopeName()));
+  if (!tp) return h + noData('ຕ້ອງມີຂໍ້ມູນຢ່າງໜ້ອຍ 2 ເດືອນ (ຂອງສາຂາດຽວກັນ) ຈຶ່ງຈະປຽບທຽບໄດ້ - ນຳເຂົ້າໄຟລ໌ຂອງເດືອນກ່ອນ ຫຼື ກົດ "ໂຫຼດຂໍ້ມູນຕົວຢ່າງ" ໃນແຖບຂໍ້ມູນ');
+  if (C.partialNote) h += '<div class="banner info">ℹ️ ' + esc(C.partialNote) + '</div>';
+  const mk = ['sales', 'use', 'fc', 'waste', 'rec', 'endV', 'orders', 'ticket'].filter(k => mv(k, tc) != null || mv(k, tp) != null);
+  h += '<div class="grid g4">' + mk.map(k => {
+    const a = mv(k, tp), b = mv(k, tc), mx = Math.max(a || 0, b || 0, 1) * 1.05;
+    return '<div class="card tile"><div class="lab">' + esc(MET[k].lo) + '</div><div class="row" style="margin:2px 0 8px">' + mchip(k, tc, tp) + '</div>' +
+      hbar([{ label: mLab(S.cmp), val: a || 0, color: 'var(--prev)', valText: mfmt(k, a) }, { label: mLab(S.month), val: b || 0, color: 'var(--series-1)', valText: '<b>' + mfmt(k, b) + '</b>' }], { max: mx }) + '</div>';
+  }).join('') + '</div>';
+  const oth = tc.begV + tc.recV - tc.useV - tc.endV;
+  const steps = [{ label: 'ຕົ້ນເດືອນ', sub: 'Beginning', val: tc.begV, kind: 'total' }, { label: 'ຮັບເຂົ້າ', sub: 'Received', val: tc.recV, kind: 'up' }, { label: 'ໃຊ້ໄປ', sub: 'Used', val: tc.useV, kind: 'down' }];
+  if (Math.abs(oth) > Math.max(1, tc.begV * .002)) steps.push({ label: oth > 0 ? 'ໂອນອອກ/ອື່ນໆ' : 'ປັບເພີ່ມ', sub: 'Other', val: Math.abs(oth), kind: oth > 0 ? 'down' : 'up' });
+  steps.push({ label: 'ຄົງເຫຼືອ', sub: 'Ending', val: tc.endV, kind: 'total' });
+  const cats = Object.keys(tc.cat).filter(c => tc.cat[c].use > 0 || (tp.cat[c] && tp.cat[c].use > 0)).sort((a, b) => tc.cat[b].use - tc.cat[a].use);
+  h += '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>ສະຕ໋ອກໄຫຼແນວໃດໃນ ' + esc(mLab(S.month)) + '</h3><p class="cap">ເລີ່ມຈາກສະຕ໋ອກຕົ້ນເດືອນ → ບວກຂອງທີ່ຊື້ເຂົ້າ → ລົບຂອງທີ່ໃຊ້ໄປ → ສະຕ໋ອກຄົງເຫຼືອ (ມູນຄ່າເປັນ ₭)</p>' + waterfall(steps, { title: 'Stock bridge', w: CW(true) }) +
+    '<p class="how"><b>ອ່ານແນວໃດ:</b> ຖ້າແຖບ "ຮັບເຂົ້າ" ສູງກວ່າ "ໃຊ້ໄປ" ເປັນປົກກະຕິ ສະຕ໋ອກຄົງເຫຼືອຈະເພີ່ມ (ເງິນຈົມ). ຖ້າ "ໃຊ້ໄປ" ສູງກວ່າ ສະຕ໋ອກຈະຫຼຸດ ແລະ ຄວນລະວັງຂາດສະຕ໋ອກ.</p></div>' +
+    '<div class="card"><h3>ຕົ້ນທຶນທີ່ໃຊ້ແຍກຕາມໝວດ</h3><p class="cap">ເຮັດໃຫ້ເຫັນວ່າໝວດໃດເຮັດໃຫ້ຕົ້ນທຶນຂຶ້ນ/ລົງ</p>' + legend([{ name: mLab(S.month), color: 'var(--series-1)' }, { name: mLab(S.cmp), color: 'var(--prev)' }]) +
+    pairBars(cats.slice(0, 8).map(c => { const a = tc.cat[c].use, b = (tp.cat[c] || { use: 0 }).use; return { label: catName(c), cur: a, prev: b, curText: fK(a), prevText: fN(b) + ' ₭', chip: dChip(a, b, 0), curName: mLab(S.month), prevName: mLab(S.cmp) }; }), { curName: mLab(S.month), prevName: mLab(S.cmp) }) + '</div></div>';
+  if (tc.hasSales) {
+    const cum = (rows, side) => { const n = Math.max(...rows.map(r => Math.max(r.Bc.dim, r.Bp.dim))), a = Array(n).fill(0), seen = Array(n).fill(false), last = Math.max(0, ...rows.map(r => (side === 'c' ? r.Bc : r.Bp).lastSalesDay)); rows.forEach(r => { const B = side === 'c' ? r.Bc : r.Bp; for (let d = 1; d <= B.dim; d++) a[d - 1] += B.daily[d]; }); let s = 0; return a.map((v, i) => i + 1 > last ? null : (s += v)); };
+    const rows = C.rows.filter(r => r.Bp), cc = cum(rows, 'c'), cp = cum(rows, 'p'), n = Math.max(cc.length, cp.length), tgt = rows.reduce((a, r) => a + (r.Bc.target || 0), 0);
+    h += '<div class="card" style="margin-top:14px"><h3>ຍອດຂາຍສະສົມລາຍວັນ</h3><p class="cap">ເສັ້ນສີຟ້າ = ' + esc(mLab(S.month)) + ' · ເສັ້ນສີເທົາ = ' + esc(mLab(S.cmp)) + (tgt ? ' · ເສັ້ນແດງ = ເປົ້າຍອດຂາຍເດືອນ' : '') + '</p>' + legend([{ name: mLab(S.month), color: 'var(--series-1)', line: 1 }, { name: mLab(S.cmp), color: 'var(--prev)', line: 1 }]) +
+      lineChart({ xs: Array.from({ length: n }, (_, i) => 'ວັນທີ ' + (i + 1)), series: [{ name: mLab(S.cmp), color: 'var(--prev)', vals: Array.from({ length: n }, (_, i) => cp[i] == null ? null : cp[i]) }, { name: mLab(S.month), color: 'var(--series-1)', vals: Array.from({ length: n }, (_, i) => cc[i] == null ? null : cc[i]) }], fmt: v => fN(v) + ' ₭', axis: (v) => fK(v), ref: tgt ? { v: tgt, label: 'ເປົ້າ' } : null, xEvery: 5, zeroBase: true, title: 'Cumulative sales', w: CW() }) +
+      '<p class="how"><b>ອ່ານແນວໃດ:</b> ຖ້າເສັ້ນສີຟ້າຢູ່ເໜືອເສັ້ນສີເທົາ ແປວ່າເດືອນນີ້ຂາຍໄດ້ດີກວ່າເດືອນກ່ອນໃນວັນເດີຍວກັນ. ເສັ້ນຊັນຂຶ້ນ = ຂາຍດີ.</p></div>';
+  }
+  return h;
+}
+
+/* ---------- slide 4: week vs week ---------- */
+function wkAgg(rows, side) {
+  const out = [], nW = 5;
+  for (let w = 0; w < nW; w++) {
+    const Ws = rows.map(r => { const B = side === 'c' ? r.Bc : r.Bp; return B && B.wk[w] ? { W: B.wk[w], B } : null; });
+    if (Ws.some(x => !x)) { out.push(null); continue; }
+    const a = { w, from: Math.min(...Ws.map(x => x.W.from)), to: Math.max(...Ws.map(x => x.W.to)), sales: 0, rev: 0, orders: 0, rec: 0, use: 0, waste: 0, hasSales: Ws.some(x => x.B.hasSales), anyWk: Ws.some(x => x.B.anyWk), counted: Ws.every(x => x.W.counted > 0) };
+    Ws.forEach(x => ['sales', 'rev', 'orders', 'rec', 'use', 'waste'].forEach(f => a[f] += x.W[f]));
+    out.push(a);
+  }
+  return out;
+}
+const WM = {
+  sales: { lo: 'ຍອດຂາຍ', f: a => a && a.hasSales ? a.sales : null, fmt: fKk, axis: v => fK(v), full: v => fN(v) + ' ₭', dir: 1 },
+  use: { lo: 'ຕົ້ນທຶນທີ່ໃຊ້', f: a => a && a.anyWk && a.counted ? a.use : null, fmt: fKk, axis: v => fK(v), full: v => fN(v) + ' ₭', dir: 0 },
+  fc: { lo: 'Food cost %', f: a => a && a.hasSales && a.anyWk && a.counted && a.rev > 0 ? a.use / a.rev * 100 : null, fmt: v => fP(v), axis: v => v.toFixed(0) + '%', full: v => fP(v, 2), dir: -1, pt: true },
+  rec: { lo: 'ຮັບເຂົ້າ (ຊື້)', f: a => a && a.anyWk && a.counted ? a.rec : null, fmt: fKk, axis: v => fK(v), full: v => fN(v) + ' ₭', dir: 0 },
+  waste: { lo: 'ຂອງເສຍ', f: a => a ? a.waste : null, fmt: fKk, axis: v => fK(v), full: v => fN(v) + ' ₭', dir: -1 },
+  orders: { lo: 'ຈຳນວນບິນ', f: a => a && a.hasSales ? a.orders : null, fmt: fN, axis: v => fN(v), full: fN, dir: 1 }
+};
+function vWeek(C) {
+  let h = head('ອາທິດ vs ອາທິດ', 'ອາທິດຂອງ ' + esc(mLo(S.month)) + (S.cmp ? ' ທຽບກັບອາທິດດຽວກັນຂອງ ' + esc(mLo(S.cmp)) : '') + ' · ' + esc(scopeName()));
+  const rows = C.rows.filter(r => r.Bp);
+  if (!rows.length) return h + noData('ຕ້ອງມີຂໍ້ມູນຂອງເດືອນທີ່ປຽບທຽບ ຈຶ່ງຈະທຽບລາຍອາທິດໄດ້');
+  const cw = wkAgg(rows, 'c'), pw = wkAgg(rows, 'p'), wm = WM[S.wMetric] || WM.use;
+  if (!WM[S.wMetric]) S.wMetric = 'use';
+  const nW = Math.max(cw.filter(Boolean).length, pw.filter(Boolean).length), lab = w => 'ອາທິດ ' + (w + 1) + ' · ' + ((cw[w] || pw[w]) ? (cw[w] || pw[w]).from + '-' + (cw[w] || pw[w]).to : '');
+  const lastC = (() => { let k = -1; cw.forEach((a, i) => { if (a && (WM.use.f(a) != null || WM.sales.f(a) > 0)) k = i; }); return k; })();
+  if (lastC >= 0) {
+    const a = cw[lastC], b = pw[lastC];
+    h += '<div class="card" style="margin-bottom:14px"><h3>ອາທິດລ່າສຸດ: ອາທິດ ' + (lastC + 1) + ' (ວັນທີ ' + a.from + '-' + a.to + ') ທຽບອາທິດ ' + (lastC + 1) + ' ຂອງ ' + esc(mLab(S.cmp)) + '</h3><p class="cap">"ອາທິດນີ້ ທຽບ ອາທິດດຽວກັນຂອງເດືອນກ່ອນ"</p><div class="grid g4">' +
+      ['sales', 'use', 'fc', 'waste'].map(k => { const x = WM[k].f(a), y = WM[k].f(b); return '<div class="tile"><div class="lab">' + WM[k].lo + '</div><div class="val" style="font-size:22px">' + (x == null ? '—' : WM[k].fmt(x)) + '</div><div class="row">' + dChip(x, y, WM[k].dir, { pt: WM[k].pt }) + '</div><div class="note">ເດືອນກ່ອນ ' + (y == null ? '—' : WM[k].fmt(y)) + '</div></div>'; }).join('') + '</div></div>';
+  }
+  const k2 = Object.keys(WM).filter(k => cw.some(a => WM[k].f(a) != null) || pw.some(a => WM[k].f(a) != null));
+  h += '<div class="card"><h3>ປຽບທຽບລາຍອາທິດ: ' + esc(wm.lo) + '</h3><p class="cap">ແຖບສີຟ້າ = ' + esc(mLab(S.month)) + ' · ແຖບສີເທົາ = ' + esc(mLab(S.cmp)) + '</p><div class="chips">' + k2.map(k => '<button class="' + (k === S.wMetric ? 'on' : '') + '" data-wm="' + k + '">' + esc(WM[k].lo) + '</button>').join('') + '</div>' + legend([{ name: mLab(S.month), color: 'var(--series-1)' }, { name: mLab(S.cmp), color: 'var(--prev)' }]);
+  const cats = Array.from({ length: Math.max(nW, 4) }, (_, i) => 'W' + (i + 1) + ' (' + ((cw[i] || pw[i]) ? (cw[i] || pw[i]).from + '-' + (cw[i] || pw[i]).to : '') + ')');
+  h += cols({ cats, series: [{ name: mLab(S.cmp), color: 'var(--prev)', vals: cats.map((_, i) => wm.f(pw[i])) }, { name: mLab(S.month), color: 'var(--series-1)', vals: cats.map((_, i) => wm.f(cw[i])) }], fmt: wm.full, axis: wm.axis, label: 1, title: wm.lo + ' by week', w: CW() });
+  const tr = cats.map((_, i) => { const x = wm.f(cw[i]), y = wm.f(pw[i]); return { cells: [esc(lab(i)), x == null ? '<span class="muted">ຍັງບໍ່ມີ</span>' : wm.fmt(x), y == null ? '—' : wm.fmt(y), x == null || y == null ? '—' : (wm.pt ? (x - y).toFixed(1) + ' pt' : fN(x - y)), dChip(x, y, wm.dir, { pt: wm.pt })] }; });
+  h += '<p class="how"><b>ອ່ານແນວໃດ:</b> ທຽບອາທິດຕໍ່ອາທິດ (W1 ກັບ W1, W2 ກັບ W2 …) ເພື່ອເຫັນວ່າອາທິດໃດຜິດປົກກະຕິ. ຍອດຂາຍນັບເປັນຊຸດ 7 ວັນ (ວັນທີ 1-7, 8-14 …); ຕົ້ນທຶນນັບຕາມອາທິດທີ່ນັບສະຕ໋ອກ. ອາທິດທີ່ຍັງບໍ່ນັບສະຕ໋ອກສະແດງ "ຍັງບໍ່ມີ".</p>' + tableHtml(['ອາທິດ (ວັນທີ)', mLab(S.month), mLab(S.cmp), 'ຜົນຕ່າງ', 'ປ່ຽນແປງ'], tr) + '</div>';
+  return h;
+}
+
+/* ---------- slide 5: food cost & waste ---------- */
+function vCost(C) {
+  const t = T();
+  let h = head('Food cost & ຂອງເສຍ', esc(mLo(S.month)) + ' · ເປົ້າ Food cost ' + t + '%');
+  const series = C.rows.map(r => ({ name: r.b, color: colorOf(r.b), vals: r.Bc.wk.map(W => W.counted > 0 && r.Bc.hasSales && W.rev > 0 ? W.use / W.rev * 100 : null) }));
+  const nW = Math.max(...C.rows.map(r => r.Bc.nW), 4);
+  if (series.some(s => s.vals.some(v => v != null))) {
+    const mx = (C.rows.length === 1 && C.rows[0].Bp) ? [{ name: mLab(S.cmp), color: 'var(--prev)', dash: 1, vals: C.rows[0].Bp.wk.map(W => W.counted > 0 && C.rows[0].Bp.hasSales && W.rev > 0 ? W.use / W.rev * 100 : null) }] : [];
+    h += '<div class="card"><h3>Food cost % ລາຍອາທິດ ແຕ່ລະສາຂາ</h3><p class="cap">ເສັ້ນສີແດງ = ເປົ້າ ' + t + '% · ຈຸດທີ່ຢູ່ເໜືອເສັ້ນແດງ = ອາທິດທີ່ເກີນເປົ້າ</p>' + legend(series.concat(mx).map(s => ({ name: s.name, color: s.color, line: 1 }))) +
+      lineChart({ xs: Array.from({ length: nW }, (_, i) => 'W' + (i + 1)), series: mx.concat(series).map(s => ({ ...s, vals: Array.from({ length: nW }, (_, i) => s.vals[i] == null ? null : s.vals[i]) })), fmt: v => fP(v, 1), axis: v => v.toFixed(0) + '%', ref: { v: t, label: 'ເປົ້າ ' + t + '%' }, title: 'Food cost % by week', w: CW() }) +
+      '<p class="how"><b>ອ່ານແນວໃດ:</b> ແຕ່ລະເສັ້ນ = 1 ສາຂາ. ເສັ້ນທີ່ໄຕ່ຂຶ້ນ = ຕົ້ນທຶນເລີ່ມແພງຂຶ້ນເມື່ອທຽບກັບຍອດຂາຍ. ທີ່ລະອາທິດເຫັນໄວກວ່າລໍຖ້າສິ້ນເດືອນ.</p></div>';
+  } else h += noData('ຍັງບໍ່ມີຂໍ້ມູນ Food cost ລາຍອາທິດ (ຕ້ອງມີຍອດຂາຍ POS ແລະ ການນັບສະຕ໋ອກລາຍອາທິດ)');
+  h += '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>ຂອງເສຍ ແຕ່ລະສາຂາ</h3><p class="cap">ມູນຄ່າຂອງເສຍ ແລະ ສັດສ່ວນຕໍ່ຕົ້ນທຶນທີ່ໃຊ້</p>' +
+    hbar(C.rows.slice().sort((a, b) => b.Vc.wasteV - a.Vc.wasteV).map(r => ({ label: r.b, dot: colorOf(r.b), val: r.Vc.wasteV, color: colorOf(r.b), valText: fKk(r.Vc.wasteV) + (r.Vc.wastePct != null ? ' · ' + fP(r.Vc.wastePct) : '') + ' ' + (r.Vp ? mchip('waste', r.Vc, r.Vp) : ''), tip: { t: r.b, l: [['ມູນຄ່າຂອງເສຍ', fN(r.Vc.wasteV) + ' ₭', colorOf(r.b)], ['% ຂອງຕົ້ນທຶນ', fP(r.Vc.wastePct, 2)]] } }))) + '</div>';
+  const wi = Object.values(C.tc.items).filter(i => i.waste > 0).sort((a, b) => b.waste - a.waste).slice(0, 8);
+  h += '<div class="card"><h3>ລາຍການທີ່ເສຍຫຼາຍສຸດ</h3><p class="cap">ເລີ່ມແກ້ຈາກລາຍການເຫຼົ່ານີ້ກ່ອນ</p>' + (wi.length ? hbar(wi.map(i => ({ label: i.name, val: i.waste, color: 'var(--series-2)', valText: fKk(i.waste), tip: { t: i.name, l: [['ມູນຄ່າຂອງເສຍ', fN(i.waste) + ' ₭']] } }))) : '<p class="muted">ບໍ່ມີບັນທຶກຂອງເສຍໃນເດືອນນີ້</p>') + '</div></div>';
+  return h;
+}
+
+/* ---------- slide 6: items ---------- */
+function vItems(C) {
+  const tc = C.tc, tp = C.tp; let h = head('ລາຍການສິນຄ້າ (Drill-down)', esc(mLo(S.month)) + ' · ' + esc(scopeName()));
+  const items = Object.values(tc.items).filter(i => i.use > 0).sort((a, b) => b.use - a.use), tot = items.reduce((a, i) => a + i.use, 0);
+  if (!items.length) return h + noData('ຍັງບໍ່ມີຂໍ້ມູນການໃຊ້ສິນຄ້າ (ຕ້ອງນັບສະຕ໋ອກກ່ອນ)');
+  let cumv = 0; const top = items.slice(0, 10).map(i => { cumv += i.use; return { i, share: i.use / tot * 100, cum: cumv / tot * 100 }; });
+  let n80 = 0, c = 0; for (const i of items) { c += i.use; n80++; if (c / tot >= .8) break; }
+  h += '<div class="card"><h3>10 ລາຍການທີ່ໃຊ້ຕົ້ນທຶນສູງສຸດ (Pareto)</h3><p class="cap">ຄວບຄຸມ 10 ລາຍການນີ້ໃຫ້ດີ = ຄວບຄຸມຕົ້ນທຶນສ່ວນໃຫຍ່</p>' +
+    hbar(top.map(x => ({ label: x.i.name, val: x.i.use, color: 'var(--series-1)', valText: fKk(x.i.use) + ' · ' + x.share.toFixed(1) + '%', tip: { t: x.i.name + ' (' + catName(x.i.cat) + ')', l: [['ມູນຄ່າທີ່ໃຊ້', fN(x.i.use) + ' ₭', 'var(--series-1)'], ['ສັດສ່ວນ', x.share.toFixed(1) + '%'], ['ສະສົມ', x.cum.toFixed(1) + '%']] } }))) +
+    '<p class="how"><b>ອ່ານແນວໃດ:</b> ຕົວເລກຂ້າງແຖບ = ມູນຄ່າ ແລະ % ຂອງຕົ້ນທຶນທັງໝົດ. ທັງໝົດ ' + items.length + ' ລາຍການທີ່ມີການໃຊ້ · ' + n80 + ' ລາຍການທຳອິດ ຄິດເປັນ 80% ຂອງຕົ້ນທຶນ (ກົດ 80/20). 10 ອັນດັບທຳອິດລວມ ' + top[top.length - 1].cum.toFixed(0) + '%.</p></div>';
+  if (tp) {
+    const ds = items.concat(Object.values(tp.items).filter(i => !tc.items[i.id] || tc.items[i.id].use === 0)).map(i => { const a = (tc.items[i.id] || { use: 0 }).use, b = (tp.items[i.id] || { use: 0 }).use; return { i, a, b, d: a - b, p: b > 0 ? (a - b) / b * 100 : null }; });
+    const up = ds.filter(x => x.d > 0).sort((a, b) => b.d - a.d).slice(0, 8), dn = ds.filter(x => x.d < 0).sort((a, b) => a.d - b.d).slice(0, 8);
+    const tb = list => tableHtml(['ລາຍການ', mLab(S.cmp), mLab(S.month), 'ຕ່າງ (₭)', '%'], list.map(x => ({ cells: [esc(x.i.name), fN(x.b), fN(x.a), (x.d > 0 ? '+' : '−') + fN(Math.abs(x.d)), x.p == null ? 'ໃໝ່' : (x.p > 0 ? '+' : '−') + Math.abs(x.p).toFixed(0) + '%'] })));
+    h += '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>ຕົ້ນທຶນເພີ່ມຂຶ້ນຫຼາຍສຸດ ▲</h3><p class="cap">ທຽບກັບ ' + esc(mLab(S.cmp)) + ' (ມູນຄ່າທີ່ໃຊ້ ₭)</p>' + (up.length ? tb(up) : '<p class="muted">ບໍ່ມີ</p>') + '</div><div class="card"><h3>ຕົ້ນທຶນຫຼຸດລົງຫຼາຍສຸດ ▼</h3><p class="cap">ທຽບກັບ ' + esc(mLab(S.cmp)) + '</p>' + (dn.length ? tb(dn) : '<p class="muted">ບໍ່ມີ</p>') + '</div></div>';
+  }
+  const low = []; C.rows.forEach(r => Object.values(r.Vc.items).forEach(i => { if (r.Vc.counted && i.endQ <= 2) low.push({ b: r.b, i }); }));
+  low.sort((a, b) => a.i.endQ - b.i.endQ);
+  h += '<div class="card" style="margin-top:14px"><h3>ລາຍການໃກ້ໝົດ (≤ 2 ໜ່ວຍ) - ' + low.length + ' ລາຍການ</h3><p class="cap">ສະແດງ 15 ລາຍການທຳອິດ · ໃຊ້ສ້າງໃບສັ່ງຊື້</p>' + (low.length ? tableHtml(['ສາຂາ', 'ລາຍການ', 'ໝວດ', 'ຄົງເຫຼືອ'], low.slice(0, 15).map(x => ({ cells: [esc(x.b), esc(x.i.name), esc(catName(x.i.cat)), (Math.round(x.i.endQ * 100) / 100) + ' ' + esc(x.i.uom)] }))) : '<p class="muted">ບໍ່ມີລາຍການໃກ້ໝົດ</p>') + '</div>';
+  return h;
+}
+
+/* ---------- slide 7: actions ---------- */
+function vActions(C) {
+  const L = insights(C); let h = head('ສະຫຼຸບ & ສິ່ງທີ່ຄວນເຮັດ', esc(mLo(S.month)) + (S.cmp ? ' ທຽບ ' + esc(mLab(S.cmp)) : '') + ' · ' + esc(scopeName()));
+  const todo = L.filter(x => x.sev === 'crit' || x.sev === 'warn'), ok = L.filter(x => x.sev === 'good');
+  h += '<div class="grid g2"><div class="card"><h3>⚠ ເລື່ອງທີ່ຕ້ອງຕິດຕາມ / ແກ້ໄຂ</h3><p class="cap">ພ້ອມຂໍ້ສະເໜີການດຳເນີນງານ</p>' + (todo.length ? insList(todo, true) : '<p class="muted">ບໍ່ມີເລື່ອງທີ່ຕ້ອງເຝົ້າລະວັງເປັນພິເສດ 🎉</p>') + '</div>' +
+    '<div class="card"><h3>✔ ຈຸດທີ່ເຮັດໄດ້ດີ</h3><p class="cap">ເລື່ອງທີ່ຄວນຮັກສາໄວ້</p>' + (ok.length ? insList(ok, true) : '<p class="muted">ຍັງບໍ່ມີຈຸດເດັ່ນທີ່ວັດໄດ້</p>') + '</div></div>';
+  const lim = []; if (C.partialNote) lim.push(C.partialNote); if (C.excluded.length) lim.push('ສາຂາ ' + C.excluded.join(', ') + ' ບໍ່ມີຂໍ້ມູນ ' + mLab(S.cmp) + ' ຈຶ່ງບໍ່ຖືກນັບໃນຍອດລວມທຽບເດືອນ');
+  const nos = C.rows.filter(r => !r.Vc.hasSales).map(r => r.b); if (nos.length) lim.push('ສາຂາ ' + nos.join(', ') + ' ບໍ່ມີຂໍ້ມູນຍອດຂາຍ POS ຈຶ່ງຄິດ Food cost % ບໍ່ໄດ້');
+  const dm = DB.records.some(r => (r.month === S.month || r.month === S.cmp) && r.demo); if (dm) lim.push('⚠ ມີຂໍ້ມູນຕົວຢ່າງ (Demo) ປົນຢູ່ - ບໍ່ແມ່ນຕົວເລກຈິງ');
+  h += '<div class="card" style="margin-top:14px"><h3>ໝາຍເຫດ ແລະ ຂໍ້ຈຳກັດຂອງຂໍ້ມູນ</h3><ul class="meth">' + (lim.length ? lim.map(x => '<li>' + esc(x) + '</li>').join('') : '<li>ຂໍ້ມູນຄົບຖ້ວນສຳລັບການປຽບທຽບນີ້</li>') + '<li>ຕົ້ນທຶນຄິດຈາກການເຄື່ອນໄຫວສະຕ໋ອກ (ສະຕ໋ອກຕົ້ນ + ຮັບເຂົ້າ − ໂອນອອກ − ຄົງເຫຼືອ) ຕາມລາຄາຕໍ່ໜ່ວຍໃນໄຟລ໌ ບໍ່ແມ່ນຕົ້ນທຶນຕາມສູດອາຫານ (BOM).</li></ul></div>';
+  return h;
+}
+
+/* ---------- growth trend (all months) ---------- */
+function trendData() {
+  const months = [...new Set(DB.records.map(r => r.month))].sort(), out = [];
+  months.forEach(mo => {
+    const recs = DB.records.filter(r => r.month === mo && (S.scope === 'ALL' || r.branch === S.scope)); if (!recs.length) return;
+    const Bs = recs.map(BC), part = Bs.some(salesPartial), Vf = sumV(Bs.map(B => view(B, null)));
+    const kc = part ? Math.min(...Bs.map(B => B.kCounted || B.nW)) : null, Vk = part && kc > 0 ? sumV(Bs.map(B => view(B, kc))) : Vf;
+    out.push({ mo, recs, Bs, part, Vf, Vk, sales: Bs.reduce((a, B) => a + salesUpTo(B, null), 0), g: null });
+  });
+  const growth = (cB, pB) => { const lim = cB.part ? Math.min(...cB.map(B => B.lastSalesDay)) : null; return [cB.reduce((a, B) => a + salesUpTo(B, lim), 0), pB.reduce((a, B) => a + salesUpTo(B, lim), 0), lim]; };
+  out.forEach((row, i) => {
+    const pr = out[i - 1]; if (!pr || pr.mo !== addM(row.mo, -1)) return;
+    const common = row.recs.map(r => r.branch).filter(b => pr.recs.some(r => r.branch === b)); if (!common.length) return;
+    const cB = row.recs.filter(r => common.includes(r.branch)).map(BC), pB = pr.recs.filter(r => common.includes(r.branch)).map(BC); cB.part = row.part;
+    const [c, p, lim] = growth(cB, pB); row.gCur = c; row.gPrev = p; row.lim = lim; row.g = p > 0 ? (c / p - 1) * 100 : null;
+  });
+  return out;
+}
+function branchGrowth(mo, b) {
+  const rc = DB.records.find(r => r.month === mo && r.branch === b), rp = DB.records.find(r => r.month === addM(mo, -1) && r.branch === b); if (!rc || !rp) return null;
+  const Bc = BC(rc), Bp = BC(rp), lim = salesPartial(Bc) ? Bc.lastSalesDay : null, c = salesUpTo(Bc, lim), p = salesUpTo(Bp, lim); return p > 0 ? { c, p, g: (c / p - 1) * 100 } : null;
+}
+function vTrend(C) {
+  let h = head('ການເຕີບໂຕຂອງຍອດຂາຍ', 'ທຸກເດືອນທີ່ມີຂໍ້ມູນ · ' + esc(scopeName()) + ' · ເຕີບໂຕ = ທຽບກັບເດືອນກ່ອນໜ້າ');
+  const D = trendData();
+  if (D.length < 2) return h + noData('ຕ້ອງມີຂໍ້ມູນຢ່າງໜ້ອຍ 2 ເດືອນຕິດກັນ ຈຶ່ງຈະເຫັນອັດຕາເຕີບໂຕ - ນຳເຂົ້າໄຟລ໌ JSON ຂອງເດືອນກ່ອນ ຫຼື ກົດ "ໂຫຼດຂໍ້ມູນຕົວຢ່າງ" ໃນແຖບຂໍ້ມູນ');
+  if (!D.some(r => r.Vf.hasSales)) return h + noData('ຍັງບໍ່ມີຂໍ້ມູນຍອດຂາຍ POS ໃນໄຟລ໌ທີ່ນຳເຂົ້າ');
+  const withG = D.filter(r => r.g != null), best = withG.slice().sort((a, b) => b.g - a.g)[0], worst = withG.slice().sort((a, b) => a.g - b.g)[0];
+  h += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:14px">' + D.map(r => '<div class="card tile"><div class="lab">' + esc(mLo(r.mo)) + (r.part ? ' (ຍັງບໍ່ຄົບເດືອນ)' : '') + '</div><div class="val" style="font-size:24px">' + fKk(r.sales) + '</div><div class="row">' + (r.g == null ? '<span class="chip neu"><i>–</i> ເດືອນທຳອິດ</span>' : dChip(r.gCur, r.gPrev, 1)) + '</div><div class="note">' + (r.g == null ? '' : r.part ? 'ທຽບຊ່ວງເທົ່າກັນ ວັນທີ 1-' + r.lim : 'ທຽບກັບ ' + mLab(addM(r.mo, -1))) + '</div></div>').join('') + '</div>';
+  if (best && worst && best !== worst) h += '<div class="banner info">📈 ເຕີບໂຕສູງສຸດ: <b>' + esc(mLab(best.mo)) + '</b> (' + (best.g >= 0 ? '+' : '') + best.g.toFixed(1) + '%) · 📉 ເຕີບໂຕຕ່ຳສຸດ: <b>' + esc(mLab(worst.mo)) + '</b> (' + (worst.g >= 0 ? '+' : '') + worst.g.toFixed(1) + '%)</div>';
+  h += '<div class="card"><h3>ຍອດຂາຍລາຍເດືອນ</h3><p class="cap">ຕົວເລກເທິງແຖບ = ຍອດຂາຍສຸດທິ · ເດືອນທີ່ຍັງບໍ່ຄົບ ສະແດງຍອດສະສົມຮອດວັນທີ່ມີຂໍ້ມູນ</p>' +
+    cols({ cats: D.map(r => mLab(r.mo) + (r.part ? '*' : '')), series: [{ name: 'ຍອດຂາຍ', color: 'var(--series-1)', vals: D.map(r => r.sales) }], fmt: v => fN(v) + ' ₭', axis: v => fK(v), label: 0, w: CW(), title: 'Monthly sales' }) +
+    '<p class="how"><b>ອ່ານແນວໃດ:</b> ແຖບສູງຂຶ້ນເລື້ອຍໆ = ຍອດຂາຍໂຕ. ປ້າຍ ✔ / ✖ ໃນກ່ອງດ້ານເທິງ ບອກວ່າເດືອນນັ້ນເຕີບໂຕ ຫຼື ຫຼຸດ ເມື່ອທຽບກັບເດືອນກ່ອນ. * = ເດືອນຍັງບໍ່ຄົບ (ທຽບສະເພາະຊ່ວງວັນທີ່ເທົ່າກັນ).</p></div>';
+  const brs = [...new Set(D.flatMap(r => r.recs.map(x => x.branch)))].sort();
+  if (S.scope === 'ALL' && brs.length > 1) {
+    h += '<div class="card" style="margin-top:14px"><h3>ຍອດຂາຍລາຍເດືອນ ແຍກຕາມສາຂາ ແລະ ອັດຕາເຕີບໂຕ</h3><p class="cap">ເບິ່ງວ່າສາຂາໃດດຶງການເຕີບໂຕ ແລະ ສາຂາໃດຊ້າລົງ</p>' + legend(brs.map(b => ({ name: b, color: colorOf(b) }))) +
+      cols({ cats: D.map(r => mLab(r.mo) + (r.part ? '*' : '')), series: brs.map(b => ({ name: b, color: colorOf(b), vals: D.map(r => { const x = r.recs.find(q => q.branch === b); return x ? salesUpTo(BC(x), null) : null; }) })), fmt: v => fN(v) + ' ₭', axis: v => fK(v), label: -1, w: CW(), title: 'Sales by branch' }) +
+      tableHtml(['ສາຂາ'].concat(D.map(r => esc(mLab(r.mo)))), brs.map(b => ({ cells: [brDot(b) + esc(b)].concat(D.map(r => { const g = branchGrowth(r.mo, b); return g ? dChip(g.c, g.p, 1) : '<span class="muted">—</span>'; })) }))) + '</div>';
+  }
+  const last = D.slice(-4), cc = ['var(--series-1)', 'var(--prev)', 'var(--series-4)', 'var(--series-6)'], nW = 5;
+  const ser = last.slice().reverse().map((r, i) => ({ name: mLab(r.mo), color: cc[i], vals: Array.from({ length: nW }, (_, w) => r.Bs.every(B => B.wk[w] && B.lastSalesDay >= B.wk[w].to) ? r.Bs.reduce((a, B) => a + B.wk[w].sales, 0) : null) }));
+  if (ser.some(s => s.vals.some(v => v != null))) h += '<div class="card" style="margin-top:14px"><h3>ຍອດຂາຍລາຍອາທິດ ທຽບທຸກເດືອນ</h3><p class="cap">ແຕ່ລະເສັ້ນ = 1 ເດືອນ · ສະແດງສະເພາະອາທິດທີ່ຄົບ 7 ວັນ</p>' + legend(ser.map(s => ({ name: s.name, color: s.color, line: 1 }))) +
+    lineChart({ xs: ['W1 (1-7)', 'W2 (8-14)', 'W3 (15-21)', 'W4 (22-28)', 'W5 (29+)'], series: ser.slice().reverse(), fmt: v => fN(v) + ' ₭', axis: v => fK(v), w: CW(), zeroBase: true, title: 'Weekly sales by month' }) + '</div>';
+  h += '<div class="card" style="margin-top:14px"><h3>ຕາຕະລາງສະຫຼຸບລາຍເດືອນ</h3>' + tableHtml(['ເດືອນ', 'ຍອດຂາຍ', 'ເຕີບໂຕ', 'Food cost', 'ກຳໄລຂັ້ນຕົ້ນ %', 'ບິນ', 'ຍອດຕໍ່ບິນ'], D.map(r => ({ cells: [esc(mLab(r.mo)) + (r.part ? '*' : ''), fKk(r.sales), r.g == null ? '—' : dChip(r.gCur, r.gPrev, 1), fP(r.Vk.fc), fP(r.Vk.gpPct), fN(r.Vf.orders), fKk(r.Vf.ticket)] }))) + '<p class="how">Food cost ແລະ ກຳໄລຂອງເດືອນທີ່ຍັງບໍ່ຄົບ ຄິດຈາກອາທິດທີ່ນັບສະຕ໋ອກແລ້ວ.</p></div>';
+  return h;
+}
+
+/* ---------- sales channels ---------- */
+function chParts(A) {
+  const parts = [{ name: 'ກິນໃນຮ້ານ (Dine-in)', val: A.dine, col: CH_COL.dine }, { name: 'ສັ່ງກັບບ້ານ (Takeaway)', val: A.take, col: CH_COL.take }];
+  Object.entries(A.plat).sort((a, b) => b[1] - a[1]).forEach(([n, v], i) => parts.push({ name: 'Delivery · ' + n, val: v, col: CH_COL['d' + Math.min(i, 3)] }));
+  return parts;
+}
+function vChannel(C) {
+  let h = head('ຊ່ອງທາງຂາຍ: ກິນໃນຮ້ານ vs Delivery', esc(mLo(S.month)) + (S.cmp ? ' ທຽບກັບ ' + esc(mLo(S.cmp)) : '') + ' · ' + esc(scopeName()));
+  const inScope = r => C.bs.includes(r.branch), curCh = C.cur.filter(r => inScope(r) && hasCh(r)), prvCh = C.prv.filter(r => inScope(r) && hasCh(r));
+  if (!curCh.length) return h + '<div class="card"><h3>ຍັງບໍ່ມີຂໍ້ມູນຊ່ອງທາງຂາຍ</h3><p class="cap">ໄຟລ໌ POS ຈາກແອັບສະຕ໋ອກບໍ່ໄດ້ບອກວ່າບິນມາຈາກກິນໃນຮ້ານ ຫຼື Delivery ຈຶ່ງຕ້ອງໃສ່ຍອດແຍກຊ່ອງທາງເອງ (ປົກກະຕິເບິ່ງໄດ້ຈາກລາຍງານຂອງແຕ່ລະແພລດຟອມ ຫຼື ລາຍງານ POS ແຍກປະເພດບິນ).</p><button class="btn" data-go="data">✍️ ໄປໃສ່ຂໍ້ມູນຊ່ອງທາງຂາຍ (ແຖບຂໍ້ມູນ ຂໍ້ 3)</button></div>';
+  const common = curCh.map(r => r.branch).filter(b => prvCh.some(r => r.branch === b)), useCmp = common.length > 0;
+  const A = chanAgg(useCmp ? curCh.filter(r => common.includes(r.branch)) : curCh), P = useCmp ? chanAgg(prvCh.filter(r => common.includes(r.branch))) : null;
+  const sales = chanSales(useCmp ? curCh.filter(r => common.includes(r.branch)) : curCh), part = curCh.some(r => salesPartial(BC(r))), comp = !part && (sales > 0 ? Math.abs(A.total - sales) / sales < .06 : true);
+  const sh = (x, t) => t > 0 ? x / t * 100 : null;
+  h += '<div class="banner info">ℹ️ ຂໍ້ມູນຊ່ອງທາງຂາຍເປັນຕົວເລກທີ່ໃສ່ເອງ' + (useCmp ? '' : ' · ຍັງບໍ່ມີຂໍ້ມູນຂອງ ' + esc(mLab(S.cmp) || 'ເດືອນທຽບ') + ' ຈຶ່ງສະແດງເດືອນດຽວ') + (comp ? '' : part ? ' · ເດືອນນີ້ຍັງບໍ່ຄົບ ຈຶ່ງສະແດງສັດສ່ວນ (%) ເທົ່ານັ້ນ - ອັດຕາເຕີບໂຕຂອງຍອດຈະຄິດໄດ້ເມື່ອຄົບເດືອນ' : ' · ຍອດລວມຊ່ອງທາງຕ່າງຈາກຍອດ POS ເກີນ 6% ຈຶ່ງສະແດງສັດສ່ວນ (%) ເທົ່ານັ້ນ ບໍ່ຄິດອັດຕາເຕີບໂຕຂອງຍອດ') + '</div>';
+  h += '<div class="card"><h3>ສັດສ່ວນຍອດຂາຍຕາມຊ່ອງທາງ</h3><p class="cap">1 ແຖບ = ຍອດຂາຍທັງໝົດ 100%</p>' + (P && P.total > 0 ? '<div class="segrow"><div>' + esc(mLab(S.cmp)) + '</div>' + segBar(chParts(P)) + '</div>' : '') + '<div class="segrow"><div><b>' + esc(mLab(S.month)) + '</b></div>' + segBar(chParts(A)) + '</div>' +
+    legend(chParts(A).filter(p => p.val > 0).map(p => ({ name: p.name, color: p.col[0] }))) + '</div>';
+  const dS = sh(A.deliv, A.total), dP = P && P.total > 0 ? sh(P.deliv, P.total) : null, iS = sh(A.dine, A.total), iP = P && P.total > 0 ? sh(P.dine, P.total) : null, tS = sh(A.take, A.total), tP = P && P.total > 0 ? sh(P.take, P.total) : null;
+  const gr = (a, b) => comp && P && b > 0 ? dChip(a, b, 1) : '<span class="chip neu"><i>–</i> —</span>';
+  h += '<div class="grid g4" style="margin-top:14px">' + tile('ກິນໃນຮ້ານ (Dine-in)', fP(iS), dChip(iS, iP, 0, { pt: true }), comp && P ? 'ຍອດເຕີບໂຕ ' + (P.dine > 0 ? ((A.dine / P.dine - 1) * 100).toFixed(1) + '%' : '—') : '') +
+    tile('Delivery ທຸກແພລດຟອມ', fP(dS), dChip(dS, dP, 0, { pt: true }), comp && P ? 'ຍອດເຕີບໂຕ ' + (P.deliv > 0 ? ((A.deliv / P.deliv - 1) * 100).toFixed(1) + '%' : '—') : '') +
+    tile('ສັ່ງກັບບ້ານ (Takeaway)', fP(tS), dChip(tS, tP, 0, { pt: true }), comp && P ? 'ຍອດເຕີບໂຕ ' + (P.take > 0 ? ((A.take / P.take - 1) * 100).toFixed(1) + '%' : '—') : '') +
+    tile('ຍອດລວມທີ່ໃສ່', fKk(A.total), P && comp ? gr(A.total, P.total) : '', 'ຍອດ POS ' + fKk(sales)) + '</div>';
+  const names = {}; chParts(A).concat(P ? chParts(P) : []).forEach(p => names[p.name] = 1);
+  const val = (X, nm) => X ? (chParts(X).find(p => p.name === nm) || { val: 0 }).val : 0;
+  h += '<div class="card" style="margin-top:14px"><h3>ຕາຕະລາງຊ່ອງທາງ</h3>' + tableHtml(['ຊ່ອງທາງ', P ? esc(mLab(S.cmp)) + ' (₭)' : '', P ? '%' : '', esc(mLab(S.month)) + ' (₭)', '%', P ? 'ປ່ຽນ (pt)' : '', P && comp ? 'ເຕີບໂຕ' : ''].filter((x, i) => x !== '' ), Object.keys(names).map(nm => { const a = val(A, nm), p = val(P, nm); const cells = [esc(nm)]; if (P) { cells.push(fN(p), fP(sh(p, P.total))); } cells.push(fN(a), fP(sh(a, A.total))); if (P) { cells.push((sh(a, A.total) - sh(p, P.total) >= 0 ? '+' : '−') + Math.abs(sh(a, A.total) - sh(p, P.total)).toFixed(1)); if (comp) cells.push(p > 0 ? dChip(a, p, 1) : '—'); } return { cells }; })) + '</div>';
+  const brs = curCh.map(r => { const x = chanAgg([r]), pr = prvCh.find(q => q.branch === r.branch), px = pr ? chanAgg([pr]) : null; return { b: r.branch, s: x.deliv / x.total * 100, ps: px && px.total > 0 ? px.deliv / px.total * 100 : null, x }; }).sort((a, b) => b.s - a.s);
+  if (brs.length > 1) h += '<div class="card" style="margin-top:14px"><h3>ສັດສ່ວນ Delivery ແຕ່ລະສາຂາ</h3><p class="cap">ສາຂາທີ່ Delivery ສູງ = ເສຍຄ່າທຳນຽມແພລດຟອມຫຼາຍ ກຳໄລຕໍ່ບິນອາດຕ່ຳກວ່າ</p>' + hbar(brs.map(r => ({ label: r.b, dot: colorOf(r.b), val: r.s, color: colorOf(r.b), valText: fP(r.s) + ' ' + (r.ps != null ? dChip(r.s, r.ps, 0, { pt: true }) : ''), tip: { t: r.b, l: [['Delivery', fP(r.s, 1)], ['ກິນໃນຮ້ານ', fP(r.x.dine / r.x.total * 100, 1)]] } })), { max: 100 }) + '</div>';
+  const mths = [...new Set(DB.records.filter(r => inScope0(r) && hasCh(r)).map(r => r.month))].sort();
+  if (mths.length > 1) { const ag = mths.map(mo => chanAgg(DB.records.filter(r => r.month === mo && inScope0(r) && hasCh(r)))); h += '<div class="card" style="margin-top:14px"><h3>ສັດສ່ວນຊ່ອງທາງລາຍເດືອນ</h3><p class="cap">ເບິ່ງວ່າລູກຄ້າຍ້າຍໄປໃຊ້ Delivery ຫຼາຍຂຶ້ນ ຫຼື ກັບມາກິນໃນຮ້ານ</p>' + legend([{ name: 'ກິນໃນຮ້ານ %', color: 'var(--series-1)' }, { name: 'Delivery %', color: 'var(--series-2)' }]) + cols({ cats: mths.map(mLab), series: [{ name: 'ກິນໃນຮ້ານ %', color: 'var(--series-1)', vals: ag.map(a => sh(a.dine, a.total)) }, { name: 'Delivery %', color: 'var(--series-2)', vals: ag.map(a => sh(a.deliv, a.total)) }], fmt: v => v.toFixed(1) + '%', axis: v => v.toFixed(0) + '%', label: 1, w: CW(), title: 'Channel share by month' }) + '</div>'; }
+  return h;
+}
+const inScope0 = r => S.scope === 'ALL' || r.branch === S.scope;
+const chanSales = recs => recs.reduce((a, r) => a + salesUpTo(BC(r), null), 0);
+/* =====================================================================
+   Demo data, data tab, rendering, present mode
+   ===================================================================== */
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function makeDemo() {
+  const R = mulberry(20261121), VAT = 10;
+  const CAT = [['MP001', 'Meat & Protein', 'Chicken thigh', 'kg', 38000, 100], ['MP002', 'Meat & Protein', 'Chicken wing', 'kg', 42000, 60], ['MP003', 'Meat & Protein', 'Pork belly', 'kg', 65000, 30], ['MP004', 'Meat & Protein', 'Beef patty', 'kg', 110000, 25],
+    ['RM001', 'Raw Material', 'Cooking oil', 'L', 24000, 120], ['RM002', 'Raw Material', 'Potato', 'kg', 12000, 220], ['RM003', 'Raw Material', 'Flour', 'kg', 14000, 80], ['RM004', 'Raw Material', 'Batter mix', 'kg', 32000, 70], ['RM005', 'Raw Material', 'Cabbage', 'kg', 9000, 50], ['RM006', 'Raw Material', 'Tomato', 'kg', 15000, 30], ['RM007', 'Raw Material', 'Rice', 'kg', 18000, 40], ['RM008', 'Raw Material', 'Sugar', 'kg', 17000, 20],
+    ['SD001', 'Side', 'Cheese slice', 'pack', 52000, 25], ['SD002', 'Side', 'Mayonnaise', 'kg', 45000, 30], ['SD003', 'Side', 'Ketchup', 'kg', 28000, 35], ['SD004', 'Side', 'Pickles', 'jar', 38000, 12], ['SD005', 'Side', 'Seasoning', 'pack', 25000, 20],
+    ['BV001', 'Beverage', 'Cola syrup', 'box', 480000, 8], ['BV002', 'Beverage', 'Orange juice', 'L', 30000, 15], ['BV003', 'Beverage', 'Coffee beans', 'kg', 180000, 6], ['BV004', 'Beverage', 'Milk', 'L', 22000, 40], ['BV005', 'Beverage', 'Drinking water', 'case', 28000, 25],
+    ['PK001', 'Packaging', 'Paper cup', 'pack', 45000, 40], ['PK002', 'Packaging', 'Takeaway box', 'pack', 60000, 45], ['PK003', 'Packaging', 'Paper bag', 'pack', 35000, 40], ['PK004', 'Packaging', 'Napkin', 'pack', 12000, 50], ['PK005', 'Packaging', 'Fries sleeve', 'pack', 40000, 35],
+    ['CL001', 'Cleaning', 'Detergent', 'L', 30000, 10], ['CL002', 'Cleaning', 'Sanitizer', 'L', 55000, 6], ['CL003', 'Cleaning', 'Garbage bag', 'roll', 20000, 20], ['CL004', 'Cleaning', 'Gloves', 'box', 60000, 12]];
+  const totW = CAT.reduce((a, c) => a + c[5], 0), DOW = [1.25, .85, .85, .9, .95, 1.15, 1.3];
+  const BR = [{ name: 'Vangxai', base: 14.5e6, fc: [33.6, 34.9], waste: [1.9, 2.3], nWaste: 14, dl: [.18, .22] }, { name: 'Mega Mall', base: 18.5e6, fc: [37.4, 39.3], waste: [3.4, 4.1], nWaste: 22, dl: [.12, .13] }, { name: 'Center', base: 9.6e6, fc: [36.9, 34.2], waste: [2.5, 2.1], nWaste: 12, dl: [.3, .34] }];
+  const months = ['2026-10', '2026-11'], out = [];
+  BR.forEach(b => {
+    let prevEnd = null;
+    months.forEach((mo, mi) => {
+      const [y, m] = mo.split('-').map(Number), dim = new Date(y, m, 0).getDate(), lastDay = mi === 0 ? dim : 21, counted = mi === 0 ? 5 : 3, days = {}; let fullExp = 0;
+      for (let d = 1; d <= dim; d++) {
+        const dow = new Date(y, m - 1, d).getDay(), net = Math.round(b.base * (mi ? 1.03 : 1) * DOW[dow] * (1 + (R() - .5) * .16) / 1000) * 1000; fullExp += net;
+        if (d <= lastDay) days[mo + '-' + p2(d)] = { net, orders: Math.round(net / (46000 + R() * 6000)) };
+      }
+      const weekRev = w => { let s = 0; for (let d = w * 7 + 1; d <= Math.min(w * 7 + 7, dim); d++) if (days[mo + '-' + p2(d)]) s += days[mo + '-' + p2(d)].net; return s / (1 + VAT / 100); };
+      const items = CAT.map(c => ({ id: c[0], cat: c[1], name: c[2], uom: c[3], cost: c[4], beg: 0, rec: 0, out: 0, ending: 0, wk: [] }));
+      let useTotal = 0;
+      items.forEach((it, i) => {
+        const share = CAT[i][5] / totW, weeklyUse = (b.fc[mi] / 100 * (weekRev(1) || 1)) * share / it.cost;
+        it.beg = prevEnd ? prevEnd[i] : Math.round(weeklyUse * (1.2 + R() * .5) * 10) / 10; let beg = it.beg;
+        for (let w = 0; w < 5; w++) {
+          if (w >= counted) { it.wk.push({ rec: null, out: null, end: null }); continue; }
+          let use = (b.fc[mi] / 100 * weekRev(w)) * share / it.cost * (.86 + R() * .28); use = Math.round(use * 10) / 10;
+          const rec = R() < .12 ? 0 : Math.round(use * (.85 + R() * .4) * 10) / 10; let total = beg + rec; if (use > total) use = Math.round(total * .95 * 10) / 10;
+          const end = Math.round((total - use) * 10) / 10; useTotal += use * it.cost; it.wk.push({ rec, out: null, end }); beg = end;
+        }
+        it.rec = r2(it.wk.reduce((a, x) => a + (x.rec || 0), 0)); it.ending = endingOf(it);
+      });
+      prevEnd = items.map(i => i.ending);
+      const pool = items.filter(i => i.cat !== 'Packaging' && i.cat !== 'Cleaning'), logs = []; let raw = 0;
+      for (let i = 0; i < b.nWaste; i++) { const it = pool[Math.floor(R() * pool.length)], dd = 1 + Math.floor(R() * (counted === 5 ? dim : 7 * counted - 1)), q = .3 + R() * 2.2; logs.push({ it, dd: Math.min(dd, lastDay), q }); raw += q * it.cost; }
+      const k = (b.waste[mi] / 100 * useTotal) / (raw || 1);
+      const waste = logs.map(l => ({ d: mo + '-' + p2(l.dd), q: Math.max(.1, Math.round(l.q * k * 10) / 10), cost: l.it.cost, id: l.it.id, name: l.it.name }));
+      out.push({ id: 'demo-' + b.name + mo, branch: b.name, month: mo, src: 'Demo', demo: true, items, waste, sales: { salesMonth: mo, target: Math.round(fullExp * 1.04 / 1e5) * 1e5, vat: VAT, costPct: 35, days, other: Object.fromEntries(Array.from({ length: counted }, (_, w) => [mo + '-' + w, Math.round(b.base * .075 * (1 + (R() - .5) * .1) / 1e5) * 1e5])) }, ch: (() => { const tot = Object.values(days).reduce((a, x) => a + x.net, 0), dl = b.dl[mi], tk = .06; return { dine: Math.round(tot * (1 - dl - tk) / 1e3) * 1e3, take: Math.round(tot * tk / 1e3) * 1e3, d: [{ n: 'Grab', v: Math.round(tot * dl * .55 / 1e3) * 1e3 }, { n: 'Lineman', v: Math.round(tot * dl * .45 / 1e3) * 1e3 }] }; })() });
+    });
+  });
+  return out;
+}
+
+/* ---------- data tab ---------- */
+function vData(C) {
+  const branchesAll = [...new Set(DB.records.map(r => r.branch))].sort();
+  let h = head('ຂໍ້ມູນ & ການນຳເຂົ້າ', 'ນຳເຂົ້າໄຟລ໌ຈາກແອັບສະຕ໋ອກ · ຂໍ້ມູນເກັບໃນເບຣາວ໌ເຊີຂອງເຄື່ອງນີ້ເທົ່ານັ້ນ ບໍ່ໄດ້ອັບໂຫຼດຂຶ້ນເຊີບເວີ');
+  h += '<div class="grid g2"><div class="card"><h3>1) ນຳເຂົ້າໄຟລ໌</h3><p class="cap">ເລືອກໄດ້ຫຼາຍໄຟລ໌ພ້ອມກັນ</p>' +
+    '<label class="fld" style="margin-bottom:10px">ຊື່ສາຂາ (ໃຊ້ກັບໄຟລ໌ Excel .xlsx ເທົ່ານັ້ນ)<input id="impBranch" list="brList" placeholder="ເຊັ່ນ Vangxai" style="min-width:200px"></label><datalist id="brList">' + branchesAll.map(b => '<option value="' + esc(b) + '">').join('') + '</datalist>' +
+    '<div class="drop" id="drop"><p style="margin:0 0 8px">ລາກໄຟລ໌ມາວາງບ່ອນນີ້ ຫຼື</p><button class="btn" id="btnPick">📂 ເລືອກໄຟລ໌ (.json / .xlsx)</button><input type="file" id="filePick" multiple accept=".json,.xlsx" class="hidden"></div>' +
+    '<ul class="meth" style="margin-top:12px"><li><b>.json</b> = ໄຟລ໌ "ສຳຮອງຂໍ້ມູນ JSON" ຈາກແອັບສະຕ໋ອກ - ມີທຸກສາຂາ, ສະຕ໋ອກ, ຂອງເສຍ ແລະ ຍອດຂາຍ POS. ແນະນຳທີ່ສຸດ.</li><li><b>.xlsx</b> = ໄຟລ໌ Inventory ລາຍເດືອນ (Master Item List + Week 1-5 + Waste) - ບໍ່ມີຍອດຂາຍ ຈຶ່ງບໍ່ມີ Food cost %. ລະບົບກວດເດືອນຈາກວັນທີໃນໄຟລ໌ ຫຼື ຊື່ໄຟລ໌.</li><li><b>ເພື່ອປຽບທຽບຫຼາຍເດືອນ:</b> ກ່ອນກົດ Rollover ທຸກສິ້ນເດືອນ ໃຫ້ກົດ "ສຳຮອງຂໍ້ມູນ JSON" ໃນແອັບສະຕ໋ອກ ແລ້ວເກັບໄວ້ເດືອນລະໄຟລ໌ (ຍ້ອນ JSON ເກັບສະເພາະເດືອນປັດຈຸບັນ).</li></ul></div>';
+  h += '<div class="card"><h3>2) ຕັ້ງຄ່າ & ຕົວຢ່າງ</h3><p class="cap">ເປົ້າ Food cost ປ່ຽນໄດ້ທີ່ແຖບດ້ານເທິງ</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="btnDemo">🧪 ໂຫຼດຂໍ້ມູນຕົວຢ່າງ (Demo)</button><button class="btn" id="btnDelDemo">ລຶບຂໍ້ມູນຕົວຢ່າງ</button><button class="btn" id="btnClear">🗑 ລຶບຂໍ້ມູນທັງໝົດ</button></div><p class="how">ຂໍ້ມູນຕົວຢ່າງ = ຕົວເລກສົມມຸດ 3 ສາຂາ × 2 ເດືອນ ເພື່ອເບິ່ງໜ້າຕາລາຍງານ. ຈະມີປ້າຍເຕືອນສີເຫຼືອງສະເໝີເມື່ອມີຂໍ້ມູນຕົວຢ່າງປົນ - ຢ່າລືມລຶບກ່ອນພຣີເຊັນຂໍ້ມູນຈິງ.</p></div></div>';
+  const recs = DB.records.slice().sort((a, b) => a.month.localeCompare(b.month) || a.branch.localeCompare(b.branch));
+  h += '<div class="card" style="margin-top:14px"><h3>ຊຸດຂໍ້ມູນທີ່ນຳເຂົ້າແລ້ວ (' + recs.length + ')</h3><p class="cap">ແກ້ໄຂຊື່ສາຂາ ຫຼື ເດືອນໄດ້ ຖ້າລະບົບກວດຜິດ</p>' + (recs.length ? '<div class="scroll"><table class="tbl rec-t"><thead><tr><th>ສາຂາ</th><th>ເດືອນ</th><th>ແຫຼ່ງ</th><th>ລາຍການ</th><th>ວັນມີຍອດຂາຍ</th><th>ແຖວຂອງເສຍ</th><th></th></tr></thead><tbody>' + recs.map(r => '<tr><td><input data-rb="' + r.id + '" value="' + esc(r.branch) + '">' + (r.demo ? ' <span class="sev warn">Demo</span>' : '') + '</td><td><input type="month" data-rm="' + r.id + '" value="' + esc(r.month) + '"></td><td>' + esc(r.src || '') + '</td><td>' + r.items.length + '</td><td>' + (r.sales ? Object.keys(r.sales.days).filter(k => k.startsWith(r.month)).length : 0) + '</td><td>' + (r.waste || []).filter(w => w.d.startsWith(r.month)).length + '</td><td><button class="btn" data-del="' + r.id + '">ລຶບ</button></td></tr>').join('') + '</tbody></table></div>' : '<p class="muted">ຍັງບໍ່ມີຂໍ້ມູນ</p>') + '</div>';
+  h += '<div class="card" style="margin-top:14px"><h3>3) ຍອດຂາຍແຍກຊ່ອງທາງ (ໃສ່ເອງ)</h3><p class="cap">ໃສ່ຍອດຂາຍ (₭) ຂອງແຕ່ລະຊ່ອງທາງ ຕໍ່ສາຂາ ຕໍ່ເດືອນ. ຍອດລວມຄວນໃກ້ຍອດ POS. ປ່ອຍວ່າງໄດ້ຖ້າບໍ່ມີ.</p>' + (recs.length ? '<div class="scroll"><table class="tbl rec-t"><thead><tr><th>ສາຂາ</th><th>ເດືອນ</th><th>ຍອດ POS</th><th>ກິນໃນຮ້ານ</th><th>ກັບບ້ານ</th><th>Delivery 1 (ຊື່ / ຍອດ)</th><th>Delivery 2 (ຊື່ / ຍອດ)</th></tr></thead><tbody>' + recs.map(r => { const c = r.ch || {}, d = c.d || [], nm = (i, k) => d[i] ? esc(d[i][k] == null ? '' : d[i][k]) : ''; return '<tr><td>' + esc(r.branch) + '</td><td>' + esc(mLab(r.month)) + '</td><td>' + fN(salesUpTo(BC(r), null)) + '</td><td><input type="number" min="0" data-ch="' + r.id + '|dine" value="' + (c.dine || '') + '" style="width:110px"></td><td><input type="number" min="0" data-ch="' + r.id + '|take" value="' + (c.take || '') + '" style="width:100px"></td>' + [0, 1].map(i => '<td><input data-ch="' + r.id + '|n' + i + '" value="' + nm(i, 'n') + '" placeholder="Grab" style="width:80px"> <input type="number" min="0" data-ch="' + r.id + '|v' + i + '" value="' + (d[i] && d[i].v ? d[i].v : '') + '" style="width:100px"></td>').join('') + '</tr>'; }).join('') + '</tbody></table></div>' : '<p class="muted">ນຳເຂົ້າຂໍ້ມູນກ່ອນ</p>') + '</div>';
+  h += '<div class="card" style="margin-top:14px"><h3>ວິທີຄຳນວນ (Methodology)</h3><ul class="meth">' +
+    '<li><b>ຍອດຂາຍສຸດທິ</b> = ຍອດຂາຍຈາກ POS (ຫຼັງສ່ວນຫຼຸດ). <b>ຍອດຂາຍບໍ່ລວມ VAT</b> = ຍອດຂາຍ ÷ (1 + VAT%) ຕາມ VAT ທີ່ຕັ້ງໃນແອັບສະຕ໋ອກ.</li>' +
+    '<li><b>ຕົ້ນທຶນວັດຖຸດິບທີ່ໃຊ້</b> = (ສະຕ໋ອກຕົ້ນເດືອນ + ຮັບເຂົ້າ − ໂອນອອກ − ສະຕ໋ອກທີ່ນັບໄດ້) × ລາຄາຕໍ່ໜ່ວຍ ລວມທຸກລາຍການ. ລາຍອາທິດ = ຈາກຜົນການນັບສະຕ໋ອກແຕ່ລະອາທິດ.</li>' +
+    '<li><b>Food cost %</b> = ຕົ້ນທຶນວັດຖຸດິບທີ່ໃຊ້ ÷ ຍອດຂາຍບໍ່ລວມ VAT × 100.</li>' +
+    '<li><b>ຂອງເສຍ %</b> = ມູນຄ່າຂອງເສຍທີ່ບັນທຶກ ÷ ຕົ້ນທຶນທີ່ໃຊ້. ຂອງເສຍຖືກແຍກຕາມວັນທີ່ບັນທຶກ ຈຶ່ງບໍ່ປົນລະຫວ່າງເດືອນ.</li>' +
+    '<li><b>ສະຕ໋ອກພໍໃຊ້ (ວັນ)</b> = ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອ ÷ (ຕົ້ນທຶນທີ່ໃຊ້ຕໍ່ວັນ). <b>ລາຍການໃກ້ໝົດ</b> = ຄົງເຫຼືອ ≤ 2 ໜ່ວຍ (ຕາມແອັບສະຕ໋ອກ).</li>' +
+    '<li><b>ກຳໄລຂັ້ນຕົ້ນ (Gross profit)</b> = ຍອດຂາຍບໍ່ລວມ VAT − ຕົ້ນທຶນວັດຖຸດິບທີ່ໃຊ້. <b>ກຳໄລສຸດທິ</b> ສະແດງເມື່ອມີການບັນທຶກຄ່າໃຊ້ຈ່າຍອື່ນລາຍອາທິດໃນແອັບສະຕ໋ອກ. <b>ເຕີບໂຕ %</b> = (ເດືອນນີ້ ÷ ເດືອນກ່ອນ − 1) × 100; ເດືອນທີ່ຍັງບໍ່ຄົບທຽບສະເພາະຊ່ວງວັນທີ່ເທົ່າກັນ.</li><li><b>ຊ່ອງທາງຂາຍ</b>: ຂໍ້ມູນ POS ບໍ່ແຍກກິນໃນຮ້ານ/Delivery ຈຶ່ງໃສ່ເອງໃນຂໍ້ 3.</li>' +
+    '<li><b>ອາທິດ</b>: ຍອດຂາຍແບ່ງເປັນຊຸດ 7 ວັນ (1-7, 8-14, 15-21, 22-28, 29-ທ້າຍເດືອນ); ຕົ້ນທຶນຕາມອາທິດທີ່ນັບສະຕ໋ອກ (Week 1-5).</li>' +
+    '<li><b>ຊ່ວງທຽບເທົ່າ</b>: ຖ້າເດືອນນີ້ຍັງບໍ່ຄົບ ລະບົບຈະທຽບສະເພາະອາທິດທີ່ນັບແລ້ວຂອງທັງສອງເດືອນ ເພື່ອບໍ່ໃຫ້ເດືອນເຕັມທຽບກັບເດືອນເຄິ່ງ.</li></ul></div>';
+  return h;
+}
+async function importFiles(files) {
+  const branch = ($('#impBranch') || {}).value ? $('#impBranch').value.trim() : '';
+  for (const f of files) {
+    try {
+      if (/\.json$/i.test(f.name)) { const recs = recsFromBackup(JSON.parse(await f.text()), f.name), rep = addRecords(recs); toast('✔ ' + f.name + ': ນຳເຂົ້າ ' + recs.length + ' ຊຸດ (' + recs.map(r => r.branch + ' ' + mLab(r.month)).join(', ') + ')' + (rep ? ' · ແທນທີ່ຂອງເກົ່າ ' + rep + ' ຊຸດ' : '')); }
+      else if (/\.xlsx$/i.test(f.name)) {
+        const known = [...new Set(DB.records.map(r => r.branch))].find(b => f.name.toLowerCase().includes(b.toLowerCase())), br = branch || known;
+        if (!br) throw new Error('ກະລຸນາໃສ່ຊື່ສາຂາໃນຊ່ອງ "ຊື່ສາຂາ" ກ່ອນນຳເຂົ້າໄຟລ໌ Excel');
+        const r = await recFromXlsx(f, br); if (!r.month) throw new Error('ກວດບໍ່ພົບເດືອນຂອງໄຟລ໌ - ໃຫ້ໃສ່ OCT/NOV ໃນຊື່ໄຟລ໌');
+        const rep = addRecords([r]); toast('✔ ' + f.name + ': ' + br + ' ' + mLab(r.month) + ' (' + r.items.length + ' ລາຍການ)' + (rep ? ' · ແທນທີ່ຂອງເກົ່າ' : ''));
+      } else throw new Error('ຮອງຮັບສະເພາະ .json ແລະ .xlsx');
+    } catch (e) { toast('✖ ' + f.name + ': ' + (e.message || e)); }
+  }
+  render();
+}
+
+/* ---------- render ---------- */
+const SLIDES = [['summary', vSummary], ['trend', vTrend], ['month', vMonth], ['week', vWeek], ['branch', vBranch], ['channel', vChannel], ['cost', vCost], ['items', vItems], ['actions', vActions]];
+function emptyState() { return '<div class="card"><h3>ຍັງບໍ່ມີຂໍ້ມູນ</h3><p class="cap">ນຳເຂົ້າໄຟລ໌ JSON ສຳຮອງຈາກແອັບສະຕ໋ອກ ຫຼື ໄຟລ໌ Inventory (.xlsx) ຫຼື ລອງເບິ່ງຕົວຢ່າງກ່ອນ</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-go="data">📂 ໄປແຖບນຳເຂົ້າຂໍ້ມູນ</button><button class="btn" data-act="demo">🧪 ໂຫຼດຂໍ້ມູນຕົວຢ່າງ</button></div></div>'; }
+function fillSelect(el, opts, val) { el.innerHTML = opts.map(([v, t]) => '<option value="' + esc(v) + '"' + (v === val ? ' selected' : '') + '>' + esc(t) + '</option>').join(''); }
+function render() {
+  const C = ctx(), has = DB.records.length > 0;
+  fillSelect($('#fMonth'), C.months.map(m => [m, mLo(m)]), S.month);
+  fillSelect($('#fCmp'), [['', '(ບໍ່ປຽບທຽບ)']].concat(C.months.filter(m => m !== S.month).map(m => [m, mLo(m)])), S.cmp);
+  fillSelect($('#fScope'), [['ALL', 'ທຸກສາຂາລວມກັນ']].concat([...new Set(DB.records.map(r => r.branch))].sort().map(b => [b, 'ສາຂາ ' + b])), S.scope);
+  $('#fBasis').value = S.basis; $('#fTarget').value = DB.fcTarget;
+  const nb = new Set(DB.records.map(r => r.branch)).size;
+  $('#subtitle').textContent = has ? DB.records.length + ' ຊຸດຂໍ້ມູນ · ' + nb + ' ສາຂາ · ' + C.months.length + ' ເດືອນ' : 'ຍັງບໍ່ມີຂໍ້ມູນ';
+  const old = $('#demoB'); if (old) old.remove();
+  if (DB.records.some(r => r.demo)) { const d = document.createElement('div'); d.id = 'demoB'; d.className = 'banner demo'; d.textContent = '⚠ ກຳລັງສະແດງຂໍ້ມູນຕົວຢ່າງ (Demo) - ບໍ່ແມ່ນຕົວເລກຈິງ. ລຶບໄດ້ທີ່ແຖບ "ຂໍ້ມູນ & ການນຳເຂົ້າ".'; $('#banners').prepend(d); }
+  SLIDES.forEach(([id, fn]) => { $('#s-' + id).innerHTML = has && S.month ? fn(C) : head(({ summary: 'ພາບລວມຜູ້ບໍລິຫານ', trend: 'ການເຕີບໂຕ', channel: 'ຊ່ອງທາງຂາຍ', branch: 'ສາຂາ vs ສາຂາ', month: 'ເດືອນ vs ເດືອນ', week: 'ອາທິດ vs ອາທິດ', cost: 'Food cost & ຂອງເສຍ', items: 'ລາຍການສິນຄ້າ', actions: 'ສະຫຼຸບ & ສິ່ງທີ່ຄວນເຮັດ' })[id], '') + emptyState(); });
+  $('#s-data').innerHTML = vData(C);
+  showTab();
+}
+function buildTabs() {
+  $('#tabsIn').innerHTML = [...document.querySelectorAll('.slide')].map(s => '<button class="tab" data-tab="' + s.id.slice(2) + '">' + esc(s.dataset.title) + '</button>').join('');
+}
+function showTab() {
+  document.querySelectorAll('.slide').forEach(s => s.classList.toggle('on', s.id === 's-' + S.tab));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === S.tab));
+  if (PRES.on) $('#pPg').textContent = (PRES.i + 1) + ' / ' + PRES.list.length;
+}
+
+/* ---------- present mode ---------- */
+const PRES = { on: false, i: 0, list: SLIDES.map(s => s[0]) };
+function presGo(i) { PRES.i = Math.max(0, Math.min(PRES.list.length - 1, i)); S.tab = PRES.list[PRES.i]; showTab(); const m = document.querySelector('main'); if (m) m.scrollTop = 0; hideTip(); }
+function presEnter() {
+  PRES.on = true; document.body.classList.add('present'); presGo(Math.max(0, PRES.list.indexOf(S.tab)));
+  try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => { }); } catch (e) { }
+}
+function presExit() { if (!PRES.on) return; PRES.on = false; document.body.classList.remove('present'); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { } showTab(); }
+
+/* ---------- events ---------- */
+function bindApp() {
+  $('#fMonth').onchange = e => { S.month = e.target.value; S.cmp = ''; render(); };
+  $('#fCmp').onchange = e => { S.cmp = e.target.value; render(); };
+  $('#fScope').onchange = e => { S.scope = e.target.value; render(); };
+  $('#fBasis').onchange = e => { S.basis = e.target.value; render(); };
+  $('#fTarget').onchange = e => { const v = parseFloat(e.target.value); if (v > 0 && v <= 100) { DB.fcTarget = v; saveDB(); } render(); };
+  $('#btnPrint').onclick = () => window.print();
+  $('#btnPresent').onclick = presEnter; $('#pExit').onclick = presExit; $('#pPrev').onclick = () => presGo(PRES.i - 1); $('#pNext').onclick = () => presGo(PRES.i + 1);
+  $('#btnTheme').onclick = () => { const r = document.documentElement, cur = r.getAttribute('data-theme'), nx = cur === 'dark' ? 'light' : cur === 'light' ? '' : 'dark'; if (nx) r.setAttribute('data-theme', nx); else r.removeAttribute('data-theme'); try { localStorage.setItem('mt_present_theme', nx); } catch (e) { } };
+  try { const th = localStorage.getItem('mt_present_theme'); if (th) document.documentElement.setAttribute('data-theme', th); } catch (e) { }
+  document.addEventListener('keydown', e => {
+    if (!PRES.on || /INPUT|SELECT|TEXTAREA/.test((e.target.tagName || ''))) return;
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); presGo(PRES.i + 1); } else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); presGo(PRES.i - 1); } else if (e.key === 'Escape') presExit(); else if (e.key === 'Home') presGo(0); else if (e.key === 'End') presGo(PRES.list.length - 1);
+  });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && PRES.on) presExit(); });
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-tab],[data-bm],[data-wm],[data-go],[data-act],[data-del],#btnPick,#btnDemo,#btnDelDemo,#btnClear'); if (!t) return;
+    if (t.dataset.tab) { S.tab = t.dataset.tab; showTab(); scrollTo(0, 0); }
+    else if (t.dataset.bm) { S.bMetric = t.dataset.bm; render(); }
+    else if (t.dataset.wm) { S.wMetric = t.dataset.wm; render(); }
+    else if (t.dataset.go) { S.tab = t.dataset.go; showTab(); }
+    else if (t.dataset.act === 'demo' || t.id === 'btnDemo') { addRecords(makeDemo()); S.month = ''; S.cmp = ''; render(); toast('ໂຫຼດຂໍ້ມູນຕົວຢ່າງແລ້ວ (3 ສາຂາ × ຕຸລາ-ພະຈິກ 2026)'); if (S.tab === 'data') S.tab = 'summary'; showTab(); }
+    else if (t.id === 'btnDelDemo') { DB.records = DB.records.filter(r => !r.demo); invalidate(); saveDB(); render(); }
+    else if (t.id === 'btnClear') { if (confirm('ລຶບຂໍ້ມູນທັງໝົດທີ່ນຳເຂົ້າ?')) { DB.records = []; invalidate(); saveDB(); S.month = ''; S.cmp = ''; render(); } }
+    else if (t.dataset.del) { DB.records = DB.records.filter(r => r.id !== t.dataset.del); invalidate(); saveDB(); render(); }
+    else if (t.id === 'btnPick') $('#filePick').click();
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset && t.dataset.ch) {
+      const [id, f] = t.dataset.ch.split('|'), r = DB.records.find(x => x.id === id); if (!r) return;
+      const c = r.ch = r.ch || { dine: 0, take: 0, d: [{ n: '', v: 0 }, { n: '', v: 0 }] }; while (c.d.length < 2) c.d.push({ n: '', v: 0 });
+      if (f === 'dine' || f === 'take') c[f] = +t.value || 0; else { const i = +f[1]; if (f[0] === 'n') c.d[i].n = t.value.trim(); else c.d[i].v = +t.value || 0; }
+      invalidate(); saveDB(); const y = scrollY; render(); scrollTo(0, y); return;
+    }
+    if (t.id === 'filePick') { importFiles([...t.files]); t.value = ''; }
+    else if (t.dataset && (t.dataset.rb || t.dataset.rm)) {
+      const r = DB.records.find(x => x.id === (t.dataset.rb || t.dataset.rm)); if (!r) return;
+      const nb = t.dataset.rb ? t.value.trim() : r.branch, nm = t.dataset.rm ? t.value : r.month;
+      if (!nb || !/^\d{4}-\d{2}$/.test(nm)) { render(); return; }
+      if (DB.records.some(x => x !== r && x.branch === nb && x.month === nm)) { toast('ມີຂໍ້ມູນຂອງ ' + nb + ' ' + mLab(nm) + ' ຢູ່ແລ້ວ - ແກ້ບໍ່ໄດ້'); render(); return; }
+      r.branch = nb; r.month = nm; invalidate(); saveDB(); render();
+    }
+  });
+  const dz = () => $('#drop');
+  document.addEventListener('dragover', e => { if (dz() && dz().contains(e.target)) { e.preventDefault(); dz().classList.add('over'); } });
+  document.addEventListener('dragleave', e => { if (dz()) dz().classList.remove('over'); });
+  document.addEventListener('drop', e => { if (dz() && dz().contains(e.target)) { e.preventDefault(); dz().classList.remove('over'); importFiles([...e.dataTransfer.files]); } });
+}
+window.addEventListener('DOMContentLoaded', () => {
+  loadDB(); bindTips(); buildTabs(); bindApp();
+  if (!DB.records.length) S.tab = 'data';
+  render();
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(render, 200); });
+});
+<\/script>
+</body></html>
+</script>
 
         <!-- ==================== TAB 3: WASTE LOG ==================== -->
         <section id="tab-content-waste" class="hidden space-y-6">
@@ -1072,11 +2387,325 @@
             });
         }
 
+
+        // ==================== PROMO COSTING ====================
+        const PM_KEY = 'momstouch_promos_v1';
+        let PM = null;
+        function pmLoad() { if (!PM) { try { PM = JSON.parse(localStorage.getItem(PM_KEY)); } catch (e) { } if (!PM || !Array.isArray(PM.sets)) PM = { sets: [] }; } return PM; }
+        function pmSave() { try { localStorage.setItem(PM_KEY, JSON.stringify(PM)); } catch (e) { } }
+        const pmN = v => { const x = parseFloat(String(v).replace(/,/g, '')); return isNaN(x) ? 0 : x; };
+        const pmF = v => Math.round(v).toLocaleString('en-US');
+        const pmP = v => (isFinite(v) ? v.toFixed(1) : '0.0') + '%';
+        const pmItem = id => inventory.find(i => i.id === id);
+        const pmLabel = i => i.id + ' · ' + (i.nameLao || '') + ' / ' + (i.nameEn || '');
+        function pmUnits(it) {
+            const u = String(it.uom || '').toUpperCase();
+            if (u === 'KG') return [{ u: 'KG', f: 1 }, { u: 'g', f: 1000 }];
+            if (u === 'L' || u === 'LT' || u === 'LTR') return [{ u: it.uom, f: 1 }, { u: 'ml', f: 1000 }];
+            return [{ u: it.uom || 'unit', f: 1 }];
+        }
+        const pmMenus = () => { pmLoad(); return PM.menus && PM.menus.length ? PM.menus : ((salesState && salesState.bomMenus) || []); };
+        const pmMenu = n => pmMenus().find(m => m.name === n);
+        const pmMLabel = m => (m.cat ? m.cat + ' · ' : '') + m.name;
+        function pmUnit(l) { const m = pmMenu(l.n); return m ? +m.cogs || 0 : (+l.c || 0); }
+        function pmLineCost(l) {
+            if (l.k === 'x') return pmN(l.v);
+            if (l.k === 'm') return pmN(l.q) * pmUnit(l);
+            const it = pmItem(l.id); if (!it) return 0;
+            const un = pmUnits(it).find(x => x.u === l.u) || pmUnits(it)[0];
+            return pmN(l.q) / un.f * (+it.cost || 0);
+        }
+        const pmListSum = p => p.lines.filter(l => l.k === 'm' && pmMenu(l.n)).reduce((a, l) => a + (pmMenu(l.n).price || 0) * pmN(l.q), 0);
+        const pmNormal = p => pmN(p.normal) || pmListSum(p);
+        const pmRound = (v, r) => r > 0 ? Math.round(v / r) * r : Math.round(v);
+        function pmApplyDisc(p) { if (p.mode === 'disc' && pmN(p.disc) >= 0 && p.disc !== '' && pmNormal(p) > 0) p.price = String(pmRound(pmNormal(p) * (1 - pmN(p.disc) / 100), +p.rnd || 0)); }
+        function pmDisc(id, d) { const p = pmLoad().sets.find(x => x.id === id); if (!p) return; p.disc = String(d); p.mode = 'disc'; pmApplyDisc(p); pmSave(); renderPromo(); }
+        function pmCalc(p) {
+            const vat = 1 + (+(salesState && salesState.vat) || 0) / 100, tgt = +(salesState && salesState.costPct) || 35;
+            const cost = p.lines.reduce((a, l) => a + pmLineCost(l), 0), price = pmN(p.price);
+            const rev = p.inc ? price / vat : price, fee = rev * pmN(p.fee) / 100, net = rev - fee, profit = net - cost, qty = pmN(p.qty);
+            return { vat, tgt, cost, price, rev, fee, net, profit, margin: rev > 0 ? profit / rev * 100 : 0, costPct: rev > 0 ? cost / rev * 100 : 0, qty,
+                listSum: pmListSum(p), sugg: cost / (tgt / 100) * (p.inc ? vat : 1), be: (cost / (1 - pmN(p.fee) / 100)) * (p.inc ? vat : 1), disc: pmNormal(p) > 0 && price > 0 ? (1 - price / pmNormal(p)) * 100 : null, normal: pmNormal(p) };
+        }
+        function pmMenusFrom(rows) {
+            const num = x => typeof x === 'number' && isFinite(x) ? x : null, str = x => x == null ? '' : String(x).trim(), out = [], seen = {};
+            (rows || []).forEach((r, i) => { if (!r || i < 2) return; const n = str(r[2]); if (!n || !(num(r[3]) > 0) || str(r[0]) === '' || seen[n]) return; seen[n] = 1; out.push({ name: n, cat: str(r[1]), cogs: Math.round(num(r[3]) * 100) / 100, price: num(r[4]) }); });
+            return out;
+        }
+        async function pmImportMenus(inp) {
+            const f = inp.files[0]; inp.value = ''; if (!f) return;
+            try {
+                const wb = await readWorkbook(f), names = (wb.names || []).filter(n => /cogs/i.test(n)), sheets = {};
+                for (const n of names) { const m = pmMenusFrom(await wb.rows(n)); if (m.length) sheets[n] = m; }
+                const keys = Object.keys(sheets); if (!keys.length) throw new Error(L('ບໍ່ພົບຊີດ COGS ທີ່ມີເມນູ', 'No COGS sheet with menus found'));
+                pmLoad(); PM.sheets = sheets; PM.sheet = keys.includes('COGS & Price') ? 'COGS & Price' : keys[0]; PM.menus = sheets[PM.sheet]; PM.file = f.name; PM.at = today(); pmSave(); renderPromo();
+                showToast(L('📘 ໂຫຼດເມນູສຳເລັດ ' + PM.menus.length + ' ເມນູ ຈາກຊີດ "' + PM.sheet + '"', '📘 Loaded ' + PM.menus.length + ' menus from "' + PM.sheet + '"'), 'success');
+            } catch (e) { showToast(L('ອ່ານໄຟລ໌ບໍ່ໄດ້: ', 'Could not read file: ') + (e.message || e), 'error'); }
+        }
+        function pmPickSheet(n) { pmLoad(); if (PM.sheets && PM.sheets[n]) { PM.sheet = n; PM.menus = PM.sheets[n]; pmSave(); renderPromo(); } }
+        function pmAdd() { pmLoad().sets.unshift({ id: 'p' + Date.now(), name: '', price: '', normal: '', disc: '', mode: 'price', rnd: 1000, fee: '', qty: '', inc: true, lines: [{ k: 'm', n: '', q: '1', c: 0 }] }); pmSave(); renderPromo(); }
+        function pmDup(id) { const p = pmLoad().sets.find(x => x.id === id); if (!p) return; const c = JSON.parse(JSON.stringify(p)); c.id = 'p' + Date.now(); c.name = (p.name || '') + ' (copy)'; PM.sets.splice(PM.sets.indexOf(p) + 1, 0, c); pmSave(); renderPromo(); }
+        function pmDel(id) { if (!confirm(L('ລຶບເຊັດນີ້?', 'Delete this set?'))) return; PM.sets = PM.sets.filter(x => x.id !== id); pmSave(); renderPromo(); }
+        function pmAddLine(id, k) { const p = pmLoad().sets.find(x => x.id === id); p.lines.push(k === 'x' ? { k: 'x', n: '', v: '' } : k === 'm' ? { k: 'm', n: '', q: '1', c: 0 } : { k: 'item', id: '', q: '', u: '' }); pmSave(); renderPromo(); }
+        function pmDelLine(id, i) { const p = pmLoad().sets.find(x => x.id === id); p.lines.splice(i, 1); pmSave(); renderPromo(); }
+        function pmSet(id, f, v, re) { const p = pmLoad().sets.find(x => x.id === id); if (!p) return; p[f] = v; if (f === 'price') { p.mode = 'price'; p.disc = ''; const d = document.getElementById('pm-disc-' + id); if (d) d.value = ''; } if (f === 'disc') { p.mode = 'disc'; pmApplyDisc(p); const e = document.getElementById('pm-price-' + id); if (e) e.value = p.price; } if (f === 'rnd') { p.rnd = +v; pmApplyDisc(p); re = true; } pmSave(); if (re) renderPromo(); else pmUpd(id); }
+        function pmSetLine(id, i, f, v) {
+            const p = pmLoad().sets.find(x => x.id === id), l = p.lines[i];
+            if (f === 'pickm') { const m = pmMenus().find(x => pmMLabel(x) === v || x.name === v.trim()); if (!m) { showToast(L('ບໍ່ພົບເມນູນີ້ໃນ BOM - ເລືອກຈາກລາຍການທີ່ຂຶ້ນໃຫ້', 'Menu not found in BOM - pick from suggestions'), 'error'); return; } l.n = m.name; l.c = m.cogs; pmSave(); renderPromo(); return; }
+            if (f === 'pick') { const it = inventory.find(x => pmLabel(x) === v || x.id === v.trim()); if (!it) { showToast(L('ບໍ່ພົບລາຍການນີ້ - ເລືອກຈາກລາຍການທີ່ຂຶ້ນໃຫ້', 'Item not found - pick from the suggestions'), 'error'); return; } l.id = it.id; { const uu = pmUnits(it); l.u = uu[uu.length - 1].u; } pmSave(); renderPromo(); return; }
+            l[f] = v; pmSave(); pmUpd(id);
+        }
+        function pmUpd(id) {
+            const p = PM.sets.find(x => x.id === id), el = document.getElementById('pm-res-' + id); if (!p || !el) return;
+            if (p.mode === 'disc') { pmApplyDisc(p); const e = document.getElementById('pm-price-' + id); if (e) e.value = p.price; pmSave(); }
+            p.lines.forEach((l, i) => { const c = document.getElementById(`pm-lc-${id}-${i}`); if (c) c.textContent = pmF(pmLineCost(l)); });
+            el.innerHTML = pmResHtml(p);
+        }
+        function pmResHtml(p) {
+            const c = pmCalc(p), ok = c.rev > 0 && c.costPct <= c.tgt, has = c.price > 0, good = c.profit >= 0;
+            const box = (lo, v, sub, cls) => `<div class="rounded-xl border p-3 ${cls || 'bg-white border-slate-200'}"><div class="text-[11px] font-bold text-slate-500">${lo}</div><div class="text-xl font-extrabold text-slate-900">${v}</div>${sub ? `<div class="text-[11px] text-slate-500 mt-0.5">${sub}</div>` : ''}</div>`;
+            let h = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">` +
+                box(L('ຕົ້ນທຶນຕໍ່ເຊັດ', 'Cost per set'), pmF(c.cost) + ' ₭', L('ລວມທຸກລາຍການ', 'All items incl.')) +
+                box(L('ລາຍຮັບ (ບໍ່ລວມ VAT)', 'Revenue ex-VAT'), has ? pmF(c.rev) + ' ₭' : '—', p.inc && c.vat > 1 ? L('ຕັດ VAT ' + ((c.vat - 1) * 100).toFixed(0) + '% ອອກ', 'VAT ' + ((c.vat - 1) * 100).toFixed(0) + '% removed') : '') +
+                box(L('ກຳໄລຕໍ່ເຊັດ', 'Profit per set'), has ? pmF(c.profit) + ' ₭' : '—', has ? L('ກຳໄລ ', 'Margin ') + pmP(c.margin) : '', has ? (good ? 'bg-emerald-50 border-emerald-300' : 'bg-red-50 border-red-300') : '') +
+                box(L('Food cost %', 'Food cost %'), has ? pmP(c.costPct) : '—', L('ເປົ້າ ', 'Target ') + c.tgt + '%', has ? (ok ? 'bg-emerald-50 border-emerald-300' : 'bg-amber-50 border-amber-300') : '') + `</div>`;
+            if (has) {
+                h += `<div class="mt-3 text-sm rounded-xl p-3 ${good ? (ok ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800') : 'bg-red-50 text-red-800'}">` +
+                    (!good ? L('⛔ ຂາຍເຊັດນີ້ຂາດທຶນ ' + pmF(-c.profit) + ' ₭ ຕໍ່ເຊັດ', '⛔ Loss of ' + pmF(-c.profit) + ' ₭ per set') : ok ? L('✅ ກຳໄລ ' + pmF(c.profit) + ' ₭ ຕໍ່ເຊັດ ແລະ Food cost ຢູ່ໃນເປົ້າ', '✅ Profit ' + pmF(c.profit) + ' ₭ per set, food cost within target') : L('⚠️ ມີກຳໄລ ແຕ່ Food cost ' + pmP(c.costPct) + ' ສູງກວ່າເປົ້າ ' + c.tgt + '%', '⚠️ Profitable but food cost ' + pmP(c.costPct) + ' exceeds target ' + c.tgt + '%')) +
+                    (c.disc != null ? L(' · ຫຼຸດຈາກລາຄາປົກກະຕິ ' + pmP(c.disc), ' · ' + pmP(c.disc) + ' off normal price') : '') + `</div>`;
+            }
+            h += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">` +
+                box(L('ລາຄາຂັ້ນຕ່ຳ (ເທົ່າທຶນ)', 'Break-even price'), c.cost > 0 ? pmF(c.be) + ' ₭' : '—', L('ຕ່ຳກວ່ານີ້ = ຂາດທຶນ', 'Below this = loss')) +
+                box(L('ລາຄາແນະນຳ (ໃຫ້ໄດ້ Food cost ຕາມເປົ້າ ' + c.tgt + '%)', 'Suggested price (hits ' + c.tgt + '% food cost)'), c.cost > 0 ? pmF(Math.ceil(c.sugg / 500) * 500) + ' ₭' : '—', L('ປັດຂຶ້ນຫາ 500 ₭', 'Rounded up to 500 ₭')) + `</div>`;
+            if (c.cost > 0 && c.normal > 0) {
+                const maxT = (1 - c.cost / (c.tgt / 100) * (p.inc ? c.vat : 1) / c.normal) * 100, rn = +p.rnd || 0;
+                const maxB = (1 - ((c.cost / (1 - pmN(p.fee) / 100)) * (p.inc ? c.vat : 1)) / c.normal) * 100;
+                h += `<div class="mt-3 rounded-xl border border-slate-200 p-3"><div class="text-xs font-bold text-slate-700 mb-1">${L('ຈຳລອງສ່ວນຫຼຸດ ຈາກລາຄາປົກກະຕິ ' + pmF(c.normal) + ' ₭', 'Discount scenarios from normal price ' + pmF(c.normal) + ' ₭')}</div>
+                  <div class="text-xs text-slate-600 mb-2">${L('ຫຼຸດໄດ້ສູງສຸດ ', 'Max discount ')}<b>${maxT > 0 ? maxT.toFixed(1) + '%' : L('ບໍ່ໄດ້', 'none')}</b> ${L('ຖ້າຢາກໃຫ້ Food cost ບໍ່ເກີນເປົ້າ ' + c.tgt + '%', 'to stay within the ' + c.tgt + '% food-cost target')} · ${L('ຫຼຸດໄດ້ສູງສຸດ ', 'max ')}<b>${maxB > 0 ? maxB.toFixed(1) + '%' : L('ບໍ່ໄດ້', 'none')}</b> ${L('ກ່ອນຂາດທຶນ', 'before a loss')}</div>
+                  <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-left"><th class="py-1">${L('ຫຼຸດ', 'Disc.')}</th><th class="text-right">${L('ລາຄາຂາຍ', 'Price')}</th><th class="text-right">${L('ກຳໄລ/ເຊັດ', 'Profit/set')}</th><th class="text-right">Food cost</th><th></th><th></th></tr></thead><tbody>` +
+                  [0, 10, 20, 30, 40, 50].map(d => { const pr = pmRound(c.normal * (1 - d / 100), rn), q = pmCalc(Object.assign({}, p, { price: String(pr) })); const st = q.profit < 0 ? '⛔' : q.costPct > c.tgt ? '⚠️' : '✅'; return `<tr class="border-t border-slate-100"><td class="py-1.5 font-bold">${d ? '-' + d + '%' : L('ລາຄາເຕັມ', 'Full')}</td><td class="text-right">${pmF(pr)}</td><td class="text-right ${q.profit < 0 ? 'text-red-700' : ''}">${pmF(q.profit)}</td><td class="text-right">${pmP(q.costPct)}</td><td class="text-center">${st}</td><td class="text-right"><button onclick="pmDisc('${p.id}',${d})" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-bold cursor-pointer">${L('ໃຊ້', 'Use')}</button></td></tr>`; }).join('') + `</tbody></table></div></div>`;
+            }
+            if (c.qty > 0 && has) h += `<div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><div class="text-xs font-bold text-slate-700 mb-2">${L('ຖ້າຂາຍ ' + pmF(c.qty) + ' ເຊັດ', 'If you sell ' + pmF(c.qty) + ' sets')}</div><div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">` +
+                `<div><div class="text-[11px] text-slate-500">${L('ຍອດຂາຍ (ມີ VAT)', 'Sales (incl. VAT)')}</div><b>${pmF(c.price * c.qty)} ₭</b></div><div><div class="text-[11px] text-slate-500">${L('ຕົ້ນທຶນລວມ', 'Total cost')}</div><b>${pmF(c.cost * c.qty)} ₭</b></div>` +
+                `<div><div class="text-[11px] text-slate-500">${L('ຄ່າທຳນຽມ/ສ່ວນແບ່ງ', 'Fees')}</div><b>${pmF(c.fee * c.qty)} ₭</b></div><div><div class="text-[11px] text-slate-500">${L('ກຳໄລລວມ', 'Total profit')}</div><b class="${good ? 'text-emerald-700' : 'text-red-700'}">${pmF(c.profit * c.qty)} ₭</b></div></div></div>`;
+            return h;
+        }
+        function renderPromo() {
+            const el = document.getElementById('tab-content-promo'); if (!el) return; pmLoad();
+            const inp = 'px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#B91C1C]';
+            const btn = 'px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition cursor-pointer';
+            const vat = +(salesState && salesState.vat) || 0;
+            let h = `<datalist id="pm-dm">${pmMenus().map(m => `<option value="${esc(pmMLabel(m))}"></option>`).join('')}</datalist><datalist id="pm-dl">${inventory.map(i => `<option value="${esc(pmLabel(i))}"></option>`).join('')}</datalist>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div><h2 class="text-lg font-extrabold text-slate-900">🏷️ ${L('ຄິດຕົ້ນທຶນໂປຣໂມຊັນ / ເຊັດ', 'Promotion / set costing')}</h2>
+                <p class="text-xs text-slate-500 mt-1">${L('ເລືອກວັດຖຸດິບຈາກລາຍການສະຕ໋ອກ + ໃສ່ປະລິມານ → ລະບົບລວມຕົ້ນທຶນ. ໃສ່ລາຄາຂາຍ → ເຫັນກຳໄລທັນທີ. ໃຊ້ VAT ' + vat + '% ແລະ ເປົ້າ Food cost ' + ((salesState && salesState.costPct) || 35) + '% ຈາກແຖບ Target Sales.', 'Pick ingredients from stock list + quantity → cost is summed. Enter selling price → profit shows instantly. Uses VAT ' + vat + '% and food-cost target from the Target Sales tab.')}</p></div>
+                <button onclick="pmAdd()" class="${btn} bg-[#B91C1C] text-white hover:bg-red-800">➕ ${L('ເພີ່ມເຊັດໃໝ່', 'New set')}</button></div>`;
+            const nm = pmMenus().length, shn = PM.sheets ? Object.keys(PM.sheets) : [];
+            h += `<div class="rounded-2xl p-4 ${nm ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-amber-50 border-amber-200 text-amber-900'} border text-sm flex flex-wrap items-center justify-between gap-3"><span>${nm ? L('📘 ເມນູທີ່ໂຫຼດແລ້ວ ' + nm + ' ເມນູ' + (PM.file ? ' · ' + esc(PM.file) : ''), '📘 ' + nm + ' menus loaded' + (PM.file ? ' · ' + esc(PM.file) : '')) : L('ຍັງບໍ່ມີເມນູ - ໂຫຼດໄຟລ໌ BOM ເພື່ອດຶງເມນູ + ຕົ້ນທຶນ (COGS) ຈາກຊີດ COGS & Price. ບໍ່ແຕະລາຄາວັດຖຸດິບໃນສະຕ໋ອກ.', 'No menus yet - load the BOM file to pull menus + COGS. Stock prices are not touched.')}</span>
+              <span class="flex flex-wrap items-center gap-2">${shn.length > 1 ? `<label class="text-xs font-bold">${L('ຊີດ', 'Sheet')} <select class="px-2 py-1 border border-slate-300 rounded-lg text-xs" onchange="pmPickSheet(this.value)">${shn.map(n => `<option ${n === PM.sheet ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>` : ''}<label class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white cursor-pointer">📂 ${nm ? L('ໂຫຼດໄຟລ໌ໃໝ່', 'Reload file') : L('ໂຫຼດເມນູຈາກໄຟລ໌ BOM', 'Load menus from BOM file')}<input type="file" accept=".xlsx" class="hidden" onchange="pmImportMenus(this)"></label></span></div>`;
+            if (!PM.sets.length) h += `<div class="bg-white rounded-2xl p-8 text-center text-slate-500 border border-dashed border-slate-300">${L('ຍັງບໍ່ມີເຊັດ - ກົດ "ເພີ່ມເຊັດໃໝ່"', 'No sets yet - click "New set"')}</div>`;
+            PM.sets.forEach(p => {
+                const id = p.id;
+                const lines = p.lines.map((l, i) => {
+                    if (l.k === 'm') { const m = pmMenu(l.n), u = pmUnit(l); return `<tr class="border-t border-slate-100 bg-rose-50/40"><td class="py-2 pr-2"><input list="pm-dm" class="${inp} w-full min-w-[220px]" placeholder="${L('🍔 ເລືອກເມນູຈາກ BOM...', '🍔 Pick menu from BOM...')}" value="${l.n ? esc(m ? pmMLabel(m) : l.n) : ''}" onchange="pmSetLine('${id}',${i},'pickm',this.value)"></td>
+                      <td class="py-2 pr-2 w-24"><input type="number" min="0" step="any" class="${inp} w-full text-right" value="${esc(l.q)}" oninput="pmSetLine('${id}',${i},'q',this.value)"></td>
+                      <td class="py-2 pr-2 w-24 text-xs text-slate-500">${L('ຈານ/ອັນ', 'portion')}</td>
+                      <td class="py-2 pr-2 w-28 text-right text-xs text-slate-500">${l.n ? pmF(u) + ' ₭' + (m ? '' : ' ⚠') : ''}</td>
+                      <td class="py-2 pr-2 text-right font-bold text-slate-800" id="pm-lc-${id}-${i}">${pmF(pmLineCost(l))}</td><td><button onclick="pmDelLine('${id}',${i})" class="text-red-500 px-2 cursor-pointer">✕</button></td></tr>`; }
+                    if (l.k === 'x') return `<tr class="border-t border-slate-100"><td class="py-2 pr-2"><input class="${inp} w-full" placeholder="${L('ຄ່າອື່ນ ເຊັ່ນ ແຮງງານ/ຖົງ', 'Other cost e.g. labour/bag')}" value="${esc(l.n)}" oninput="pmSetLine('${id}',${i},'n',this.value)"></td><td class="py-2 pr-2 text-xs text-slate-400" colspan="2">${L('ຍອດເງິນ (₭)', 'Amount (₭)')}</td><td class="py-2 pr-2 w-28"><input type="number" min="0" class="${inp} w-full text-right" value="${esc(l.v)}" oninput="pmSetLine('${id}',${i},'v',this.value)"></td><td class="py-2 pr-2 text-right font-bold text-slate-800" id="pm-lc-${id}-${i}">${pmF(pmLineCost(l))}</td><td><button onclick="pmDelLine('${id}',${i})" class="text-red-500 px-2 cursor-pointer">✕</button></td></tr>`;
+                    const it = pmItem(l.id), us = it ? pmUnits(it) : [];
+                    return `<tr class="border-t border-slate-100"><td class="py-2 pr-2"><input list="pm-dl" class="${inp} w-full min-w-[220px]" placeholder="${L('ພິມຄົ້ນຫາລາຍການ...', 'Search item...')}" value="${it ? esc(pmLabel(it)) : ''}" onchange="pmSetLine('${id}',${i},'pick',this.value)"></td>
+                      <td class="py-2 pr-2 w-24"><input type="number" min="0" step="any" class="${inp} w-full text-right" value="${esc(l.q)}" oninput="pmSetLine('${id}',${i},'q',this.value)"></td>
+                      <td class="py-2 pr-2 w-24"><select class="${inp} w-full" onchange="pmSetLine('${id}',${i},'u',this.value)">${us.map(u => `<option ${u.u === l.u ? 'selected' : ''}>${esc(u.u)}</option>`).join('')}</select></td>
+                      <td class="py-2 pr-2 w-28 text-right text-xs text-slate-500">${it ? pmF(it.cost) + ' ₭/' + esc(it.uom) : ''}</td>
+                      <td class="py-2 pr-2 text-right font-bold text-slate-800" id="pm-lc-${id}-${i}">${pmF(pmLineCost(l))}</td><td><button onclick="pmDelLine('${id}',${i})" class="text-red-500 px-2 cursor-pointer">✕</button></td></tr>`;
+                }).join('');
+                const f = (lo, en, k, ph, w) => `<div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L(lo, en)}</label><input type="number" min="0" step="any" class="${inp} ${w || 'w-32'} text-right" placeholder="${ph || ''}" value="${esc(p[k])}" oninput="pmSet('${id}','${k}',this.value)"></div>`;
+                h += `<div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+                  <div class="flex flex-wrap items-end gap-3 justify-between">
+                    <input class="${inp} text-base font-bold flex-1 min-w-[220px]" placeholder="${L('ຊື່ເຊັດ / ໂປຣໂມຊັນ ເຊັ່ນ Combo 2 ຄົນ', 'Set / promo name e.g. Combo for 2')}" value="${esc(p.name)}" oninput="pmSet('${id}','name',this.value)">
+                    <div class="flex gap-2"><button onclick="pmDup('${id}')" class="${btn} bg-slate-100 text-slate-700 hover:bg-slate-200">📄 ${L('ສຳເນົາ', 'Duplicate')}</button><button onclick="pmDel('${id}')" class="${btn} bg-red-50 text-red-700 hover:bg-red-100">🗑 ${L('ລຶບ', 'Delete')}</button></div></div>
+                  <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-[11px] text-slate-500 text-left"><th>${L('ວັດຖຸດິບ', 'Ingredient')}</th><th class="text-right pr-2">${L('ປະລິມານ', 'Qty')}</th><th>${L('ໜ່ວຍ', 'Unit')}</th><th class="text-right pr-2">${L('ລາຄາ/ໜ່ວຍ', 'Unit cost')}</th><th class="text-right pr-2">${L('ຕົ້ນທຶນ (₭)', 'Cost (₭)')}</th><th></th></tr></thead><tbody>${lines || `<tr><td colspan="6" class="py-3 text-xs text-slate-400">${L('ຍັງບໍ່ມີລາຍການ - ກົດເພີ່ມດ້ານລຸ່ມ', 'No items yet - add below')}</td></tr>`}</tbody></table></div>
+                  <div class="flex flex-wrap gap-2"><button onclick="pmAddLine('${id}','m')" class="${btn} bg-[#B91C1C] text-white hover:bg-red-800">🍔 ${L('ເພີ່ມເມນູ (ຕົ້ນທຶນຈາກ BOM)', 'Add menu (cost from BOM)')}</button><button onclick="pmAddLine('${id}','item')" class="${btn} bg-slate-100 text-slate-700 hover:bg-slate-200">➕ ${L('ເພີ່ມວັດຖຸດິບຈາກສະຕ໋ອກ (ທາງເລືອກ)', 'Add stock ingredient (optional)')}</button><button onclick="pmAddLine('${id}','x')" class="${btn} bg-slate-100 text-slate-700 hover:bg-slate-200">➕ ${L('ເພີ່ມຄ່າໃຊ້ຈ່າຍອື່ນ', 'Add other cost')}</button></div>
+                  <div class="space-y-3 bg-amber-50/60 border border-amber-200 rounded-xl p-3">
+                    <div class="flex flex-wrap items-end gap-4">
+                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ລາຄາປົກກະຕິ (₭) - ຕັ້ງໃຫ້ອັດຕະໂນມັດຈາກເມນູ', 'Normal price (₭) - auto from menus')}</label><input type="number" min="0" class="${inp} w-40 text-right" placeholder="${pmListSum(p) ? Math.round(pmListSum(p)) : '0'}" value="${esc(p.normal)}" oninput="pmSet('${id}','normal',this.value)"></div>
+                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ສ່ວນຫຼຸດ %', 'Discount %')}</label><input id="pm-disc-${id}" type="number" min="0" max="100" step="any" class="${inp} w-24 text-right" placeholder="0" value="${esc(p.disc)}" oninput="pmSet('${id}','disc',this.value)"></div>
+                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ປັດລາຄາເປັນ', 'Round price to')}</label><select class="${inp}" onchange="pmSet('${id}','rnd',this.value)">${[0, 500, 1000, 5000].map(r => `<option value="${r}" ${(+p.rnd || 0) === r ? 'selected' : ''}>${r ? pmF(r) + ' ₭' : L('ບໍ່ປັດ', 'No rounding')}</option>`).join('')}</select></div>
+                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ລາຄາຂາຍຂອງເຊັດ (₭) - ໃສ່ເອງ ຫຼື ໃຫ້ຄິດຈາກສ່ວນຫຼຸດ', 'Selling price (₭) - type it or let discount set it')}</label><input id="pm-price-${id}" type="number" min="0" class="${inp} w-44 text-right font-bold" placeholder="0" value="${esc(p.price)}" oninput="pmSet('${id}','price',this.value)"></div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2"><span class="text-[11px] font-bold text-slate-600">${L('ລຸດດ່ວນ:', 'Quick discount:')}</span>${[10, 15, 20, 25, 30, 35, 40, 50].map(d => `<button onclick="pmDisc('${id}',${d})" class="px-3 py-1 rounded-full text-xs font-bold border cursor-pointer ${p.mode === 'disc' && pmN(p.disc) === d ? 'bg-[#B91C1C] text-white border-[#B91C1C]' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">-${d}%</button>`).join('')}</div>
+                    <div class="flex flex-wrap items-end gap-4">
+                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ຄ່າທຳນຽມ Delivery/ສ່ວນແບ່ງ %', 'Platform fee %')}</label><input type="number" min="0" step="any" class="${inp} w-28 text-right" placeholder="0" value="${esc(p.fee)}" oninput="pmSet('${id}','fee',this.value)"></div>
+                      <div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ຄາດວ່າຂາຍໄດ້ (ເຊັດ)', 'Expected sets sold')}</label><input type="number" min="0" class="${inp} w-28 text-right" value="${esc(p.qty)}" oninput="pmSet('${id}','qty',this.value)"></div>
+                      <label class="flex items-center gap-2 text-xs font-bold text-slate-700 pb-2 cursor-pointer"><input type="checkbox" ${p.inc ? 'checked' : ''} onchange="pmSet('${id}','inc',this.checked,true)"> ${L('ລາຄາລວມ VAT ແລ້ວ', 'Price includes VAT')}</label>
+                    </div>
+                  </div>
+                  <div id="pm-res-${id}">${pmResHtml(p)}</div>
+                </div>`;
+            });
+            const act = document.activeElement, keep = act && act.closest && act.closest('#tab-content-promo') ? null : null;
+            el.innerHTML = h;
+        }
+
+        // ==================== EMBEDDED REPORT ====================
+        function reportBackupObj() { return { app: 'momstouch-vangxai', version: 2, inventory, wasteLogs, isRolledOver, basePeriod, pr: prState, sales: salesState, branches, branchData: (saveSnapshot(), Object.fromEntries(branches.list.map(b => { let x = null; try { x = JSON.parse(localStorage.getItem('mt_branch_' + b.id)); } catch (e) { } return [b.id, x]; }))) }; }
+        function reportFeed() {
+            const fr = document.getElementById('report-frame'), w = fr && fr.contentWindow; if (!w || !w.eval || !w.addRecords) return;
+            try {
+                w.__bk = JSON.parse(JSON.stringify(reportBackupObj()));
+                w.eval("(function(){const recs=recsFromBackup(__bk,'live');recs.forEach(r=>r.src='Live');const e=!DB.records.length;addRecords(recs);if(e){S.tab='summary';S.month='';S.cmp='';}render();})()");
+            } catch (e) { console.error(e); showToast('Report: ' + e.message, 'error'); }
+        }
+        function reportOpen() {
+            const fr = document.getElementById('report-frame'); if (!fr) return;
+            if (!fr.dataset.ready) { fr.dataset.ready = '1'; fr.onload = reportFeed; fr.srcdoc = document.getElementById('report-src').textContent.replace(/<\\\/script/g, '</script'); }
+            else reportFeed();
+        }
+        function reportReload() { reportFeed(); showToast('🔄 ອັບເດດລາຍງານແລ້ວ', 'success'); }
+
+
+        // ==================== BOM USAGE (expected vs actual) ====================
+        const BM_KEY = 'momstouch_bomrecipes_v1';
+        let BM = null, bmRange = { from: '', to: '', pkgOnly: true, open: false };
+        function bmLoad() { if (!BM) { try { BM = JSON.parse(localStorage.getItem(BM_KEY)); } catch (e) { } if (!BM || !BM.recipes) BM = { recipes: {}, map: {}, conv: {}, file: '', at: '' }; } return BM; }
+        function bmSave() { try { localStorage.setItem(BM_KEY, JSON.stringify(BM)); } catch (e) { } }
+        const bmNorm = x => String(x == null ? '' : x).toLowerCase().replace(/[^a-z0-9]/g, '');
+        const bmTok = x => new Set(String(x == null ? '' : x).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t.length > 1 && !['the', 'new', 'and'].includes(t)));
+        function bmMatchItem(name) {
+            const n = bmNorm(name); let it = inventory.find(i => bmNorm(i.nameEn) === n); if (it) return { it, conf: 'high' };
+            const a = bmTok(name); let best = null, bs = 0;
+            inventory.forEach(i => { const b = bmTok(i.nameEn); let x = 0; a.forEach(t => { if (b.has(t)) x++; }); const j = x / (a.size + b.size - x || 1); if (j > bs) { bs = j; best = i; } });
+            if (!best) return null; const bt = bmTok(best.nameEn), sub = [...bt].every(t => a.has(t)) || [...a].every(t => bt.has(t)); return bs >= 0.7 || (bs >= 0.6 && sub) ? { it: best, conf: 'med' } : null;
+        }
+        // guess "base units (g / ml / pieces) per 1 stock unit"
+        function bmGuessConv(ing, it) {
+            const uom = String(it.uom || '').toLowerCase(), pack = String(it.pack || ''), name = String(it.nameEn || ''), use = ing.use || 0, num = x => parseFloat(String(x).replace(/,/g, ''));
+            const isPkg = /pack/i.test(it.category || '') && /^Pack/i.test(it.category) ;
+            let m;
+            if (/^pk|package/i.test(it.category || '')) {
+                if (uom === 'kg' && (m = pack.match(/(\d[\d,]*)\s*ea\s*\/\s*box\s*1\s*box\s*(\d+(?:\.\d+)?)\s*kg/i))) return { v: num(m[1]) / num(m[2]), conf: 'med' };
+                if (/^(bag|pack)$/.test(uom) && (m = pack.match(/^\s*(\d[\d,]*)\s*ea/i))) return { v: num(m[1]), conf: 'high' };
+                if (/^(pcs|ea|roll|piece)$/.test(uom)) return { v: 1, conf: 'high' };
+                return { v: 1, conf: 'low' };
+            }
+            if (/box/.test(uom) && ing.conv > 0) return { v: ing.conv, conf: 'low' };
+            if ((m = name.match(/(\d+)\s*ml/i)) && /^(pet|can|btl|bottle)$/.test(uom)) return use >= 50 ? { v: num(m[1]), conf: 'med' } : { v: 1, conf: 'high' };
+            if (/^(pet|can|btl|bottle)$/.test(uom)) return { v: 1, conf: 'high' };
+            if (uom === 'kg' || uom === 'l' || uom === 'lt') { if (use > 0 && use < 10) { const e = String(ing.pack || '').match(/(\d+)\s*ea/i); return { v: e ? num(e[1]) : 1000, conf: 'low' }; } return { v: 1000, conf: 'high' }; }
+            if ((m = pack.match(/(\d[\d,]*)\s*slices/i))) return { v: num(m[1]), conf: 'high' };
+            if ((m = pack.match(/(\d+(?:\.\d+)?)\s*(kg|l)\b/i)) && /^(bag|can|pack)$/.test(uom)) return { v: num(m[1]) * 1000, conf: 'high' };
+            if (/^(ea|pcs)$/.test(uom)) return { v: 1, conf: 'low' };
+            if (ing.conv > 0) return { v: ing.conv, conf: 'low' };
+            return { v: 1, conf: 'low' };
+        }
+        async function bmImport(inp) {
+            const f = inp.files[0]; inp.value = ''; if (!f) return;
+            try {
+                const wb = await readWorkbook(f), rows = await wb.rows('BOM'); if (!rows) throw new Error(L('ບໍ່ພົບຊີດ "BOM"', 'Sheet "BOM" not found'));
+                const hi = rows.findIndex(r => r && r.some(c => /^menu$/i.test(String(c || '').trim())) && r.some(c => /^ingredient$/i.test(String(c || '').trim())));
+                if (hi < 0) throw new Error(L('ບໍ່ພົບຫົວຖັນ Menu / Ingredient', 'Menu / Ingredient columns not found'));
+                const H = rows[hi].map(c => String(c == null ? '' : c).trim().toLowerCase()), ix = n => H.indexOf(n), iM = ix('menu'), iC = ix('category'), iI = ix('ingredient'), iU = ix('usage'), iV = ix('conversion'), iP = ix('purchase pack size'), iID = ix('product id');
+                const recipes = {}; let n = 0;
+                for (let i = hi + 1; i < rows.length; i++) {
+                    const r = rows[i]; if (!r) continue; const menu = String(r[iM] == null ? '' : r[iM]).trim(), ing = String(r[iI] == null ? '' : r[iI]).trim(), use = +r[iU];
+                    if (!menu || !ing || !(use > 0) || ing === '1') continue;
+                    const R = recipes[menu] || (recipes[menu] = { cat: String(r[iC] || '').trim(), lines: [] }); R.lines.push({ pid: r[iID] == null ? '' : String(r[iID]), name: ing, use, conv: +r[iV] > 0 ? +r[iV] : 0, pack: String(r[iP] == null ? '' : r[iP]) }); n++;
+                }
+                if (!n) throw new Error(L('ບໍ່ພົບສູດໃນຊີດ BOM', 'No recipes in BOM sheet'));
+                bmLoad(); BM.recipes = recipes; BM.file = f.name; BM.at = today(); bmAuto(); bmSave(); renderUsage();
+                showToast(L(`📦 ໂຫຼດສູດ ${Object.keys(recipes).length} ເມນູ / ${n} ແຖວ`, `📦 Loaded ${Object.keys(recipes).length} recipes / ${n} lines`), 'success');
+            } catch (e) { showToast(L('ອ່ານໄຟລ໌ບໍ່ໄດ້: ', 'Could not read file: ') + (e.message || e), 'error'); }
+        }
+        function bmIngs() {
+            const m = {}; Object.entries(bmLoad().recipes).forEach(([mn, R]) => R.lines.forEach(l => { const g = m[l.name] || (m[l.name] = { name: l.name, use: l.use, conv: l.conv, pack: l.pack, menus: 0 }); g.menus++; })); return m;
+        }
+        function bmAuto() {
+            const I = bmIngs(); bmLoad();
+            Object.values(I).forEach(g => {
+                if (BM.map[g.name] === undefined) { const h = bmMatchItem(g.name); BM.map[g.name] = h ? h.it.id : ''; }
+                if (BM.map[g.name] && BM.conv[g.name] == null) { const it = inventory.find(i => i.id === BM.map[g.name]); if (it) BM.conv[g.name] = bmGuessConv(g, it).v; }
+            });
+        }
+        function bmSetMap(name, label) {
+            bmLoad(); const it = label === '' ? null : inventory.find(i => pmLabel(i) === label || i.id === label.trim());
+            if (label !== '' && !it) { showToast(L('ບໍ່ພົບລາຍການ', 'Item not found'), 'error'); return; }
+            BM.map[name] = it ? it.id : ''; if (it) BM.conv[name] = bmGuessConv(bmIngs()[name], it).v; bmSave(); renderUsage();
+        }
+        function bmSetConv(name, v) { bmLoad(); BM.conv[name] = pmN(v); bmSave(); bmCalcRender(); }
+        function bmSet(k, v) { bmRange[k] = v; renderUsage(); }
+        function bmMenuMatch(posName) {
+            const R = bmLoad().recipes, names = Object.keys(R), n = bmNorm(posName); let hit = names.find(x => bmNorm(x) === n); if (hit) return hit;
+            const a = bmTok(posName); let best = null, bs = 0;
+            names.forEach(x => { const b = bmTok(x); let c = 0; a.forEach(t => { if (b.has(t)) c++; }); const j = c / (a.size + b.size - c || 1); if (j > bs) { bs = j; best = x; } });
+            return bs >= 0.8 ? best : null;
+        }
+        function bmCalc() {
+            bmLoad(); const S = salesState, prod = S.pos.prod || {}, used = {}, sold = {}, noBom = [], from = bmRange.from, to = bmRange.to;
+            Object.keys(prod).forEach(pk => {
+                const P = prod[pk]; let q = 0; Object.entries(P.d).forEach(([d, e]) => { if ((!from || d >= from) && (!to || d <= to)) q += (e[0] || 0) - (e[2] || 0); });
+                if (q <= 0) return; const m = bmMenuMatch(P.n);
+                if (!m) { noBom.push({ n: P.n.trim(), q }); return; }
+                sold[m] = (sold[m] || 0) + q;
+            });
+            Object.entries(sold).forEach(([m, q]) => BM.recipes[m].lines.forEach(l => { used[l.name] = (used[l.name] || 0) + q * l.use; }));
+            const byItem = {}, unmapped = [];
+            Object.entries(used).forEach(([ing, base]) => {
+                const id = BM.map[ing], conv = BM.conv[ing];
+                if (!id || !(conv > 0)) { unmapped.push({ ing, base }); return; }
+                const o = byItem[id] || (byItem[id] = { id, exp: 0, ings: [] }); o.exp += base / conv; o.ings.push(ing);
+            });
+            return { sold, noBom, byItem, unmapped };
+        }
+        function bmDates() { const ds = Object.keys(salesState.pos.days || {}).sort(); return [ds[0] || '', ds[ds.length - 1] || '']; }
+        function bmCalcRender() { const el = document.getElementById('bm-result'); if (el) el.innerHTML = bmResultHtml(); }
+        function bmResultHtml() {
+            const C = bmCalc(), rows = []; const fm = v => (Math.round(v * 10) / 10).toLocaleString('en-US');
+            Object.values(C.byItem).forEach(o => {
+                const it = inventory.find(i => i.id === o.id); if (!it) return; const isPk = /^pk|package/i.test(it.category || ''); if (bmRange.pkgOnly && !isPk) return;
+                const act = (it.beg || 0) + (it.rec || 0) - (it.ending || 0), diff = act - o.exp, pct = o.exp > 0 ? diff / o.exp * 100 : null;
+                rows.push({ it, exp: o.exp, act, diff, pct, ings: o.ings });
+            });
+            rows.sort((a, b) => String(a.it.category).localeCompare(String(b.it.category)) || Math.abs(b.diff) - Math.abs(a.diff));
+            const sold = Object.values(C.sold).reduce((a, b) => a + b, 0), flag = r => r.pct == null ? '' : Math.abs(r.pct) <= 10 ? '✅' : Math.abs(r.pct) <= 25 ? '⚠️' : '⛔';
+            let h = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">` + [[L('ເມນູທີ່ຂາຍ (ມີສູດ)', 'Menus sold (with recipe)'), fm(sold)], [L('ເມນູທີ່ບໍ່ມີສູດ', 'Menus without recipe'), fm(C.noBom.reduce((a, x) => a + x.q, 0))], [L('ລາຍການທີ່ສະແດງ', 'Items shown'), rows.length], [L('ວັດຖຸດິບທີ່ຍັງບໍ່ຈັບຄູ່', 'Unmapped ingredients'), C.unmapped.length]].map(x => `<div class="rounded-xl border border-slate-200 bg-white p-3"><div class="text-[11px] font-bold text-slate-500">${x[0]}</div><div class="text-xl font-extrabold">${x[1]}</div></div>`).join('') + `</div>`;
+            h += `<div class="overflow-x-auto bg-white rounded-2xl border border-slate-200 mt-3"><table class="w-full text-sm"><thead><tr class="text-[11px] text-slate-500 text-left border-b"><th class="p-2">${L('ລາຍການ', 'Item')}</th><th class="p-2">${L('ໝວດ', 'Category')}</th><th class="p-2 text-right">${L('ຄວນໃຊ້ (ຕາມສູດ)', 'Expected (recipe)')}</th><th class="p-2 text-right">${L('ໃຊ້ຈິງ (ນັບສະຕ໋ອກ)', 'Actual (count)')}</th><th class="p-2 text-right">${L('ຕ່າງ', 'Diff')}</th><th class="p-2 text-right">%</th><th></th></tr></thead><tbody>` +
+                (rows.length ? rows.map(r => `<tr class="border-b border-slate-100"><td class="p-2"><b>${esc(r.it.nameEn)}</b><div class="text-[11px] text-slate-500">${esc(r.it.id)} · ${L('ຫົວໜ່ວຍ', 'unit')} ${esc(r.it.uom)}</div></td><td class="p-2 text-xs text-slate-500">${esc(r.it.category)}</td><td class="p-2 text-right">${fm(r.exp)}</td><td class="p-2 text-right">${fm(r.act)}</td><td class="p-2 text-right font-bold ${r.diff > 0 ? 'text-red-700' : 'text-emerald-700'}">${r.diff > 0 ? '+' : ''}${fm(r.diff)}</td><td class="p-2 text-right">${r.pct == null ? '—' : (r.pct > 0 ? '+' : '') + r.pct.toFixed(0) + '%'}</td><td class="p-2">${flag(r)}</td></tr>`).join('') : `<tr><td colspan="7" class="p-4 text-slate-500 text-sm">${L('ຍັງບໍ່ມີຂໍ້ມູນ - ກວດວ່ານຳເຂົ້າ POS ແລ້ວ ແລະ ຊ່ວງວັນທີ່ຖືກຕ້ອງ', 'No data - check POS is imported and the date range')}</td></tr>`) + `</tbody></table></div>
+                <p class="text-xs text-slate-500 mt-2">${L('ຕ່າງ = ໃຊ້ຈິງ − ຄວນໃຊ້. ຄ່າບວກ (ແດງ) = ໃຊ້ຫຼາຍກວ່າສູດ (ເສຍ/ແຈກ/ນັບຜິດ/ຍັງບໍ່ໄດ້ຂາຍເຂົ້າ POS). ✅ ≤10% ⚠️ ≤25% ⛔ >25%. ຍອດໃຊ້ຈິງ = ຍົກມາ + ຮັບເຂົ້າ − ເຫຼືອ ຕາມການນັບສະຕ໋ອກລ່າສຸດ ຈຶ່ງຄວນໃຫ້ຊ່ວງວັນທີ່ POS ກົງກັບຊ່ວງທີ່ນັບ.', 'Diff = actual − expected. Positive (red) = used more than recipe. Actual = begin + received − ending from the latest count, so match the POS range to the counted period.')}</p>`;
+            if (C.noBom.length) h += `<details class="mt-3 bg-white rounded-xl border border-slate-200 p-3 text-sm"><summary class="cursor-pointer font-bold">${L('ເມນູທີ່ຂາຍແຕ່ບໍ່ມີສູດໃນ BOM (' + C.noBom.length + ')', 'Sold menus with no BOM recipe (' + C.noBom.length + ')')}</summary><ul class="mt-2 text-xs text-slate-600 columns-1 sm:columns-2">${C.noBom.sort((a, b) => b.q - a.q).map(x => `<li>${esc(x.n)} × ${fm(x.q)}</li>`).join('')}</ul></details>`;
+            if (C.unmapped.length) h += `<details class="mt-3 bg-amber-50 rounded-xl border border-amber-200 p-3 text-sm"><summary class="cursor-pointer font-bold">${L('ວັດຖຸດິບໃນສູດທີ່ຍັງບໍ່ໄດ້ຈັບຄູ່ກັບສະຕ໋ອກ (' + C.unmapped.length + ')', 'Recipe ingredients not mapped to stock (' + C.unmapped.length + ')')}</summary><ul class="mt-2 text-xs text-amber-900 columns-1 sm:columns-2">${C.unmapped.map(x => `<li>${esc(x.ing)}</li>`).join('')}</ul><p class="text-xs mt-2">${L('ເປີດ "ຈັບຄູ່ວັດຖຸດິບ" ດ້ານລຸ່ມເພື່ອເລືອກລາຍການສະຕ໋ອກ', 'Open "Ingredient mapping" below to pick the stock item')}</p></details>`;
+            return h;
+        }
+        function renderUsage() {
+            const el = document.getElementById('tab-content-usage'); if (!el) return; bmLoad(); pmLoad();
+            const has = Object.keys(BM.recipes).length > 0, [d0, d1] = bmDates(); if (!bmRange.from) bmRange.from = d0; if (!bmRange.to) bmRange.to = d1;
+            const inp = 'px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm';
+            let h = `<datalist id="pm-dl">${inventory.map(i => `<option value="${esc(pmLabel(i))}"></option>`).join('')}</datalist>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3"><div><h2 class="text-lg font-extrabold text-slate-900">📦 ${L('ການໃຊ້ວັດຖຸດິບ / ແພັກເກດ: ຕາມສູດ BOM vs ນັບຈິງ', 'Ingredient & packaging usage: BOM recipe vs actual count')}</h2><p class="text-xs text-slate-500 mt-1">${L('ຍອດຂາຍ POS × ສູດຂອງແຕ່ລະເມນູ (ຊີດ BOM) = ຈຳນວນທີ່ຄວນໃຊ້ → ທຽບກັບຍອດໃຊ້ຈິງຈາກການນັບສະຕ໋ອກ. ບໍ່ປ່ຽນຍອດສະຕ໋ອກຂອງເຈົ້າ - ເປັນການກວດເບິ່ງສ່ວນຕ່າງເທົ່ານັ້ນ.', 'POS sales × per-menu recipe (BOM sheet) = expected usage → compared with actual usage from stock counts. It never changes your stock numbers - it only shows differences.')}</p>${has ? `<p class="text-xs text-slate-500 mt-1">📘 ${Object.keys(BM.recipes).length} ${L('ເມນູ', 'menus')} · ${esc(BM.file)} (${esc(BM.at)})</p>` : ''}</div>
+              <label class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white cursor-pointer">📂 ${has ? L('ໂຫຼດໄຟລ໌ BOM ໃໝ່', 'Reload BOM file') : L('ໂຫຼດໄຟລ໌ BOM', 'Load BOM file')}<input type="file" accept=".xlsx" class="hidden" onchange="bmImport(this)"></label></div>`;
+            if (!has) { el.innerHTML = h + `<div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900">${L('ໂຫຼດໄຟລ໌ BOM (ມີຊີດ "BOM" ທີ່ແຕ່ລະເມນູມີລາຍການວັດຖຸດິບ + ແພັກເກດ + Usage) ກ່ອນ.', 'Load the BOM file (sheet "BOM" with ingredients, packaging and Usage per menu) first.')}</div>`; return; }
+            if (!Object.keys(salesState.pos.prod || {}).length) h += `<div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-sm text-amber-900">${L('ຍັງບໍ່ມີຂໍ້ມູນ POS - ນຳເຂົ້າໄຟລ໌ POS ໃນແຖບ "ເປົ້າໝາຍຍອດຂາຍ" ກ່ອນ ຈຶ່ງຈະຮູ້ຈຳນວນເມນູທີ່ຂາຍ.', 'No POS data yet - import POS in the Target Sales tab.')}</div>`;
+            h += `<div class="bg-white rounded-2xl p-4 border border-slate-200 flex flex-wrap items-end gap-4"><div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ແຕ່ວັນທີ', 'From')}</label><input type="date" class="${inp}" value="${esc(bmRange.from)}" onchange="bmSet('from',this.value)"></div><div><label class="block text-[11px] font-bold text-slate-600 mb-1">${L('ຮອດວັນທີ', 'To')}</label><input type="date" class="${inp}" value="${esc(bmRange.to)}" onchange="bmSet('to',this.value)"></div>
+              <label class="flex items-center gap-2 text-sm font-bold pb-2 cursor-pointer"><input type="checkbox" ${bmRange.pkgOnly ? 'checked' : ''} onchange="bmSet('pkgOnly',this.checked)"> 📦 ${L('ສະເພາະແພັກເກດ (ເອົາອອກ = ທຸກວັດຖຸດິບ)', 'Packaging only (untick = all ingredients)')}</label></div>
+              <div id="bm-result">${bmResultHtml()}</div>`;
+            const I = bmIngs(), names = Object.keys(I).sort((a, b) => { const A = inventory.find(i => i.id === BM.map[a]), B = inventory.find(i => i.id === BM.map[b]); return (A ? 1 : 0) - (B ? 1 : 0) || a.localeCompare(b); });
+            h += `<details class="bg-white rounded-2xl border border-slate-200 p-4" ${bmRange.open ? 'open' : ''} ontoggle="bmRange.open=this.open"><summary class="cursor-pointer font-bold text-sm">🔗 ${L('ຈັບຄູ່ວັດຖຸດິບໃນສູດ ↔ ລາຍການສະຕ໋ອກ + ຫົວໜ່ວຍແປງ (ກວດສອບໄດ້)', 'Ingredient mapping & unit conversion (editable)')} (${names.length})</summary>
+              <p class="text-xs text-slate-500 my-2">${L('"ຫົວໜ່ວຍຍ່ອຍຕໍ່ 1 ຫົວໜ່ວຍສະຕ໋ອກ" = ຈຳນວນ ກຣາມ/ມລ/ຊິ້ນ ໃນສູດ ຕໍ່ 1 ໜ່ວຍທີ່ນັບໃນສະຕ໋ອກ (ເຊັ່ນ ຖົງເບີເກີ ນັບເປັນ KG ແຕ່ສູດໃຊ້ເປັນຊິ້ນ). ແອັບເດົາໃຫ້ — ແຖວທີ່ມີ ⚠ ຄວນກວດ.', '"Base units per stock unit" = grams/ml/pieces in the recipe per 1 unit counted in stock. The app guesses - check rows marked ⚠.')}</p>
+              <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-left border-b"><th class="p-1">${L('ໃນສູດ BOM', 'In BOM')}</th><th class="p-1">${L('ໃຊ້ໃນ', 'Used in')}</th><th class="p-1">${L('ລາຍການສະຕ໋ອກ', 'Stock item')}</th><th class="p-1 text-right">${L('ຫົວໜ່ວຍຍ່ອຍຕໍ່ 1 ໜ່ວຍສະຕ໋ອກ', 'Base units per stock unit')}</th></tr></thead><tbody>` + names.map(n => {
+                const g = I[n], it = inventory.find(i => i.id === BM.map[n]), gu = it ? bmGuessConv(g, it) : null;
+                return `<tr class="border-b border-slate-100 ${it ? '' : 'bg-amber-50'}"><td class="p-1"><b>${esc(n)}</b><div class="text-[10px] text-slate-400">${L('ໃຊ້', 'use')} ${g.use} · ${esc(g.pack)}</div></td><td class="p-1">${g.menus} ${L('ເມນູ', 'menus')}</td><td class="p-1"><input list="pm-dl" class="${inp} w-72 max-w-full" value="${it ? esc(pmLabel(it)) : ''}" placeholder="${L('— ບໍ່ຈັບຄູ່ —', '— not mapped —')}" onchange="bmSetMap('${esc(n).replace(/'/g, "\\'")}',this.value)"></td><td class="p-1 text-right">${it ? `<input type="number" step="any" min="0" class="${inp} w-28 text-right" value="${BM.conv[n] != null ? BM.conv[n] : ''}" oninput="bmSetConv('${esc(n).replace(/'/g, "\\'")}',this.value)"> ${gu && gu.conf === 'low' ? '⚠' : ''}<div class="text-[10px] text-slate-400">${esc(it.uom)} · ${esc(it.pack || '')}</div>` : ''}</td></tr>`;
+            }).join('') + `</tbody></table></div></details>`;
+            el.innerHTML = h;
+        }
+
         // Tab Navigation
         function switchTab(tabName) {
             currentTab = tabName;
             if (tabName === 'pr') renderPR();
-            ['stock', 'rollover', 'pr', 'sales', 'waste'].forEach(t => {
+            if (tabName === 'promo') renderPromo();
+            if (tabName === 'usage') renderUsage();
+            if (tabName === 'report') reportOpen();
+            ['stock', 'rollover', 'pr', 'sales', 'promo', 'usage', 'report', 'waste'].forEach(t => {
                 const contentEl = document.getElementById(`tab-content-${t}`);
                 const btnEl = document.getElementById(`tab-btn-${t}`);
                 if (t === tabName) {
@@ -2027,7 +3656,7 @@
             const sheets = {}; Array.from(new DOMParser().parseFromString(wbx, 'application/xml').getElementsByTagName('sheet')).forEach(s => { sheets[s.getAttribute('name')] = rel[s.getAttribute('r:id')]; });
             let sst = []; const sx = await zipText(z, 'xl/sharedStrings.xml');
             if (sx) sst = Array.from(new DOMParser().parseFromString(sx, 'application/xml').getElementsByTagName('si')).map(si => Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join(''));
-            return { async rows(name) { const p = sheets[name]; return p ? parseSheetXml(await zipText(z, p), sst) : null; } };
+            return { names: Object.keys(sheets), async rows(name) { const p = sheets[name]; return p ? parseSheetXml(await zipText(z, p), sst) : null; } };
         }
         async function invParse(wb, fname) {
             const num = x => typeof x === 'number' && isFinite(x) ? x : null, str = x => x == null ? '' : String(x).trim();
@@ -2348,7 +3977,7 @@
 
         // ---- JSON backup / restore (move data between devices) ----
         function backupJSON() {
-            const d = { app: 'momstouch-vangxai', version: 2, exportedAt: new Date().toISOString(), inventory, wasteLogs, isRolledOver, basePeriod, pr: prState, sales: salesState, branches, branchData: (saveSnapshot(), Object.fromEntries(branches.list.map(b => { let x = null; try { x = JSON.parse(localStorage.getItem('mt_branch_' + b.id)); } catch (e) { } return [b.id, x]; }))) };
+            const d = { app: 'momstouch-vangxai', version: 2, exportedAt: new Date().toISOString(), inventory, wasteLogs, isRolledOver, basePeriod, pr: prState, sales: salesState, promos: pmLoad(), bomRecipes: bmLoad(), branches, branchData: (saveSnapshot(), Object.fromEntries(branches.list.map(b => { let x = null; try { x = JSON.parse(localStorage.getItem('mt_branch_' + b.id)); } catch (e) { } return [b.id, x]; }))) };
             dl(new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' }), `MomsTouch_Backup_${today()}.json`);
             showToast(L('💾 ສຳຮອງຂໍ້ມູນ JSON ແລ້ວ', '💾 JSON backup saved'), 'success');
         }
@@ -2371,6 +4000,8 @@
             wasteLogs = Array.isArray(d.wasteLogs) ? d.wasteLogs : [];
             isRolledOver = !!d.isRolledOver; basePeriod = /^\d{4}-\d{2}$/.test(d.basePeriod || '') ? d.basePeriod : DEFAULT_PERIOD; if (isRolledOver) { basePeriod = addMonths(basePeriod, 1); isRolledOver = false; }
             prState = normalizePR(d.pr); salesState = normalizeSales(d.sales);
+            if (d.promos && Array.isArray(d.promos.sets)) { PM = d.promos; pmSave(); }
+            if (d.bomRecipes && d.bomRecipes.recipes) { BM = d.bomRecipes; bmSave(); }
             if (d.branches && d.branches.list && d.branchData) { branches = d.branches; saveBranches(); branches.list.forEach(b => { if (b.id !== branches.cur && d.branchData[b.id]) localStorage.setItem('mt_branch_' + b.id, JSON.stringify(d.branchData[b.id])); }); }
             document.getElementById('rollover-success-banner').classList.toggle('hidden', !isRolledOver);
             updatePeriodUI();
