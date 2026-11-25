@@ -424,7 +424,7 @@
         <section id="tab-content-promo" class="hidden space-y-6"></section>
         <section id="tab-content-usage" class="hidden space-y-6"></section>
         <section id="tab-content-report" class="hidden">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-2 no-print"><p class="text-xs text-slate-500">📊 ດຶງຂໍ້ມູນສະຕ໋ອກ + ຍອດຂາຍຂອງທຸກສາຂາໃນແອັບນີ້ມາໃຫ້ອັດຕະໂນມັດ. ເພື່ອປຽບທຽບຫຼາຍເດືອນ ໃຫ້ນຳເຂົ້າໄຟລ໌ JSON ຂອງເດືອນກ່ອນໃນແຖບ "ຂໍ້ມູນ & ການນຳເຂົ້າ" ຂອງລາຍງານ.</p><button onclick="reportReload()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">🔄 ດຶງຂໍ້ມູນລ່າສຸດ</button></div>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2 no-print"><p class="text-xs text-slate-500">📊 ດຶງຂໍ້ມູນສະຕ໋ອກ + ຍອດຂາຍຂອງທຸກສາຂາໃນແອັບນີ້ມາໃຫ້ອັດຕະໂນມັດ. ເພື່ອປຽບທຽບຫຼາຍເດືອນ ໃຫ້ນຳເຂົ້າໄຟລ໌ JSON ຂອງເດືອນກ່ອນໃນແຖບ "ຂໍ້ມູນ & ການນຳເຂົ້າ" ຂອງລາຍງານ.</p><button onclick="reportReload()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">🔄 ດຶງຂໍ້ມູນລ່າສຸດ</button><button onclick="reportClear()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-700 hover:bg-red-100 cursor-pointer">🗑 ລ້າງຂໍ້ມູນລາຍງານ</button></div>
             <iframe id="report-frame" allow="fullscreen" class="w-full rounded-2xl border border-slate-200 bg-white" style="height:calc(100vh - 170px);min-height:600px"></iframe>
         </section>
         <script type="text/plain" id="report-src"><!DOCTYPE html>
@@ -2558,13 +2558,18 @@ window.addEventListener('DOMContentLoaded', () => {
             const fr = document.getElementById('report-frame'), w = fr && fr.contentWindow; if (!w || !w.eval || !w.addRecords) return;
             try {
                 w.__bk = JSON.parse(JSON.stringify(reportBackupObj()));
-                w.eval("(function(){const recs=recsFromBackup(__bk,'live');recs.forEach(r=>r.src='Live');const e=!DB.records.length;addRecords(recs);if(e){S.tab='summary';S.month='';S.cmp='';}render();})()");
+                w.eval("(function(){const recs=recsFromBackup(__bk,'live');recs.forEach(r=>r.src='Live');const keep=new Set(recs.map(r=>r.branch+'|'+r.month));DB.records=DB.records.filter(r=>r.src!=='Live'||keep.has(r.branch+'|'+r.month));const e=!DB.records.length;addRecords(recs);if(e||(S.scope!=='ALL'&&!DB.records.some(r=>r.branch===S.scope))){S.tab='summary';S.month='';S.cmp='';S.scope='ALL';}render();})()");
             } catch (e) { console.error(e); showToast('Report: ' + e.message, 'error'); }
         }
         function reportOpen() {
             const fr = document.getElementById('report-frame'); if (!fr) return;
             if (!fr.dataset.ready) { fr.dataset.ready = '1'; fr.onload = reportFeed; fr.srcdoc = document.getElementById('report-src').textContent.replace(/<\\\/script/g, '</script'); }
             else reportFeed();
+        }
+        function reportClear() {
+            if (!confirm(L('ລຶບຂໍ້ມູນທັງໝົດທີ່ເກັບໄວ້ໃນລາຍງານ (ລວມຂໍ້ມູນທີ່ນຳເຂົ້າ/ຕົວຢ່າງ)? ຂໍ້ມູນໃນແອັບສະຕ໋ອກບໍ່ຖືກລຶບ ແລະ ຈະດຶງມາໃໝ່ອັດຕະໂນມັດ.', 'Delete everything stored in the report (imported/demo too)? Stock app data is untouched and live data is re-pulled.'))) return;
+            const fr = document.getElementById('report-frame'), w = fr && fr.contentWindow; if (w && w.eval) { w.eval("DB.records=[];invalidate();saveDB();"); }
+            reportFeed(); showToast(L('🗑 ລ້າງຂໍ້ມູນລາຍງານແລ້ວ', '🗑 Report data cleared'), 'success');
         }
         function reportReload() { reportFeed(); showToast('🔄 ອັບເດດລາຍງານແລ້ວ', 'success'); }
 
